@@ -1,0 +1,14 @@
+{
+  "name": "maldongmu",
+  "private": true,
+  "scripts": {
+    "dev:server": "pnpm --filter @maldongmu/server start:dev",
+    "dev:web": "pnpm --filter @maldongmu/web dev",
+    "build": "pnpm -r build",
+    "dev": "pnpm dev:server & pnpm dev:web"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "pnpm@9.15.9"
+}
