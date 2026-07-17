@@ -3,9 +3,10 @@
 import { use, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { PersonaCard as Card } from "@maldongmu/shared";
-import { apiGet, streamChat, LoginRequiredError } from "../../../lib/api";
+import { apiGet, streamChat, LoginRequiredError, QuotaExceededError } from "../../../lib/api";
 import Avatar from "../../../components/Avatar";
 import LoginSheet from "../../../components/LoginSheet";
+import QuotaSheet from "../../../components/QuotaSheet";
 
 interface Msg {
   role: "user" | "assistant";
@@ -27,6 +28,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
+  const [showQuota, setShowQuota] = useState(false);
   const bodyRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -64,11 +66,12 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
         return copy;
       });
     } catch (e) {
-      if (e instanceof LoginRequiredError) {
-        // 보낸 메시지와 빈 말풍선을 되돌리고 로그인 유도
+      if (e instanceof LoginRequiredError || e instanceof QuotaExceededError) {
+        // 보낸 메시지와 빈 말풍선을 되돌리고 안내 시트 표시
         setMsgs((m) => m.slice(0, -2));
         setInput(text);
-        setShowLogin(true);
+        if (e instanceof QuotaExceededError) setShowQuota(true);
+        else setShowLogin(true);
       } else {
         setMsgs((m) => {
           const copy = [...m];
@@ -157,6 +160,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
       </div>
 
       {showLogin && <LoginSheet onClose={() => setShowLogin(false)} />}
+      {showQuota && <QuotaSheet onClose={() => setShowQuota(false)} />}
     </div>
   );
 }

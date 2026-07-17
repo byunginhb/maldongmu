@@ -35,18 +35,28 @@ export class LoginRequiredError extends Error {
   }
 }
 
-async function handleError(res: Response): Promise<never> {
-  if (res.status === 403) {
-    try {
-      const body = await res.json();
-      if (body?.code === "LOGIN_REQUIRED" || body?.message?.code === "LOGIN_REQUIRED") {
-        throw new LoginRequiredError();
-      }
-    } catch (e) {
-      if (e instanceof LoginRequiredError) throw e;
-    }
-    throw new LoginRequiredError();
+/** 로그인 사용자 대화 한도 소진 → 피드백 안내 */
+export class QuotaExceededError extends Error {
+  constructor() {
+    super("대화 한도에 도달했어요");
+    this.name = "QuotaExceededError";
   }
+}
+
+async function extract403(res: Response): Promise<never> {
+  let code = "";
+  try {
+    const body = await res.json();
+    code = body?.code || body?.message?.code || "";
+  } catch {
+    /* body 없음 */
+  }
+  if (code === "QUOTA_EXCEEDED") throw new QuotaExceededError();
+  throw new LoginRequiredError();
+}
+
+async function handleError(res: Response): Promise<never> {
+  if (res.status === 403) await extract403(res);
   if (res.status === 401) {
     // 토큰 만료/무효 → 재발급 후 재시도할 수 있게 초기화
     clearToken();
@@ -96,7 +106,7 @@ export async function streamChat(
     headers: { Authorization: `Bearer ${t}`, "Content-Type": "application/json" },
     body: JSON.stringify({ message }),
   });
-  if (res.status === 403) throw new LoginRequiredError();
+  if (res.status === 403) await extract403(res);
   if (!res.ok || !res.body) throw new Error(`API ${res.status}`);
   const reader = res.body.getReader();
   const decoder = new TextDecoder();
@@ -136,6 +146,19 @@ export async function adminGet<T>(path: string): Promise<T> {
   if (!key) throw new Error("NO_ADMIN_KEY");
   const res = await fetch(`${API}/api/admin${path}`, {
     headers: { "x-admin-key": key },
+  });
+  if (res.status === 401) throw new Error("BAD_ADMIN_KEY");
+  if (!res.ok) throw new Error(`API ${res.status}`);
+  return res.json();
+}
+
+export async function adminPost<T>(path: string, body?: unknown): Promise<T> {
+  const key = getAdminKey();
+  if (!key) throw new Error("NO_ADMIN_KEY");
+  const res = await fetch(`${API}/api/admin${path}`, {
+    method: "POST",
+    headers: { "x-admin-key": key, "Content-Type": "application/json" },
+    body: body ? JSON.stringify(body) : undefined,
   });
   if (res.status === 401) throw new Error("BAD_ADMIN_KEY");
   if (!res.ok) throw new Error(`API ${res.status}`);

@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, Param, Post, Query, UseGuards } from "@nestjs/common";
 import { AdminGuard } from "./admin.guard";
 import { DbService } from "../db/db.service";
 import { PersonasService } from "../personas/personas.service";
@@ -61,6 +61,29 @@ export class AdminController {
          ORDER BY u.created_at DESC LIMIT ? OFFSET ?`,
       )
       .all(limit, offset);
+  }
+
+  /** 사용자 대화 한도 조정 (피드백 답례로 증설) */
+  @Post("users/:id/limit")
+  setLimit(@Param("id") id: string, @Body() body: { limit: number }) {
+    const limit = Math.max(0, Math.min(Number(body.limit) || 0, 1000000));
+    this.db.prepare(`UPDATE users SET message_limit = ? WHERE id = ?`).run(limit, id);
+    return { ok: true, limit };
+  }
+
+  /** 피드백 목록 */
+  @Get("feedback")
+  feedback() {
+    return this.db
+      .prepare(
+        `SELECT f.id, f.user_id as userId, f.content, f.created_at as createdAt,
+                u.type, u.nickname, u.email, u.message_limit as messageLimit,
+                (SELECT COUNT(*) FROM messages m JOIN conversations c ON c.id = m.conversation_id
+                 WHERE c.user_id = f.user_id AND m.role = 'user') as messagesUsed
+         FROM feedback f LEFT JOIN users u ON u.id = f.user_id
+         ORDER BY f.created_at DESC LIMIT 100`,
+      )
+      .all();
   }
 
   /** 유저 상세: 어떤 페르소나와 어떤 대화방을 만들었는지 */

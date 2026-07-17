@@ -45,6 +45,25 @@ export class ChatService {
     return { id, persona };
   }
 
+  countUserMessages(userId: string): number {
+    return (
+      this.db
+        .prepare(
+          `SELECT COUNT(*) as c FROM messages m
+           JOIN conversations c2 ON c2.id = m.conversation_id
+           WHERE c2.user_id = ? AND m.role = 'user'`,
+        )
+        .get(userId) as any
+    ).c;
+  }
+
+  saveFeedback(userId: string, content: string) {
+    this.db
+      .prepare(`INSERT INTO feedback (user_id, content) VALUES (?, ?)`)
+      .run(userId, content.slice(0, 2000));
+    return { ok: true };
+  }
+
   listConversations(userId: string) {
     return this.db
       .prepare(
@@ -79,7 +98,9 @@ export class ChatService {
     if (!conv) throw new NotFoundException("conversation not found");
 
     // 게스트는 대화방당 메시지 N개까지 → 이후 로그인 유도
-    const user = this.db.prepare(`SELECT type FROM users WHERE id = ?`).get(userId) as any;
+    const user = this.db
+      .prepare(`SELECT type, message_limit FROM users WHERE id = ?`)
+      .get(userId) as any;
     if (user?.type === "guest") {
       const msgLimit = Number(process.env.GUEST_MESSAGE_LIMIT || 3);
       const sent = (
@@ -89,6 +110,13 @@ export class ChatService {
       ).c;
       if (sent >= msgLimit) {
         throw new ForbiddenException({ code: "LOGIN_REQUIRED", message: "로그인이 필요해요" });
+      }
+    } else if (user) {
+      // 로그인 사용자: 전체 메시지 한도(기본 100)에서 차감. 피드백을 주면 운영자가 늘려줌
+      const limit = user.message_limit ?? Number(process.env.LOGIN_MESSAGE_LIMIT || 100);
+      const used = this.countUserMessages(userId);
+      if (used >= limit) {
+        throw new ForbiddenException({ code: "QUOTA_EXCEEDED", message: "대화 한도에 도달했어요" });
       }
     }
 

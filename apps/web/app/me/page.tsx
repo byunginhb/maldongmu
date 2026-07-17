@@ -24,6 +24,8 @@ interface Me {
   nickname: string | null;
   conversationCount: number;
   guestLimit: number;
+  messageLimit: number;
+  messagesUsed: number;
 }
 
 export default function MePage() {
@@ -47,9 +49,20 @@ export default function MePage() {
         {me?.type === "guest"
           ? `둘러보는 중이에요 (대화 ${me.conversationCount}/${me.guestLimit}회)`
           : me
-            ? `${me.nickname || "이웃"}님, 어서오세요`
+            ? `${me.nickname || "이웃"}님, 어서오세요 · 남은 대화 ${Math.max(0, me.messageLimit - me.messagesUsed)}번`
             : ""}
       </p>
+
+      {me && me.type !== "guest" && me.messagesUsed >= me.messageLimit && (
+        <div style={{ background: "var(--paper)", border: "1px solid var(--line)", borderRadius: 16, padding: "16px 18px", marginBottom: 24 }}>
+          <p style={{ margin: "0 0 12px", fontSize: 14, lineHeight: 1.7 }}>
+            대화를 정말 많이 나누셨네요! 서비스가 어땠는지 들려주시면 더 나눌 수 있게 열어드릴게요.
+          </p>
+          <Link href="/feedback" className="btn-cta" style={{ display: "flex" }}>
+            피드백 남기고 더 대화하기
+          </Link>
+        </div>
+      )}
 
       {me?.type === "guest" && (
         <div style={{ background: "var(--paper)", border: "1px solid var(--line)", borderRadius: 16, padding: "16px 18px", marginBottom: 24 }}>

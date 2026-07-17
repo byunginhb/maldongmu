@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import type { PersonaCard as Card } from "@maldongmu/shared";
-import { adminGet, getAdminKey, setAdminKey } from "../../lib/api";
+import { adminGet, adminPost, getAdminKey, setAdminKey } from "../../lib/api";
 import Avatar from "../../components/Avatar";
 
 interface Stats {
@@ -36,6 +36,17 @@ interface UserDetail {
   user: { id: string; type: string; nickname: string | null; email: string | null; createdAt: string };
   conversations: UserConv[];
 }
+interface FeedbackRow {
+  id: number;
+  userId: string;
+  content: string;
+  createdAt: string;
+  type: string;
+  nickname: string | null;
+  email: string | null;
+  messageLimit: number | null;
+  messagesUsed: number;
+}
 interface ConvDetail {
   id: string;
   userId: string;
@@ -57,6 +68,15 @@ export default function AdminPage() {
   const [users, setUsers] = useState<UserRow[]>([]);
   const [userDetail, setUserDetail] = useState<UserDetail | null>(null);
   const [convDetail, setConvDetail] = useState<ConvDetail | null>(null);
+  const [feedback, setFeedback] = useState<FeedbackRow[]>([]);
+  const [limitInputs, setLimitInputs] = useState<Record<string, string>>({});
+
+  const bumpLimit = async (userId: string) => {
+    const v = Number(limitInputs[userId]);
+    if (!v) return;
+    await adminPost(`/users/${encodeURIComponent(userId)}/limit`, { limit: v });
+    setFeedback(await adminGet<FeedbackRow[]>("/feedback"));
+  };
 
   const openUser = async (id: string) => {
     setConvDetail(null);
@@ -68,14 +88,16 @@ export default function AdminPage() {
 
   const loadAll = useCallback(async () => {
     try {
-      const [s, r, u] = await Promise.all([
+      const [s, r, u, f] = await Promise.all([
         adminGet<Stats>("/stats?days=14"),
         adminGet<(Card & { chats: number })[]>("/personas/ranking?days=7"),
         adminGet<UserRow[]>("/users?page=1"),
+        adminGet<FeedbackRow[]>("/feedback"),
       ]);
       setStats(s);
       setRanking(r);
       setUsers(u);
+      setFeedback(f);
       setAuthed(true);
       setError("");
     } catch (e: any) {
@@ -173,6 +195,31 @@ export default function AdminPage() {
               <p className="card-meta">{p.occupation} · {p.province}</p>
             </div>
             <span className="meta">대화 {n(p.chats)}회</span>
+          </div>
+        ))}
+      </div>
+
+      <h2 className="dot-title" style={{ marginBottom: 12 }}>피드백 · 한도 요청</h2>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 28 }}>
+        {feedback.length === 0 && <p className="empty" style={{ padding: "8px 0" }}>아직 피드백이 없어요.</p>}
+        {feedback.map((f) => (
+          <div key={f.id} style={{ background: "var(--paper)", border: "1px solid var(--line)", borderRadius: 16, padding: "14px 16px" }}>
+            <p className="meta" style={{ margin: "0 0 6px" }}>
+              {f.nickname || f.email || f.userId} · {f.type} · 사용 {n(f.messagesUsed)}/{n(f.messageLimit ?? 100)} · {f.createdAt?.slice(0, 16)}
+            </p>
+            <p style={{ margin: "0 0 10px", fontSize: 14, whiteSpace: "pre-wrap" }}>{f.content}</p>
+            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <input
+                type="number"
+                placeholder={`새 한도 (현재 ${f.messageLimit ?? 100})`}
+                value={limitInputs[f.userId] ?? ""}
+                onChange={(e) => setLimitInputs((s) => ({ ...s, [f.userId]: e.target.value }))}
+                style={{ width: 160, height: 36, border: "1px solid var(--line)", borderRadius: 10, padding: "0 10px", fontSize: 13, background: "var(--cream)", color: "var(--brown)", outline: "none" }}
+              />
+              <button className="btn-ghost" style={{ height: 36, padding: "0 14px" }} onClick={() => bumpLimit(f.userId)}>
+                한도 변경
+              </button>
+            </div>
           </div>
         ))}
       </div>

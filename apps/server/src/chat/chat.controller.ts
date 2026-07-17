@@ -17,6 +17,11 @@ export class ChatController {
     return this.chat.createConversation(req.userId, body.personaUuid);
   }
 
+  @Post("feedback")
+  feedback(@Req() req: any, @Body() body: { content: string }) {
+    return this.chat.saveFeedback(req.userId, (body.content || "").trim());
+  }
+
   @Get("conversations")
   list(@Req() req: any) {
     return this.chat.listConversations(req.userId);

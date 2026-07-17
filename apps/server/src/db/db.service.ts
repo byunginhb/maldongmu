@@ -54,7 +54,19 @@ export class DbService implements OnModuleDestroy {
       );
       CREATE INDEX IF NOT EXISTS idx_usage_persona ON usage_events(persona_uuid, created_at);
       CREATE INDEX IF NOT EXISTS idx_usage_created ON usage_events(created_at);
+      CREATE TABLE IF NOT EXISTS feedback (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id TEXT NOT NULL,
+        content TEXT NOT NULL,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
     `);
+    // 기존 DB 마이그레이션: 로그인 사용자 메시지 한도 (기본 100)
+    try {
+      this.db.exec(`ALTER TABLE users ADD COLUMN message_limit INTEGER DEFAULT 100`);
+    } catch {
+      /* 이미 있음 */
+    }
   }
 
   onModuleDestroy() {
