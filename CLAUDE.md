@@ -15,6 +15,8 @@
 - 원본 parquet는 `~/Documents/studio/Personas-Korea/data` (재빌드 때만 필요)
 
 ## 컨벤션 / 주의
+- 서비스 기본 프롬프트: `apps/server/prompts/base.md` 한 곳에서 관리 (수정 후 서버 재시작).
+  캐시 프리픽스 유지를 위해 완전 정적이어야 함 — 날짜·이름 등 변수 삽입 금지. 구조: 기본(정적)→인물→히스토리
 - 인증: JWT 헤더 방식(웹뷰 앱 대비, 쿠키 금지). 게스트 → 대화 3회 후 구글/카카오 로그인 유도
 - 서버 .env: .env.example 참고 (OPENROUTER_API_KEY 필요)
 - 디자인: coral CTA 화면당 1개, 도트 폰트(NeoDunggeunmo)는 제목 전용, 그림자 금지 — DESIGN.md 참고
