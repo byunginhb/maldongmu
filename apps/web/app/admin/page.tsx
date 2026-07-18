@@ -66,6 +66,8 @@ export default function AdminPage() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [ranking, setRanking] = useState<(Card & { chats: number })[]>([]);
   const [users, setUsers] = useState<UserRow[]>([]);
+  const [userPage, setUserPage] = useState(1);
+  const [userTotal, setUserTotal] = useState(0);
   const [userDetail, setUserDetail] = useState<UserDetail | null>(null);
   const [convDetail, setConvDetail] = useState<ConvDetail | null>(null);
   const [feedback, setFeedback] = useState<FeedbackRow[]>([]);
@@ -86,17 +88,26 @@ export default function AdminPage() {
     setConvDetail(await adminGet<ConvDetail>(`/conversations/${id}`));
   };
 
+  const loadUsers = useCallback(async (page: number) => {
+    const u = await adminGet<{ rows: UserRow[]; total: number }>(`/users?page=${page}`);
+    setUsers(u.rows);
+    setUserTotal(u.total);
+    setUserPage(page);
+  }, []);
+
   const loadAll = useCallback(async () => {
     try {
       const [s, r, u, f] = await Promise.all([
         adminGet<Stats>("/stats?days=14"),
         adminGet<(Card & { chats: number })[]>("/personas/ranking?days=7"),
-        adminGet<UserRow[]>("/users?page=1"),
+        adminGet<{ rows: UserRow[]; total: number }>("/users?page=1"),
         adminGet<FeedbackRow[]>("/feedback"),
       ]);
       setStats(s);
       setRanking(r);
-      setUsers(u);
+      setUsers(u.rows);
+      setUserTotal(u.total);
+      setUserPage(1);
       setFeedback(f);
       setAuthed(true);
       setError("");
@@ -225,7 +236,9 @@ export default function AdminPage() {
       </div>
 
       <h2 className="dot-title" style={{ marginBottom: 12 }}>사용자</h2>
-      <p className="meta" style={{ margin: "0 0 8px" }}>행을 누르면 대화 내역을 볼 수 있어요.</p>
+      <p className="meta" style={{ margin: "0 0 8px" }}>
+        가입 유저와 대화 있는 게스트만 · 총 {n(userTotal)}명 · 행을 누르면 대화 내역을 볼 수 있어요.
+      </p>
       <div style={{ overflowX: "auto" }}>
         <table className="admin-table">
           <thead>
@@ -244,12 +257,34 @@ export default function AdminPage() {
                 <td>{n(u.conversations)}</td>
                 <td>{n(u.messages)}</td>
                 <td>{n(u.tokens)}</td>
-                <td>{u.createdAt?.slice(0, 10)}</td>
+                <td>{u.createdAt?.slice(0, 16)}</td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+
+      {userTotal > 30 && (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12, marginTop: 12 }}>
+          <button
+            className="btn-ghost"
+            style={{ height: 36, padding: "0 14px" }}
+            onClick={() => loadUsers(userPage - 1)}
+            disabled={userPage <= 1}
+          >
+            이전
+          </button>
+          <span className="meta">{userPage} / {Math.ceil(userTotal / 30)}</span>
+          <button
+            className="btn-ghost"
+            style={{ height: 36, padding: "0 14px" }}
+            onClick={() => loadUsers(userPage + 1)}
+            disabled={userPage >= Math.ceil(userTotal / 30)}
+          >
+            다음
+          </button>
+        </div>
+      )}
 
       {userDetail && (
         <section style={{ marginTop: 28 }}>

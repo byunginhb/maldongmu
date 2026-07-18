@@ -49,8 +49,14 @@ export class AdminController {
   users(@Query("page") page = "1") {
     const limit = 30;
     const offset = (Number(page) - 1) * limit;
+    // 가입 유저(구글/카카오)는 항상, 게스트는 대화가 있는 경우만 노출
+    const where = `WHERE u.type != 'guest'
+                   OR EXISTS (SELECT 1 FROM conversations c WHERE c.user_id = u.id)`;
+    const { total } = this.db
+      .prepare(`SELECT COUNT(*) as total FROM users u ${where}`)
+      .get() as { total: number };
     // 조인 곱셈으로 tokens가 부풀지 않도록 서브쿼리로 집계
-    return this.db
+    const rows = this.db
       .prepare(
         `SELECT u.id, u.type, u.nickname, u.email, u.created_at as createdAt,
                 (SELECT COUNT(*) FROM conversations c WHERE c.user_id = u.id) as conversations,
@@ -58,9 +64,11 @@ export class AdminController {
                  WHERE c.user_id = u.id AND m.role = 'user') as messages,
                 (SELECT COALESCE(SUM(e.tokens), 0) FROM usage_events e WHERE e.user_id = u.id) as tokens
          FROM users u
+         ${where}
          ORDER BY u.created_at DESC LIMIT ? OFFSET ?`,
       )
       .all(limit, offset);
+    return { rows, total, page: Number(page), limit };
   }
 
   /** 사용자 대화 한도 조정 (피드백 답례로 증설) */
