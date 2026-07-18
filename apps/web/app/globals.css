@@ -344,6 +344,15 @@ h2.dot-title { font-size: 18px; margin: 0; }
 .occupation-card:active { transform: scale(0.98); background: var(--sand); }
 .occupation-title { font-size: 15px; font-weight: 600; margin: 0; }
 
+/* 추천 로딩 연출: 아바타 얼굴 넘기기 + 문구 순환 */
+.finding { display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 48px 0; }
+.finding-faces { display: flex; gap: 12px; }
+.finding-face { display: inline-flex; animation: finding-pop 0.3s ease; }
+.finding-msg { margin: 0; font-size: 14px; color: var(--brown-soft); animation: finding-fade 0.4s ease; }
+@keyframes finding-pop { from { transform: scale(0.7); opacity: 0.3; } to { transform: scale(1); opacity: 1; } }
+@keyframes finding-fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .finding-face, .finding-msg { animation: none; } }
+
 /* 유틸 */
 .empty { text-align: center; color: var(--brown-soft); padding: 48px 0; font-size: 14px; }
 .skeleton { background: var(--sand); border-radius: 16px; height: 84px; animation: pulse 1.2s ease-in-out infinite; }

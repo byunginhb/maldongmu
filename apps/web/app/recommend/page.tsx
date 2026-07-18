@@ -4,9 +4,45 @@ import { Suspense, useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { recommendPersonas, RecommendLimitError, type RecommendedPersona } from "../../lib/api";
 import PersonaCard from "../../components/PersonaCard";
+import Avatar from "../../components/Avatar";
 
 // 홈과 동일한 고민 칩 (concern 없이 진입했을 때 다시 보여줌)
 const CONCERNS = ["일·직장", "연애·썸", "가족", "친구·관계", "돈·미래", "건강·체력", "공부·진로", "외로움·수다"];
+
+// 추천을 기다리는 동안 순환하는 문구
+const FINDING_MESSAGES = [
+  "어울리는 이웃을 찾고 있어요...",
+  "고민을 함께해줄 분을 기다리고 있어요...",
+  "동네를 한 바퀴 둘러보는 중이에요...",
+  "이야기가 잘 통할 분을 고르고 있어요...",
+];
+
+/** 로딩 연출: 픽셀 아바타 3개가 번갈아 다른 얼굴로 바뀌며 "찾는 중"을 표현 */
+function FindingLoader() {
+  const [tick, setTick] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => setTick((v) => v + 1), 450);
+    return () => clearInterval(t);
+  }, []);
+  const msg = FINDING_MESSAGES[Math.floor(tick / 5) % FINDING_MESSAGES.length];
+  return (
+    <div className="finding">
+      <div className="finding-faces">
+        {[0, 1, 2].map((i) => {
+          // 슬롯마다 3틱 주기로 어긋나게 얼굴 교체 (한 번에 하나씩만 바뀜)
+          const seed = Math.floor((tick + i) / 3);
+          const uuid = `finding-${i}-${seed}`;
+          return (
+            <span key={uuid} className="finding-face">
+              <Avatar uuid={uuid} sex={(seed + i) % 2 ? "여자" : "남자"} age={20 + ((seed * 7 + i * 13) % 55)} size={48} radius={12} />
+            </span>
+          );
+        })}
+      </div>
+      <p key={msg} className="finding-msg">{msg}</p>
+    </div>
+  );
+}
 
 function ConcernPicker({ onPick }: { onPick: (c: string) => void }) {
   return (
@@ -61,15 +97,9 @@ function RecommendContent() {
   return (
     <main className="page">
       <h1 className="dot-title">{concern}</h1>
-      <p className="meta" style={{ margin: "4px 0 20px" }}>
-        {loading ? "어울리는 이웃을 찾고 있어요..." : "어울리는 말동무를 찾아드릴게요"}
-      </p>
+      <p className="meta" style={{ margin: "4px 0 20px" }}>어울리는 말동무를 찾아드릴게요</p>
 
-      {loading && (
-        <div className="card-grid">
-          {Array.from({ length: 3 }).map((_, i) => <div key={i} className="skeleton" />)}
-        </div>
-      )}
+      {loading && <FindingLoader />}
 
       {!loading && limited && (
         <p className="empty">오늘은 추천을 많이 받으셨어요. 내일 다시 만나요!</p>
