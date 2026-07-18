@@ -1,5 +1,6 @@
-import { Controller, Get, Param, Query } from "@nestjs/common";
+import { Body, Controller, Get, Param, Post, Query, Req, UseGuards } from "@nestjs/common";
 import { PersonasService } from "./personas.service";
+import { AuthGuard } from "../auth/auth.guard";
 
 @Controller("personas")
 export class PersonasController {
@@ -8,6 +9,20 @@ export class PersonasController {
   @Get("featured")
   featured() {
     return this.personas.featured();
+  }
+
+  @Get("occupations")
+  occupations() {
+    return this.personas.occupations();
+  }
+
+  @Post("recommend")
+  @UseGuards(AuthGuard)
+  recommend(@Req() req: any, @Body() body: { concern: string; detail?: string }) {
+    // LLM 프롬프트에 들어가는 사용자 입력 — 길이 캡 (chat의 message slice와 동일 관례)
+    const concern = String(body.concern || "").slice(0, 30);
+    const detail = body.detail ? String(body.detail).slice(0, 300) : undefined;
+    return this.personas.recommend(req.userId, concern, detail);
   }
 
   @Get("random")

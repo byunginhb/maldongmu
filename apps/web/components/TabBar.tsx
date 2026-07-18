@@ -20,6 +20,14 @@ const SearchIcon = ({ on }: { on: boolean }) => (
     />
   </svg>
 );
+const MeetIcon = ({ on }: { on: boolean }) => (
+  <svg width="20" height="20" viewBox="0 0 16 16" shapeRendering="crispEdges" aria-hidden>
+    <path
+      d="M3 3h3v3H3zM2 7h5v5H2zM10 3h3v3H10zM9 7h5v5H9z"
+      fill={on ? "var(--coral)" : "var(--brown-soft)"}
+    />
+  </svg>
+);
 const ChatIcon = ({ on }: { on: boolean }) => (
   <svg width="20" height="20" viewBox="0 0 16 16" shapeRendering="crispEdges" aria-hidden>
     <path
@@ -32,6 +40,7 @@ const ChatIcon = ({ on }: { on: boolean }) => (
 const TABS = [
   { href: "/", label: "홈", Icon: HomeIcon },
   { href: "/search", label: "검색", Icon: SearchIcon },
+  { href: "/meet", label: "만남", Icon: MeetIcon },
   { href: "/me", label: "내 대화", Icon: ChatIcon },
 ];
 

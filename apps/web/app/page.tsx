@@ -24,6 +24,9 @@ const HERO_MESSAGES = [
   <>스무 살의 고민부터 일흔의 지혜까지 — <b>다른 세대와의 대화</b>가 여기선 어렵지 않아요</>,
 ];
 
+// 고민 기반 추천 진입 칩
+const CONCERNS = ["일·직장", "연애·썸", "가족", "친구·관계", "돈·미래", "건강·체력", "공부·진로", "외로움·수다"];
+
 export default function Home() {
   const router = useRouter();
   const [featured, setFeatured] = useState<Card[] | null>(null);
@@ -72,6 +75,16 @@ export default function Home() {
           <span>{HERO_MESSAGES[heroIdx]}</span>
         </div>
       </header>
+
+      <h2 className="dot-title">요즘 이런 고민이 있다면</h2>
+      <p className="meta" style={{ margin: "4px 0 14px" }}>골라주시면 어울리는 말동무를 찾아드려요</p>
+      <div className="chip-wrap" style={{ marginBottom: 32 }}>
+        {CONCERNS.map((c) => (
+          <button key={c} className="chip" onClick={() => router.push(`/recommend?concern=${encodeURIComponent(c)}`)}>
+            {c}
+          </button>
+        ))}
+      </div>
 
       <h2 className="dot-title">오늘의 이웃</h2>
       <p className="meta" style={{ margin: "4px 0 14px" }}>매일 새로운 이웃을 소개해드려요</p>

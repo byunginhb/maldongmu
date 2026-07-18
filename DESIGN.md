@@ -60,7 +60,7 @@ hover/pressed는 coral-deep. 그림자 없음.
 
 **검색 입력**: paper 배경, line 테두리, radius 24px, 높이 44px, 왼쪽 돋보기 아이콘.
 
-**하단 탭바(모바일)**: paper 배경 + 상단 line, 3탭(홈/검색/내 대화), 활성 탭만 coral.
+**하단 탭바(모바일)**: paper 배경 + 상단 line, 4탭(홈/검색/만남/내 대화), 활성 탭만 coral.
 아이콘은 픽셀 스타일 16px 커스텀 SVG.
 
 **구분선 장식**: 섹션 사이에 4px 정사각형 3개(coral, sand, line)를 점점이 배치 — 도트 감성 포인트.

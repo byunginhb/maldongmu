@@ -171,6 +171,7 @@ h2.dot-title { font-size: 18px; margin: 0; }
 .chip.on { background: var(--brown); color: var(--cream); }
 .chip-row { display: flex; gap: 8px; overflow-x: auto; padding: 2px 0; scrollbar-width: none; }
 .chip-row::-webkit-scrollbar { display: none; }
+.chip-wrap { display: flex; flex-wrap: wrap; gap: 8px; }
 
 /* 검색 입력 */
 .search-box {
@@ -330,6 +331,18 @@ h2.dot-title { font-size: 18px; margin: 0; }
   .cta-float { bottom: 0; padding-bottom: 24px; }
 }
 .cta-float > div { max-width: 600px; margin: 0 auto; }
+
+/* 만남 탭 직업 카드 */
+.occupation-card {
+  display: block;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 16px;
+  transition: transform 0.08s ease, background 0.08s ease;
+}
+.occupation-card:active { transform: scale(0.98); background: var(--sand); }
+.occupation-title { font-size: 15px; font-weight: 600; margin: 0; }
 
 /* 유틸 */
 .empty { text-align: center; color: var(--brown-soft); padding: 48px 0; font-size: 14px; }

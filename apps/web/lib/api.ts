@@ -1,3 +1,5 @@
+import type { PersonaCard } from "@maldongmu/shared";
+
 export const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
 let token: string | null = null;
@@ -43,6 +45,14 @@ export class QuotaExceededError extends Error {
   }
 }
 
+/** 고민 추천 일일 한도 초과 */
+export class RecommendLimitError extends Error {
+  constructor() {
+    super("추천 한도에 도달했어요");
+    this.name = "RecommendLimitError";
+  }
+}
+
 async function extract403(res: Response): Promise<never> {
   let code = "";
   try {
@@ -52,6 +62,7 @@ async function extract403(res: Response): Promise<never> {
     /* body 없음 */
   }
   if (code === "QUOTA_EXCEEDED") throw new QuotaExceededError();
+  if (code === "RECOMMEND_LIMIT") throw new RecommendLimitError();
   throw new LoginRequiredError();
 }
 
@@ -129,6 +140,29 @@ export async function streamChat(
       }
     }
   }
+}
+
+/* ---------- 고민 기반 추천 / 만남 ---------- */
+export interface RecommendedPersona extends PersonaCard {
+  reason: string;
+}
+
+export interface OccupationEntry {
+  key: string;
+  label: string;
+  blurb: string;
+  count: number;
+  persona: PersonaCard;
+}
+
+/** 고민 기반 추천 (일반 인증 필요, 일일 한도 있음 → RecommendLimitError) */
+export function recommendPersonas(concern: string, detail?: string): Promise<{ items: RecommendedPersona[] }> {
+  return apiPost("/personas/recommend", { concern, detail });
+}
+
+/** 만나기 어려운 직업 대표 페르소나 목록 (공개) */
+export function getOccupations(): Promise<{ items: OccupationEntry[] }> {
+  return apiGet("/personas/occupations");
 }
 
 /* ---------- 어드민 ---------- */

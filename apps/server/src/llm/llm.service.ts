@@ -84,4 +84,30 @@ export class LlmService {
       }
     }
   }
+
+  /** 비스트리밍 단발 호출 (추천 등 JSON 응답이 필요한 곳에서 사용) */
+  async complete(messages: LlmMessage[]): Promise<string> {
+    const model = process.env.OPENROUTER_MODEL || "google/gemini-2.5-flash";
+    const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
+        "Content-Type": "application/json",
+        "HTTP-Referer": "https://maldongmu.app",
+        "X-Title": "maldongmu",
+      },
+      body: JSON.stringify({
+        model,
+        messages: this.withCacheControl(model, messages),
+        stream: false,
+      }),
+    });
+
+    if (!res.ok) {
+      const body = await res.text().catch(() => "");
+      throw new Error(`OpenRouter error ${res.status}: ${body.slice(0, 300)}`);
+    }
+    const json = await res.json();
+    return json.choices?.[0]?.message?.content || "";
+  }
 }
