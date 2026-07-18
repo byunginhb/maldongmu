@@ -1,9 +1,9 @@
 "use client";
 
-import { use, useEffect, useRef, useState } from "react";
+import { use, useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { PersonaCard as Card } from "@maldongmu/shared";
-import { apiGet, streamChat, LoginRequiredError, QuotaExceededError } from "../../../lib/api";
+import { apiGet, streamChat, streamGreeting, LoginRequiredError, QuotaExceededError } from "../../../lib/api";
 import Avatar from "../../../components/Avatar";
 import LoginSheet from "../../../components/LoginSheet";
 import QuotaSheet from "../../../components/QuotaSheet";
@@ -31,15 +31,46 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
   const [showQuota, setShowQuota] = useState(false);
   const bodyRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const greetedRef = useRef(false);
+
+  /** 첫 만남: 페르소나가 먼저 인사를 건넨다 */
+  const runGreeting = useCallback(async () => {
+    setBusy(true);
+    setMsgs([{ role: "assistant", content: "", streaming: true }]);
+    try {
+      await streamGreeting(id, (delta) => {
+        setMsgs((m) => {
+          const copy = [...m];
+          const last = copy[copy.length - 1];
+          copy[copy.length - 1] = { ...last, content: last.content + delta };
+          return copy;
+        });
+      });
+      setMsgs((m) => {
+        const copy = [...m];
+        copy[copy.length - 1] = { ...copy[copy.length - 1], streaming: false };
+        return copy;
+      });
+    } catch {
+      setMsgs([]); // 실패·중복(409) 시 기존 빈 화면으로 — 사용자가 먼저 말 걸면 됨
+    } finally {
+      setBusy(false);
+      inputRef.current?.focus();
+    }
+  }, [id]);
 
   useEffect(() => {
     apiGet<ConvRes>(`/conversations/${id}`)
       .then((c) => {
         setPersona(c.persona);
         setMsgs(c.messages.map((m) => ({ role: m.role, content: m.content })));
+        if (c.messages.length === 0 && !greetedRef.current) {
+          greetedRef.current = true; // StrictMode 이중 실행 가드
+          runGreeting();
+        }
       })
       .catch(() => router.replace("/"));
-  }, [id, router]);
+  }, [id, router, runGreeting]);
 
   useEffect(() => {
     bodyRef.current?.scrollTo({ top: bodyRef.current.scrollHeight });
@@ -113,6 +144,11 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
       </header>
 
       <div className="chat-body" ref={bodyRef}>
+        {msgs.length > 0 && msgs.length <= 2 && (
+          <p className="meta" style={{ textAlign: "center", fontSize: 11, margin: "0 0 4px" }}>
+            말동무의 인물들은 한국의 실제 데이터를 기반으로 만들어진 페르소나예요
+          </p>
+        )}
         {msgs.length === 0 && persona && (
           <p className="empty">
             {persona.name}님이 기다리고 있어요.

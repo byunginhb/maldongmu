@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Param, Post, Req, Res, UseGuards } from "@nestjs/common";
 import { Response } from "express";
 import { ChatService } from "./chat.service";
-import { LlmService } from "../llm/llm.service";
+import { LlmMessage, LlmService } from "../llm/llm.service";
 import { AuthGuard } from "../auth/auth.guard";
 
 @Controller()
@@ -32,6 +32,15 @@ export class ChatController {
     return this.chat.getConversation(req.userId, id);
   }
 
+  /** 첫 만남: 페르소나가 먼저 인사를 건넨다 (빈 대화방에서만) */
+  @Post("chat/:conversationId/greeting")
+  async greeting(@Req() req: any, @Param("conversationId") conversationId: string, @Res() res: Response) {
+    const { conv, messages } = this.chat.buildGreetingMessages(req.userId, conversationId);
+    await this.relay(res, messages, (full, tokensIn, tokensOut) =>
+      this.chat.saveGreeting(req.userId, conversationId, conv.persona_uuid, full, tokensIn, tokensOut),
+    );
+  }
+
   @Post("chat/:conversationId")
   async send(
     @Req() req: any,
@@ -41,7 +50,17 @@ export class ChatController {
   ) {
     const userText = (body.message || "").slice(0, 2000);
     const { conv, messages } = this.chat.buildLlmMessages(req.userId, conversationId, userText);
+    await this.relay(res, messages, (full, tokensIn, tokensOut) =>
+      this.chat.saveTurn(req.userId, conversationId, conv.persona_uuid, userText, full, tokensIn, tokensOut),
+    );
+  }
 
+  /** OpenRouter 스트림을 SSE로 릴레이하고, 완료 시 onDone으로 저장 위임 */
+  private async relay(
+    res: Response,
+    messages: LlmMessage[],
+    onDone: (full: string, tokensIn: number, tokensOut: number) => void,
+  ) {
     res.set({
       "Content-Type": "text/event-stream",
       "Cache-Control": "no-cache, no-transform",
@@ -63,7 +82,7 @@ export class ChatController {
           tokensOut = ev.completionTokens;
         }
       }
-      this.chat.saveTurn(req.userId, conversationId, conv.persona_uuid, userText, full, tokensIn, tokensOut);
+      onDone(full, tokensIn, tokensOut);
       res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
     } catch (e: any) {
       res.write(`data: ${JSON.stringify({ error: "응답 생성에 실패했어요. 다시 시도해주세요." })}\n\n`);

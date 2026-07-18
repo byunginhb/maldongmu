@@ -105,17 +105,13 @@ export function socialLoginUrl(provider: "google" | "kakao"): string {
   return `${API}/api/auth/${provider}/start${q}`;
 }
 
-/** SSE 채팅 스트림. onDelta로 토큰 단위 수신 */
-export async function streamChat(
-  conversationId: string,
-  message: string,
-  onDelta: (text: string) => void,
-): Promise<void> {
+/** SSE 스트림 공통부. onDelta로 토큰 단위 수신 */
+async function streamSse(path: string, body: unknown | undefined, onDelta: (text: string) => void): Promise<void> {
   const t = await ensureGuest();
-  const res = await fetch(`${API}/api/chat/${conversationId}`, {
+  const res = await fetch(`${API}/api${path}`, {
     method: "POST",
     headers: { Authorization: `Bearer ${t}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ message }),
+    body: body ? JSON.stringify(body) : undefined,
   });
   if (res.status === 403) await extract403(res);
   if (!res.ok || !res.body) throw new Error(`API ${res.status}`);
@@ -140,6 +136,16 @@ export async function streamChat(
       }
     }
   }
+}
+
+/** SSE 채팅 스트림 */
+export function streamChat(conversationId: string, message: string, onDelta: (text: string) => void): Promise<void> {
+  return streamSse(`/chat/${conversationId}`, { message }, onDelta);
+}
+
+/** 첫 만남 인사 스트림 — 빈 대화방에서 페르소나가 먼저 말을 건넨다 (이미 시작된 방이면 409) */
+export function streamGreeting(conversationId: string, onDelta: (text: string) => void): Promise<void> {
+  return streamSse(`/chat/${conversationId}/greeting`, undefined, onDelta);
 }
 
 /* ---------- 고민 기반 추천 / 만남 ---------- */

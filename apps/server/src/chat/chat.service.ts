@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
+import { ConflictException, ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
 import { nanoid } from "nanoid";
 import { DbService } from "../db/db.service";
 import { PersonasService } from "../personas/personas.service";
@@ -141,6 +141,60 @@ export class ChatService {
         { role: "user" as const, content: userText },
       ],
     };
+  }
+
+  /** 첫 만남 인사: 메시지가 없는 대화방에서 페르소나가 먼저 말을 건넨다 */
+  buildGreetingMessages(userId: string, conversationId: string) {
+    const conv = this.db
+      .prepare(`SELECT * FROM conversations WHERE id = ? AND user_id = ?`)
+      .get(conversationId, userId) as any;
+    if (!conv) throw new NotFoundException("conversation not found");
+    const count = (
+      this.db.prepare(`SELECT COUNT(*) as c FROM messages WHERE conversation_id = ?`).get(conversationId) as any
+    ).c;
+    if (count > 0) throw new ConflictException("conversation already started");
+
+    const detail = this.personas.detail(conv.persona_uuid);
+    return {
+      conv,
+      messages: [
+        { role: "system" as const, content: buildSystemPrompt(detail) },
+        {
+          role: "user" as const,
+          content:
+            "(첫 만남입니다. 아직 상대는 아무 말도 하지 않았어요. 이 괄호 지시문에 답하지 말고, 당신이 먼저 건네는 첫인사를 하세요: 당신답게 인사하고, 요즘 당신 일상에서 꺼낼 만한 작은 이야깃거리 하나로 말문을 열고, 마지막에 궁금한 건 뭐든 편하게 물어봐도 된다고 다정하게 덧붙이세요. 전체 2~3문장, 당신의 말투로.)",
+        },
+      ],
+    };
+  }
+
+  /** 인사말 저장: user 메시지 없이 assistant만. 동시 요청이 겹쳐도 빈 방일 때만 저장 */
+  saveGreeting(
+    userId: string,
+    conversationId: string,
+    personaUuid: string,
+    text: string,
+    tokensIn: number,
+    tokensOut: number,
+  ) {
+    const count = (
+      this.db.prepare(`SELECT COUNT(*) as c FROM messages WHERE conversation_id = ?`).get(conversationId) as any
+    ).c;
+    if (count > 0) return; // 이미 인사가 저장됨 (중복 요청)
+    this.db
+      .prepare(
+        `INSERT INTO messages (id, conversation_id, role, content, tokens_in, tokens_out)
+         VALUES (?, ?, 'assistant', ?, ?, ?)`,
+      )
+      .run(nanoid(12), conversationId, text, tokensIn, tokensOut);
+    this.db
+      .prepare(`UPDATE conversations SET last_message_at = datetime('now') WHERE id = ?`)
+      .run(conversationId);
+    this.db
+      .prepare(
+        `INSERT INTO usage_events (user_id, persona_uuid, event, tokens) VALUES (?, ?, 'message', ?)`,
+      )
+      .run(userId, personaUuid, tokensIn + tokensOut);
   }
 
   saveTurn(
