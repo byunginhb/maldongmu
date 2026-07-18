@@ -7,7 +7,7 @@ import { buildSystemPrompt } from "./prompt";
 // 프롬프트 캐시 효율을 위한 계단식 히스토리 윈도우:
 // 항상 "최근 N개"로 자르면 매 턴 프리픽스가 바뀌어 캐시가 깨진다.
 // 대신 시작점을 STEP 단위로만 이동시켜, STEP턴 동안 동일 프리픽스 유지 → 캐시 적중.
-const HISTORY_MAX = 30;
+const HISTORY_MAX = 50; // 유저 기준 약 25턴까지 완전 기억
 const HISTORY_STEP = 10;
 
 @Injectable()
