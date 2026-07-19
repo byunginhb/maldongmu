@@ -50,7 +50,7 @@ export default function TabBar() {
   return (
     <nav className="tabbar">
       {TABS.map(({ href, label, Icon }) => {
-        const on = href === "/" ? pathname === "/" : pathname.startsWith(href);
+        const on = pathname === href || pathname.startsWith(href + "/");
         return (
           <Link key={href} href={href} className={on ? "on" : ""}>
             <Icon on={on} />
