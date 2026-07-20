@@ -84,7 +84,7 @@ export class ChatService {
     const messages = this.db
       .prepare(
         `SELECT id, role, content, created_at as createdAt FROM messages
-         WHERE conversation_id = ? ORDER BY created_at, id`,
+         WHERE conversation_id = ? ORDER BY created_at, rowid`,
       )
       .all(id);
     const persona = this.personas.card(conv.persona_uuid);
@@ -129,7 +129,7 @@ export class ChatService {
     const history = this.db
       .prepare(
         `SELECT role, content FROM messages WHERE conversation_id = ?
-         ORDER BY created_at, id LIMIT -1 OFFSET ?`,
+         ORDER BY created_at, rowid LIMIT -1 OFFSET ?`,
       )
       .all(conversationId, start) as any[];
 

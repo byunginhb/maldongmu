@@ -132,7 +132,7 @@ export class AdminController {
       .prepare(
         `SELECT id, role, content, tokens_in as tokensIn, tokens_out as tokensOut,
                 created_at as createdAt
-         FROM messages WHERE conversation_id = ? ORDER BY created_at, id`,
+         FROM messages WHERE conversation_id = ? ORDER BY created_at, rowid`,
       )
       .all(id);
     return { ...(conv as any), messages };
