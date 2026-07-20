@@ -158,7 +158,7 @@ export class ChatService {
     // 이 힌트는 프롬프트 꼬리(user 메시지)라 base+페르소나 캐시 프리픽스에 영향 없음.
     const langHint =
       lang && !lang.toLowerCase().startsWith("ko")
-        ? ` 상대의 브라우저 언어 코드는 '${lang}'입니다. 이 첫인사만 그 언어로 건네세요.`
+        ? ` [매우 중요] 상대의 화면 언어는 '${lang}'입니다. 이 첫인사를 반드시 그 언어로만 건네세요. 절대 한국어로 인사하지 마세요.`
         : "";
     const detail = this.personas.detail(conv.persona_uuid);
     return {
