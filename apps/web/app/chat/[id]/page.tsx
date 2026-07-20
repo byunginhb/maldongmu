@@ -38,14 +38,18 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
     setBusy(true);
     setMsgs([{ role: "assistant", content: "", streaming: true }]);
     try {
-      await streamGreeting(id, (delta) => {
-        setMsgs((m) => {
-          const copy = [...m];
-          const last = copy[copy.length - 1];
-          copy[copy.length - 1] = { ...last, content: last.content + delta };
-          return copy;
-        });
-      });
+      await streamGreeting(
+        id,
+        (delta) => {
+          setMsgs((m) => {
+            const copy = [...m];
+            const last = copy[copy.length - 1];
+            copy[copy.length - 1] = { ...last, content: last.content + delta };
+            return copy;
+          });
+        },
+        typeof navigator !== "undefined" ? navigator.language : undefined,
+      );
       setMsgs((m) => {
         const copy = [...m];
         copy[copy.length - 1] = { ...copy[copy.length - 1], streaming: false };

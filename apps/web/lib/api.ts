@@ -144,8 +144,12 @@ export function streamChat(conversationId: string, message: string, onDelta: (te
 }
 
 /** 첫 만남 인사 스트림 — 빈 대화방에서 페르소나가 먼저 말을 건넨다 (이미 시작된 방이면 409) */
-export function streamGreeting(conversationId: string, onDelta: (text: string) => void): Promise<void> {
-  return streamSse(`/chat/${conversationId}/greeting`, undefined, onDelta);
+export function streamGreeting(
+  conversationId: string,
+  onDelta: (text: string) => void,
+  lang?: string,
+): Promise<void> {
+  return streamSse(`/chat/${conversationId}/greeting`, lang ? { lang } : undefined, onDelta);
 }
 
 /* ---------- 고민 기반 추천 / 만남 ---------- */

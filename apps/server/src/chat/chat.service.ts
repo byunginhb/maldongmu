@@ -144,7 +144,7 @@ export class ChatService {
   }
 
   /** 첫 만남 인사: 메시지가 없는 대화방에서 페르소나가 먼저 말을 건넨다 */
-  buildGreetingMessages(userId: string, conversationId: string) {
+  buildGreetingMessages(userId: string, conversationId: string, lang?: string) {
     const conv = this.db
       .prepare(`SELECT * FROM conversations WHERE id = ? AND user_id = ?`)
       .get(conversationId, userId) as any;
@@ -154,6 +154,12 @@ export class ChatService {
     ).c;
     if (count > 0) throw new ConflictException("conversation already started");
 
+    // 유저 첫 답변 전이라 감지할 언어가 없음 → 브라우저 언어가 비한국어면 첫인사만 그 언어로.
+    // 이 힌트는 프롬프트 꼬리(user 메시지)라 base+페르소나 캐시 프리픽스에 영향 없음.
+    const langHint =
+      lang && !lang.toLowerCase().startsWith("ko")
+        ? ` 상대의 브라우저 언어 코드는 '${lang}'입니다. 이 첫인사만 그 언어로 건네세요.`
+        : "";
     const detail = this.personas.detail(conv.persona_uuid);
     return {
       conv,
@@ -162,7 +168,7 @@ export class ChatService {
         {
           role: "user" as const,
           content:
-            "(첫 만남입니다. 아직 상대는 아무 말도 하지 않았어요. 이 괄호 지시문에 답하지 말고, 당신이 먼저 건네는 첫인사를 하세요: 당신답게 인사하고, 요즘 당신 일상에서 꺼낼 만한 작은 이야깃거리 하나로 말문을 열고, 마지막에 궁금한 건 뭐든 편하게 물어봐도 된다고 다정하게 덧붙이세요. 전체 2~3문장, 당신의 말투로.)",
+            `(첫 만남입니다. 아직 상대는 아무 말도 하지 않았어요. 이 괄호 지시문에 답하지 말고, 당신이 먼저 건네는 첫인사를 하세요: 당신답게 인사하고, 요즘 당신 일상에서 꺼낼 만한 작은 이야깃거리 하나로 말문을 열고, 마지막에 궁금한 건 뭐든 편하게 물어봐도 된다고 다정하게 덧붙이세요. 전체 2~3문장, 당신의 말투로.${langHint})`,
         },
       ],
     };

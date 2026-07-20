@@ -34,8 +34,13 @@ export class ChatController {
 
   /** 첫 만남: 페르소나가 먼저 인사를 건넨다 (빈 대화방에서만) */
   @Post("chat/:conversationId/greeting")
-  async greeting(@Req() req: any, @Param("conversationId") conversationId: string, @Res() res: Response) {
-    const { conv, messages } = this.chat.buildGreetingMessages(req.userId, conversationId);
+  async greeting(
+    @Req() req: any,
+    @Param("conversationId") conversationId: string,
+    @Body() body: { lang?: string },
+    @Res() res: Response,
+  ) {
+    const { conv, messages } = this.chat.buildGreetingMessages(req.userId, conversationId, body?.lang);
     await this.relay(res, messages, (full, tokensIn, tokensOut) =>
       this.chat.saveGreeting(req.userId, conversationId, conv.persona_uuid, full, tokensIn, tokensOut),
     );
