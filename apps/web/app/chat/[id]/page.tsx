@@ -3,7 +3,7 @@
 import { use, useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { PersonaCard as Card } from "@maldongmu/shared";
-import { apiGet, streamChat, streamGreeting, LoginRequiredError, QuotaExceededError } from "../../../lib/api";
+import { apiGet, streamChat, fetchGreeting, LoginRequiredError, QuotaExceededError } from "../../../lib/api";
 import Avatar from "../../../components/Avatar";
 import LoginSheet from "../../../components/LoginSheet";
 import QuotaSheet from "../../../components/QuotaSheet";
@@ -33,32 +33,17 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
   const inputRef = useRef<HTMLInputElement>(null);
   const greetedRef = useRef(false);
 
-  /** 첫 만남: 페르소나가 먼저 인사를 건넨다 */
+  /** 첫 만남: 인물 카드로 만든 가벼운 인사를 즉시 띄운다 (LLM 대기 없음) */
   const runGreeting = useCallback(async () => {
-    setBusy(true);
-    setMsgs([{ role: "assistant", content: "", streaming: true }]);
     try {
-      await streamGreeting(
+      const { greeting } = await fetchGreeting(
         id,
-        (delta) => {
-          setMsgs((m) => {
-            const copy = [...m];
-            const last = copy[copy.length - 1];
-            copy[copy.length - 1] = { ...last, content: last.content + delta };
-            return copy;
-          });
-        },
         typeof navigator !== "undefined" ? navigator.language : undefined,
       );
-      setMsgs((m) => {
-        const copy = [...m];
-        copy[copy.length - 1] = { ...copy[copy.length - 1], streaming: false };
-        return copy;
-      });
+      setMsgs([{ role: "assistant", content: greeting }]);
     } catch {
       setMsgs([]); // 실패·중복(409) 시 기존 빈 화면으로 — 사용자가 먼저 말 걸면 됨
     } finally {
-      setBusy(false);
       inputRef.current?.focus();
     }
   }, [id]);

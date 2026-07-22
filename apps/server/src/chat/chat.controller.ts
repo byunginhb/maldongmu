@@ -32,18 +32,16 @@ export class ChatController {
     return this.chat.getConversation(req.userId, id);
   }
 
-  /** 첫 만남: 페르소나가 먼저 인사를 건넨다 (빈 대화방에서만) */
+  /** 첫 만남: 인물 카드로 만든 가벼운 인사를 즉시 반환 (LLM 대기 없음) */
   @Post("chat/:conversationId/greeting")
-  async greeting(
+  greeting(
     @Req() req: any,
     @Param("conversationId") conversationId: string,
     @Body() body: { lang?: string },
-    @Res() res: Response,
   ) {
-    const { conv, messages } = this.chat.buildGreetingMessages(req.userId, conversationId, body?.lang);
-    await this.relay(res, messages, (full, tokensIn, tokensOut) =>
-      this.chat.saveGreeting(req.userId, conversationId, conv.persona_uuid, full, tokensIn, tokensOut),
-    );
+    const { conv, text } = this.chat.buildGreetingText(req.userId, conversationId, body?.lang);
+    this.chat.saveGreeting(req.userId, conversationId, conv.persona_uuid, text, 0, 0);
+    return { greeting: text };
   }
 
   @Post("chat/:conversationId")
