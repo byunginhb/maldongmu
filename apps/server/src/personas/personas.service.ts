@@ -207,7 +207,7 @@ export class PersonasService {
       const r = this.db.prepare(`SELECT ${CARD_COLS} FROM personas WHERE rowid = ?`).get(rowid) as any;
       if (r && !seen.has(r.uuid)) { seen.add(r.uuid); pool.push(r); }
     }
-    const candidates = pool.slice(0, 30);
+    const candidates = pool.slice(0, 12);
 
     const list = candidates
       .map((p, i) => `${i + 1}. ${p.name} (${p.age}세 ${p.sex}, ${p.occupation}, ${p.province} ${p.district}) - ${p.oneLiner}`)
@@ -221,7 +221,11 @@ ${list}
 
     let picks: { idx: number; reason: string }[] = [];
     try {
-      const raw = await this.llm.complete([{ role: "user", content: prompt }]);
+      // 추천 픽은 가벼운 작업 → 빠른 모델로 분리(메인 채팅은 그대로 고급 모델). 지연 28s→~2s
+      const raw = await this.llm.complete(
+        [{ role: "user", content: prompt }],
+        process.env.RECOMMEND_MODEL || "google/gemini-2.5-flash",
+      );
       const cleaned = raw.replace(/```json|```/g, "").trim();
       const parsed = JSON.parse(cleaned);
       picks = (parsed.picks || []).filter(

@@ -346,12 +346,18 @@ h2.dot-title { font-size: 18px; margin: 0; }
 
 /* 추천 로딩 연출: 아바타 얼굴 넘기기 + 문구 순환 */
 .finding { display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 48px 0; }
-.finding-faces { display: flex; gap: 12px; }
-.finding-face { display: inline-flex; animation: finding-pop 0.3s ease; }
+/* 동네를 둘러보는 느낌: 얼굴 무리가 좌우로 스캔 */
+.finding-faces { display: flex; gap: 12px; animation: finding-scan 2.6s ease-in-out infinite; }
+/* 각 얼굴은 걷는 듯 통통(walk는 translate, pop은 transform → 충돌 없이 합성) */
+.finding-face { display: inline-flex; animation: finding-pop 0.3s ease, finding-walk 0.62s ease-in-out infinite; }
+.finding-face:nth-child(2) { animation-delay: 0s, 0.15s; }
+.finding-face:nth-child(3) { animation-delay: 0s, 0.3s; }
 .finding-msg { margin: 0; font-size: 14px; color: var(--brown-soft); animation: finding-fade 0.4s ease; }
 @keyframes finding-pop { from { transform: scale(0.7); opacity: 0.3; } to { transform: scale(1); opacity: 1; } }
+@keyframes finding-walk { 0%, 100% { translate: 0 0; } 50% { translate: 0 -6px; } }
+@keyframes finding-scan { 0%, 100% { transform: translateX(-9px); } 50% { transform: translateX(9px); } }
 @keyframes finding-fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
-@media (prefers-reduced-motion: reduce) { .finding-face, .finding-msg { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .finding-faces, .finding-face, .finding-msg { animation: none; } }
 
 /* 유틸 */
 .empty { text-align: center; color: var(--brown-soft); padding: 48px 0; font-size: 14px; }
