@@ -49,14 +49,18 @@ export function isBlockedIp(ip: string): boolean {
   return true; // 파싱 불가 → 차단
 }
 
-/** http(s) request의 lookup 훅: 해석된 모든 주소를 검증, 하나라도 사설이면 거부. */
-function safeLookup(hostname: string, _opts: any, cb: (err: Error | null, addr?: string, fam?: number) => void) {
+/**
+ * http(s) request의 lookup 훅: 해석된 모든 주소를 검증하고 검증된 IP로만 연결(핀닝).
+ * Agent가 opts.all=true로 호출하면(happy-eyeballs) 콜백도 배열 형식으로 응답해야 한다.
+ */
+function safeLookup(hostname: string, opts: any, cb: (err: Error | null, addr?: any, fam?: number) => void) {
   dnsLookup(hostname, { all: true, verbatim: true }, (err, addresses: any) => {
     if (err) return cb(err);
     const list = Array.isArray(addresses) ? addresses : [addresses];
     if (!list.length) return cb(new Error("no address"));
     for (const a of list) if (isBlockedIp(a.address)) return cb(new Error("blocked address"));
-    cb(null, list[0].address, list[0].family);
+    if (opts && opts.all) cb(null, list);
+    else cb(null, list[0].address, list[0].family);
   });
 }
 
@@ -67,6 +71,10 @@ function fetchOnce(urlStr: string): Promise<Once> {
   if (u.protocol !== "http:" && u.protocol !== "https:") throw new Error("scheme not allowed");
   const port = u.port ? Number(u.port) : u.protocol === "https:" ? 443 : 80;
   if (port !== 80 && port !== 443) throw new Error("port not allowed");
+  // IP 리터럴은 Node가 lookup 훅을 거치지 않으므로 여기서 직접 검증(우회 차단).
+  // WHATWG URL이 10진/8진/16진 IPv4를 점표기로 정규화하므로 그것들도 잡힌다.
+  const host = u.hostname.replace(/^\[|\]$/g, "");
+  if (isIP(host) && isBlockedIp(host)) throw new Error("blocked host");
   const mod = u.protocol === "https:" ? httpsRequest : httpRequest;
 
   return new Promise<Once>((resolve, reject) => {

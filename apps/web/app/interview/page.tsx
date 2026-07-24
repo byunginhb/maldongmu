@@ -26,6 +26,7 @@ function GuestTeaser({ onLogin }: { onLogin: () => void }) {
       <span className="iv-sample-tag">예시 인터뷰</span>
       <p className="meta" style={{ margin: "0 0 6px" }}>이런 주제를 던지면…</p>
       <div className="iv-quote" style={{ marginTop: 0 }}>“무설탕 탄산음료, 사람들이 살까요?”</div>
+      <div className="iv-quote">“https://maldongmu.app 이 서비스, 사람들이 쓸까요?”</div>
 
       <p className="meta" style={{ margin: "18px 0 8px" }}>이웃들이 이렇게 답해요</p>
       <div className="iv-block">
@@ -97,7 +98,7 @@ export default function InterviewLandingPage() {
     }
   };
 
-  const isUrl = /^https?:\/\/\S+$/i.test(input.trim());
+  const isUrl = /https?:\/\//i.test(input);
 
   return (
     <main className="page">

@@ -74,7 +74,10 @@ export class InterviewService implements OnModuleInit {
 
     const input = (rawInput || "").trim().slice(0, 1000);
     if (input.length < 5) throw new ForbiddenException({ code: "INPUT_TOO_SHORT", message: "조금 더 자세히 적어주세요" });
-    const resolvedKind: "text" | "url" = kind || (/^https?:\/\/\S+$/i.test(input) ? "url" : "text");
+    // 입력 어디에 있든 URL을 추출해 fetch (따옴표·질문이 섞인 혼합 입력도 지원)
+    const urlMatch = input.match(/https?:\/\/[^\s"'<>()]+/i);
+    const sourceUrl = urlMatch ? urlMatch[0] : null;
+    const resolvedKind: "text" | "url" = kind === "text" ? "text" : sourceUrl ? "url" : "text";
 
     // 시도 레이트리밋(환불 불가): 크레딧 환불 우회로 무한 fetch/LLM 호출 차단
     const attempts = (
@@ -101,9 +104,9 @@ export class InterviewService implements OnModuleInit {
         throw new ForbiddenException({ code: "INTERVIEW_LIMIT", message: "이웃 인터뷰는 계정당 2번 체험할 수 있어요" });
       this.db
         .prepare(
-          `INSERT INTO interview_sessions (id, user_id, status, input_kind, input_raw) VALUES (?, ?, 'active', ?, ?)`,
+          `INSERT INTO interview_sessions (id, user_id, status, input_kind, input_raw, source_url) VALUES (?, ?, 'active', ?, ?, ?)`,
         )
-        .run(id, userId, resolvedKind, input);
+        .run(id, userId, resolvedKind, input, sourceUrl);
     });
     reserve();
 
@@ -123,11 +126,15 @@ export class InterviewService implements OnModuleInit {
 
       // 1) URL 본문 추출 (선정 前 실패 = 환불)
       if (s.input_kind === "url" && !s.source_text) {
-        const text = await fetchUrlText(s.input_raw);
+        const text = await fetchUrlText(s.source_url || s.input_raw);
         this.db.prepare(`UPDATE interview_sessions SET source_text = ?, updated_at = datetime('now') WHERE id = ?`).run(text, id);
         s = this.session(id);
       }
-      const subject = s.input_kind === "url" ? s.source_text : s.input_raw;
+      // URL이면 사용자 질문/설명 + 가져온 사이트 내용을 함께 준다 (혼합 입력 지원)
+      const subject =
+        s.input_kind === "url"
+          ? `사용자 질문/설명: ${s.input_raw}\n\n[참고한 웹사이트 내용]\n${s.source_text}`
+          : s.input_raw;
 
       // 2) 주제/키워드/필터 추출 → 후보 → 3명 선정 (여기까지 성공 = 크레딧 확정 의미)
       if (!s.picks_json) {
