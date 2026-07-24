@@ -8,10 +8,10 @@ import {
   extractPrompt,
   selectPrompt,
   questionsPrompt,
+  normalizeQuestions,
   interviewMessages,
   reportPrompt,
   parseJsonLoose,
-  FALLBACK_QUESTIONS,
 } from "./interview.prompt";
 
 const CARD_COLS = `uuid, name, one_liner as oneLiner, age, sex, occupation, province, district`;
@@ -156,27 +156,26 @@ export class InterviewService implements OnModuleInit {
       const topic = s.topic as string;
       const picks: { uuid: string; reason: string }[] = JSON.parse(s.picks_json);
 
-      // 3) 질문지
+      // 3) 질문지: 조사 목적에 충실한 공통 3 + 페르소나별 맞춤 2 (한 콜)
       if (!s.questions_json) {
-        const parsed = parseJsonLoose(await this.llm.complete([{ role: "user", content: questionsPrompt(topic) }]));
-        let questions: string[] = Array.isArray(parsed?.questions)
-          ? parsed.questions.filter((q: any) => typeof q === "string" && q.trim()).map((q: string) => q.trim().slice(0, 200))
-          : [];
-        if (questions.length < 3) questions = FALLBACK_QUESTIONS;
-        questions = questions.slice(0, 5);
-        this.db.prepare(`UPDATE interview_sessions SET questions_json = ?, updated_at = datetime('now') WHERE id = ?`).run(JSON.stringify(questions), id);
+        const pickCards = picks.map((pk) => this.personas.card(pk.uuid));
+        const parsed = parseJsonLoose(await this.llm.complete([{ role: "user", content: questionsPrompt(topic, pickCards) }]));
+        const q = normalizeQuestions(parsed, picks.length);
+        this.db.prepare(`UPDATE interview_sessions SET questions_json = ?, updated_at = datetime('now') WHERE id = ?`).run(JSON.stringify(q), id);
         s = this.session(id);
       }
-      const questions: string[] = JSON.parse(s.questions_json);
+      // 저장값 정규화 (옛 배열형 하위호환 포함)
+      const q = normalizeQuestions(JSON.parse(s.questions_json), picks.length);
 
-      // 4) 이웃별 인터뷰 (멱등: 완료된 이웃 skip)
+      // 4) 이웃별 인터뷰 (멱등: 완료된 이웃 skip). 페르소나 i = 공통 3 + 맞춤 2
       for (let i = 0; i < picks.length; i++) {
         const done = this.db
           .prepare(`SELECT 1 FROM interview_transcripts WHERE session_id = ? AND persona_uuid = ? AND status = 'done'`)
           .get(id, picks[i].uuid);
         if (done) continue;
         const detail = this.personas.detail(picks[i].uuid);
-        const answer = await this.llm.complete(interviewMessages(detail, topic, questions));
+        const merged = [...q.common, ...q.tailored[i]];
+        const answer = await this.llm.complete(interviewMessages(detail, topic, merged));
         this.db
           .prepare(
             `INSERT INTO interview_transcripts (id, session_id, persona_uuid, order_idx, status, content)
@@ -355,7 +354,7 @@ export class InterviewService implements OnModuleInit {
       error: s.error,
       phase: this.phaseOf(s, interviewed, picksRaw.length),
       picks,
-      questions: s.questions_json ? JSON.parse(s.questions_json) : [],
+      questions: s.questions_json ? normalizeQuestions(JSON.parse(s.questions_json), picksRaw.length || 3).common : [],
       transcripts,
       report: s.report_md || null,
       interviewed,
