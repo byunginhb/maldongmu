@@ -18,6 +18,8 @@ interface UserRow {
   conversations: number;
   messages: number;
   tokens: number;
+  interviewLimit?: number;
+  interviewUsed?: number;
 }
 interface UserConv {
   id: string;
@@ -33,7 +35,7 @@ interface UserConv {
   tokens: number;
 }
 interface UserDetail {
-  user: { id: string; type: string; nickname: string | null; email: string | null; createdAt: string };
+  user: { id: string; type: string; nickname: string | null; email: string | null; createdAt: string; interviewLimit?: number; interviewUsed?: number };
   conversations: UserConv[];
 }
 interface FeedbackRow {
@@ -72,12 +74,22 @@ export default function AdminPage() {
   const [convDetail, setConvDetail] = useState<ConvDetail | null>(null);
   const [feedback, setFeedback] = useState<FeedbackRow[]>([]);
   const [limitInputs, setLimitInputs] = useState<Record<string, string>>({});
+  const [userType, setUserType] = useState("");
+  const [ivInputs, setIvInputs] = useState<Record<string, string>>({});
 
   const bumpLimit = async (userId: string) => {
     const v = Number(limitInputs[userId]);
     if (!v) return;
     await adminPost(`/users/${encodeURIComponent(userId)}/limit`, { limit: v });
     setFeedback(await adminGet<FeedbackRow[]>("/feedback"));
+  };
+
+  const bumpInterview = async (userId: string) => {
+    const v = Number(ivInputs[userId]);
+    if (Number.isNaN(v)) return;
+    await adminPost(`/users/${encodeURIComponent(userId)}/interview-limit`, { limit: v });
+    setUserDetail(await adminGet<UserDetail>(`/users/${encodeURIComponent(userId)}`));
+    loadUsers(userPage, userType);
   };
 
   const openUser = async (id: string) => {
@@ -88,11 +100,12 @@ export default function AdminPage() {
     setConvDetail(await adminGet<ConvDetail>(`/conversations/${id}`));
   };
 
-  const loadUsers = useCallback(async (page: number) => {
-    const u = await adminGet<{ rows: UserRow[]; total: number }>(`/users?page=${page}`);
+  const loadUsers = useCallback(async (page: number, type: string) => {
+    const u = await adminGet<{ rows: UserRow[]; total: number }>(`/users?page=${page}${type ? `&type=${type}` : ""}`);
     setUsers(u.rows);
     setUserTotal(u.total);
     setUserPage(page);
+    setUserType(type);
   }, []);
 
   const loadAll = useCallback(async () => {
@@ -236,13 +249,25 @@ export default function AdminPage() {
       </div>
 
       <h2 className="dot-title" style={{ marginBottom: 12 }}>사용자</h2>
+      <div className="chip-row" style={{ marginBottom: 8 }}>
+        {[
+          { val: "", label: "전체" },
+          { val: "google", label: "구글" },
+          { val: "kakao", label: "카카오" },
+          { val: "guest", label: "게스트" },
+        ].map((t) => (
+          <button key={t.val} className={`chip ${userType === t.val ? "on" : ""}`} onClick={() => loadUsers(1, t.val)}>
+            {t.label}
+          </button>
+        ))}
+      </div>
       <p className="meta" style={{ margin: "0 0 8px" }}>
-        가입 유저와 대화 있는 게스트만 · 총 {n(userTotal)}명 · 행을 누르면 대화 내역을 볼 수 있어요.
+        총 {n(userTotal)}명 · 행을 누르면 대화 내역과 인터뷰 크레딧을 볼 수 있어요.
       </p>
       <div style={{ overflowX: "auto" }}>
         <table className="admin-table">
           <thead>
-            <tr><th>ID</th><th>유형</th><th>닉네임</th><th>대화방</th><th>메시지</th><th>토큰</th><th>가입일</th></tr>
+            <tr><th>ID</th><th>유형</th><th>닉네임</th><th>대화방</th><th>메시지</th><th>인터뷰</th><th>토큰</th><th>가입일</th></tr>
           </thead>
           <tbody>
             {users.map((u) => (
@@ -256,6 +281,7 @@ export default function AdminPage() {
                 <td>{u.nickname || u.email || "-"}</td>
                 <td>{n(u.conversations)}</td>
                 <td>{n(u.messages)}</td>
+                <td>{n(u.interviewUsed)}/{u.interviewLimit ?? 2}</td>
                 <td>{n(u.tokens)}</td>
                 <td>{u.createdAt?.slice(0, 16)}</td>
               </tr>
@@ -269,7 +295,7 @@ export default function AdminPage() {
           <button
             className="btn-ghost"
             style={{ height: 36, padding: "0 14px" }}
-            onClick={() => loadUsers(userPage - 1)}
+            onClick={() => loadUsers(userPage - 1, userType)}
             disabled={userPage <= 1}
           >
             이전
@@ -278,7 +304,7 @@ export default function AdminPage() {
           <button
             className="btn-ghost"
             style={{ height: 36, padding: "0 14px" }}
-            onClick={() => loadUsers(userPage + 1)}
+            onClick={() => loadUsers(userPage + 1, userType)}
             disabled={userPage >= Math.ceil(userTotal / 30)}
           >
             다음
@@ -294,6 +320,24 @@ export default function AdminPage() {
           <p className="meta" style={{ margin: "0 0 12px" }}>
             {userDetail.user?.type} · 가입 {userDetail.user?.createdAt?.slice(0, 10)} · 대화방 {userDetail.conversations.length}개
           </p>
+          <div className="card" style={{ padding: "12px 14px", marginBottom: 16, alignItems: "center", gap: 10 }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p style={{ margin: 0, fontWeight: 600 }}>이웃 인터뷰 크레딧</p>
+              <p className="meta" style={{ margin: "2px 0 0" }}>
+                사용 {n(userDetail.user?.interviewUsed)} / 한도 {userDetail.user?.interviewLimit ?? 2}
+              </p>
+            </div>
+            <input
+              type="number"
+              value={ivInputs[userDetail.user.id] ?? ""}
+              onChange={(e) => setIvInputs((s) => ({ ...s, [userDetail.user.id]: e.target.value }))}
+              placeholder="새 한도"
+              style={{ width: 80, height: 36, border: "1px solid var(--line)", borderRadius: 10, padding: "0 10px", background: "var(--cream)", color: "var(--brown)", outline: "none" }}
+            />
+            <button className="btn-ghost" style={{ height: 36, padding: "0 14px", flexShrink: 0 }} onClick={() => bumpInterview(userDetail.user.id)}>
+              부여
+            </button>
+          </div>
           {userDetail.conversations.length === 0 && (
             <p className="empty" style={{ padding: "12px 0" }}>아직 대화가 없어요.</p>
           )}

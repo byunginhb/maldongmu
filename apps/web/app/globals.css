@@ -372,3 +372,48 @@ h2.dot-title { font-size: 18px; margin: 0; }
 @media (min-width: 768px) { .stat-grid { grid-template-columns: repeat(4, 1fr); } }
 .stat-card { background: var(--paper); border: 1px solid var(--line); border-radius: 16px; padding: 14px 16px; }
 .stat-card b { font-size: 20px; display: block; }
+
+/* ---------- 이웃 인터뷰 (페르소나 설문조사) ---------- */
+.iv-banner { display: flex; align-items: center; gap: 14px; width: 100%; text-align: left; background: var(--paper); border: 1px solid var(--line); border-radius: 16px; padding: 16px; margin-bottom: 32px; cursor: pointer; font-family: inherit; }
+.iv-banner:active { background: var(--sand); }
+.iv-banner-faces { display: flex; flex-shrink: 0; }
+.iv-banner-faces span { width: 30px; height: 30px; border-radius: 8px; overflow: hidden; margin-left: -9px; border: 2px solid var(--paper); display: inline-flex; }
+.iv-banner-faces span:first-child { margin-left: 0; }
+.iv-banner-arrow { margin-left: auto; color: var(--brown-soft); font-size: 18px; }
+
+.iv-steps { list-style: none; margin: 20px 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.iv-step { display: flex; align-items: center; gap: 10px; padding: 7px 0; color: var(--brown-soft); font-size: 14px; }
+.iv-step-dot { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--line); flex-shrink: 0; display: grid; place-items: center; font-size: 11px; line-height: 1; }
+.iv-step.done { color: var(--brown); }
+.iv-step.done .iv-step-dot { background: var(--green); border-color: var(--green); color: #fff; }
+.iv-step.on { color: var(--brown); font-weight: 600; }
+.iv-step.on .iv-step-dot { border-color: var(--coral); animation: iv-pulse 1.1s ease-in-out infinite; }
+@keyframes iv-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.28); } }
+
+.iv-bar { height: 6px; background: var(--sand); border-radius: 99px; overflow: hidden; margin: 8px 0 16px; }
+.iv-bar > i { display: block; height: 100%; background: var(--coral); border-radius: 99px; transition: width 0.4s ease; }
+
+.iv-pick-reason { color: var(--brown-soft); font-size: 13px; margin: 4px 0 14px; padding-left: 2px; }
+
+.iv-block { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; margin-bottom: 12px; }
+.iv-block.pending { opacity: 0.55; }
+.iv-block-head { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+.iv-block-head .who { font-weight: 600; font-size: 14px; }
+.iv-block-head .tag { margin-left: auto; font-size: 12px; color: var(--brown-soft); }
+.iv-block-head .tag.done { color: var(--green); }
+.iv-answer { white-space: pre-wrap; font-size: 15px; }
+.iv-nonverbal { font-style: italic; color: var(--brown); opacity: 0.72; }
+
+.iv-report h3 { font-size: 15px; font-weight: 700; margin: 20px 0 6px; padding-left: 9px; border-left: 3px solid var(--coral); }
+.iv-report ul { margin: 6px 0; padding-left: 18px; }
+.iv-report li { margin: 3px 0; }
+.iv-report p { margin: 7px 0; }
+.iv-report .iv-disclaimer { font-size: 12px; color: var(--brown-soft); margin-top: 18px; }
+.iv-quote { border-left: 3px solid var(--coral); background: var(--sand); border-radius: 0 10px 10px 0; padding: 10px 14px; margin: 10px 0; }
+
+.iv-lock { position: relative; max-height: 220px; overflow: hidden; }
+.iv-lock-fade { position: absolute; inset: 0; background: linear-gradient(to bottom, transparent 30%, var(--cream) 92%); display: flex; align-items: flex-end; justify-content: center; padding-bottom: 8px; }
+.iv-lock-fade span { color: var(--brown-soft); font-size: 13px; }
+.iv-sample-tag { display: inline-block; font-size: 11px; color: var(--brown-soft); border: 1px solid var(--line); border-radius: 99px; padding: 2px 8px; margin-bottom: 10px; }
+
+@media (prefers-reduced-motion: reduce) { .iv-step.on .iv-step-dot { animation: none; } }

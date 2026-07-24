@@ -46,28 +46,37 @@ export class AdminController {
   }
 
   @Get("users")
-  users(@Query("page") page = "1") {
+  users(@Query("page") page = "1", @Query("type") type = "") {
     const limit = 30;
     const offset = (Number(page) - 1) * limit;
-    // 가입 유저(구글/카카오)는 항상, 게스트는 대화가 있는 경우만 노출
-    const where = `WHERE u.type != 'guest'
-                   OR EXISTS (SELECT 1 FROM conversations c WHERE c.user_id = u.id)`;
+    // type=google|kakao|guest 필터, 없으면 기존 기본(가입자 전체 + 대화 있는 게스트)
+    const params: any[] = [];
+    let where: string;
+    if (type === "google" || type === "kakao" || type === "guest") {
+      where = `WHERE u.type = ?`;
+      params.push(type);
+    } else {
+      where = `WHERE u.type != 'guest'
+               OR EXISTS (SELECT 1 FROM conversations c WHERE c.user_id = u.id)`;
+    }
     const { total } = this.db
       .prepare(`SELECT COUNT(*) as total FROM users u ${where}`)
-      .get() as { total: number };
+      .get(...params) as { total: number };
     // 조인 곱셈으로 tokens가 부풀지 않도록 서브쿼리로 집계
     const rows = this.db
       .prepare(
         `SELECT u.id, u.type, u.nickname, u.email, u.created_at as createdAt,
+                u.interview_limit as interviewLimit,
                 (SELECT COUNT(*) FROM conversations c WHERE c.user_id = u.id) as conversations,
                 (SELECT COUNT(*) FROM messages m JOIN conversations c ON c.id = m.conversation_id
                  WHERE c.user_id = u.id AND m.role = 'user') as messages,
+                (SELECT COUNT(*) FROM interview_sessions s WHERE s.user_id = u.id AND s.status != 'aborted') as interviewUsed,
                 (SELECT COALESCE(SUM(e.tokens), 0) FROM usage_events e WHERE e.user_id = u.id) as tokens
          FROM users u
          ${where}
          ORDER BY u.created_at DESC LIMIT ? OFFSET ?`,
       )
-      .all(limit, offset);
+      .all(...params, limit, offset);
     return { rows, total, page: Number(page), limit };
   }
 
@@ -77,6 +86,14 @@ export class AdminController {
     const limit = Math.max(0, Math.min(Number(body.limit) || 0, 1000000));
     this.db.prepare(`UPDATE users SET message_limit = ? WHERE id = ?`).run(limit, id);
     return { ok: true, limit };
+  }
+
+  /** 이웃 인터뷰 크레딧 부여 (기본 2, 어드민 증설). 양수·상한 클램프 */
+  @Post("users/:id/interview-limit")
+  setInterviewLimit(@Param("id") id: string, @Body() body: { limit: number }) {
+    const limit = Math.max(0, Math.min(Math.floor(Number(body.limit) || 0), 100));
+    this.db.prepare(`UPDATE users SET interview_limit = ? WHERE id = ?`).run(limit, id);
+    return { ok: true, interviewLimit: limit };
   }
 
   /** 피드백 목록 */
@@ -98,7 +115,11 @@ export class AdminController {
   @Get("users/:id")
   userDetail(@Param("id") id: string) {
     const user = this.db
-      .prepare(`SELECT id, type, nickname, email, created_at as createdAt FROM users WHERE id = ?`)
+      .prepare(
+        `SELECT id, type, nickname, email, created_at as createdAt, interview_limit as interviewLimit,
+                (SELECT COUNT(*) FROM interview_sessions s WHERE s.user_id = users.id AND s.status != 'aborted') as interviewUsed
+         FROM users WHERE id = ?`,
+      )
       .get(id);
     const conversations = this.db
       .prepare(

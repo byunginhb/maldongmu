@@ -86,6 +86,19 @@ export default function Home() {
         ))}
       </div>
 
+      <button className="iv-banner" onClick={() => router.push("/interview")}>
+        <span className="iv-banner-faces">
+          {HERO_SEEDS.slice(0, 4).map((s) => (
+            <span key={s.uuid}><Avatar uuid={s.uuid} sex={s.sex} age={s.age} size={30} radius={8} /></span>
+          ))}
+        </span>
+        <span style={{ minWidth: 0 }}>
+          <span className="dot-title" style={{ fontSize: 16, display: "block" }}>이웃 인터뷰</span>
+          <span className="meta">궁금한 주제를 던지면 이웃 3명이 답해드려요</span>
+        </span>
+        <span className="iv-banner-arrow">→</span>
+      </button>
+
       <h2 className="dot-title">오늘의 이웃</h2>
       <p className="meta" style={{ margin: "4px 0 14px" }}>매일 새로운 이웃을 소개해드려요</p>
       <div className="card-grid">

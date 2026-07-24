@@ -60,6 +60,36 @@ export class DbService implements OnModuleDestroy {
         content TEXT NOT NULL,
         created_at TEXT NOT NULL DEFAULT (datetime('now'))
       );
+      -- 이웃 인터뷰(페르소나 설문조사) 세션. 세션 행 = 크레딧 단위.
+      CREATE TABLE IF NOT EXISTS interview_sessions (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL REFERENCES users(id),
+        status TEXT NOT NULL DEFAULT 'active',        -- active | done | failed | aborted
+        input_kind TEXT NOT NULL,                     -- text | url
+        input_raw TEXT NOT NULL,
+        source_url TEXT,
+        source_text TEXT,
+        topic TEXT,
+        picks_json TEXT,                              -- [{uuid,reason}] × 3
+        questions_json TEXT,                          -- ["...", ...] 5문항
+        report_md TEXT,
+        error TEXT,
+        retries INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+      CREATE INDEX IF NOT EXISTS idx_interview_user ON interview_sessions(user_id, created_at DESC);
+      -- 이웃별 인터뷰 전문 (완료 단위 저장 → 멱등 재개)
+      CREATE TABLE IF NOT EXISTS interview_transcripts (
+        id TEXT PRIMARY KEY,
+        session_id TEXT NOT NULL REFERENCES interview_sessions(id),
+        persona_uuid TEXT NOT NULL,
+        order_idx INTEGER NOT NULL,
+        status TEXT NOT NULL DEFAULT 'pending',        -- pending | done | failed
+        content TEXT NOT NULL DEFAULT '',
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_interview_tr ON interview_transcripts(session_id, persona_uuid);
     `);
     // 기존 DB 마이그레이션: 로그인 사용자 메시지 한도 (기본 100)
     try {
@@ -67,6 +97,14 @@ export class DbService implements OnModuleDestroy {
     } catch {
       /* 이미 있음 */
     }
+    // 이웃 인터뷰 크레딧 (기본 2, 어드민이 증설)
+    try {
+      this.db.exec(`ALTER TABLE users ADD COLUMN interview_limit INTEGER DEFAULT 2`);
+    } catch {
+      /* 이미 있음 */
+    }
+    // 인터뷰 시도 레이트리밋용 per-user 조회 인덱스 (환불불가 카운터)
+    this.db.exec(`CREATE INDEX IF NOT EXISTS idx_usage_user ON usage_events(user_id, event, created_at)`);
   }
 
   onModuleDestroy() {

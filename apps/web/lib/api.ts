@@ -53,6 +53,14 @@ export class RecommendLimitError extends Error {
   }
 }
 
+/** 이웃 인터뷰 크레딧 소진 */
+export class InterviewLimitError extends Error {
+  constructor() {
+    super("이웃 인터뷰는 계정당 2번 체험할 수 있어요");
+    this.name = "InterviewLimitError";
+  }
+}
+
 async function extract403(res: Response): Promise<never> {
   let code = "";
   try {
@@ -63,6 +71,7 @@ async function extract403(res: Response): Promise<never> {
   }
   if (code === "QUOTA_EXCEEDED") throw new QuotaExceededError();
   if (code === "RECOMMEND_LIMIT") throw new RecommendLimitError();
+  if (code === "INTERVIEW_LIMIT") throw new InterviewLimitError();
   throw new LoginRequiredError();
 }
 
@@ -169,6 +178,61 @@ export function recommendPersonas(concern: string, detail?: string): Promise<{ i
 /** 만나기 어려운 직업 대표 페르소나 목록 (공개) */
 export function getOccupations(): Promise<{ items: OccupationEntry[] }> {
   return apiGet("/personas/occupations");
+}
+
+/* ---------- 이웃 인터뷰 (페르소나 설문조사) ---------- */
+export interface InterviewPick extends PersonaCard {
+  reason: string;
+}
+export interface InterviewTranscript {
+  personaUuid: string;
+  order: number;
+  name: string;
+  occupation: string;
+  status: "pending" | "done" | "failed";
+  content: string;
+}
+export interface InterviewSnapshot {
+  id: string;
+  status: "active" | "done" | "failed" | "aborted";
+  inputKind: "text" | "url";
+  topic: string | null;
+  error: string | null;
+  phase: "reading" | "finding" | "questioning" | "interviewing" | "reporting" | "done" | "failed" | "aborted";
+  picks: InterviewPick[];
+  questions: string[];
+  transcripts: InterviewTranscript[];
+  report: string | null;
+  interviewed: number;
+  total: number;
+  createdAt: string;
+}
+export interface InterviewCredits {
+  used: number;
+  granted: number;
+  remaining: number;
+}
+export interface InterviewListItem {
+  id: string;
+  topic: string | null;
+  status: string;
+  inputKind: string;
+  createdAt: string;
+}
+
+/** 새 인터뷰 시작 (로그인 필수, 크레딧 소모 → InterviewLimitError) */
+export function createInterview(input: string, kind?: "text" | "url"): Promise<{ sessionId: string } & InterviewCredits> {
+  return apiPost("/interviews", { input, kind });
+}
+/** 진행 상황 스냅샷 (폴링) */
+export function getInterview(id: string): Promise<InterviewSnapshot> {
+  return apiGet(`/interviews/${id}`);
+}
+export function listInterviews(): Promise<InterviewListItem[]> {
+  return apiGet("/interviews");
+}
+export function getInterviewCredits(): Promise<InterviewCredits> {
+  return apiGet("/interviews/credits");
 }
 
 /* ---------- 어드민 ---------- */
