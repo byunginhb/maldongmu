@@ -436,6 +436,7 @@ h2.dot-title { font-size: 18px; margin: 0; }
 .iv-finding { margin: 0 0 10px; }
 .iv-finding b { display: block; }
 .iv-q { color: var(--brown-soft); font-size: 13px; font-weight: 600; margin: 12px 0 2px; }
+.iv-followup { color: var(--brown-soft); font-size: 13px; font-weight: 600; margin: 8px 0 2px 16px; }
 .iv-accordion { width: 100%; text-align: left; background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; margin-bottom: 10px; cursor: pointer; font-family: inherit; }
 .iv-accordion-head { display: flex; align-items: center; gap: 10px; }
 .iv-accordion .who { font-weight: 600; font-size: 14px; }

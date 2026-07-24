@@ -15,15 +15,26 @@ const STEPS = [
 const ORDER = ["reading", "finding", "questioning", "interviewing", "reporting", "done"];
 
 /** 답변 속 괄호 (표정·몸짓) 을 이탤릭으로 구분 */
-function renderAnswer(text: string): ReactNode[] {
-  const parts = text.split(/(\([^)]*\))/g);
-  return parts.map((p, i) =>
+function renderInline(text: string, keyBase: string): ReactNode[] {
+  return text.split(/(\([^)]*\))/g).map((p, i) =>
     p.startsWith("(") && p.endsWith(")") ? (
-      <i key={i} className="iv-nonverbal">{p}</i>
+      <i key={`${keyBase}-${i}`} className="iv-nonverbal">{p}</i>
     ) : (
-      <span key={i}>{p}</span>
+      <span key={`${keyBase}-${i}`}>{p}</span>
     ),
   );
+}
+
+/** 전사를 줄 단위로: 질문(Q.)·꼬리질문(↳)·답변을 구분해 렌더 */
+function renderAnswer(text: string): ReactNode[] {
+  const lines = text.split("\n");
+  return lines.map((line, i) => {
+    const t = line.trim();
+    if (!t) return <div key={i} style={{ height: 6 }} />;
+    if (t.startsWith("Q.")) return <p key={i} className="iv-q" style={{ margin: "10px 0 2px" }}>{t}</p>;
+    if (t.startsWith("↳")) return <p key={i} className="iv-followup">{t}</p>;
+    return <p key={i} style={{ margin: "0 0 4px" }}>{renderInline(line, String(i))}</p>;
+  });
 }
 
 /** 아주 가벼운 마크다운 렌더 (## 제목, - 목록, **굵게**, 문단) */
