@@ -5,6 +5,7 @@ import Link from "next/link";
 import { apiGet, clearToken, socialLoginUrl } from "../../lib/api";
 import Avatar from "../../components/Avatar";
 import DotDivider from "../../components/DotDivider";
+import { SkeletonCard } from "../../components/ui";
 
 interface ConvItem {
   id: string;
@@ -79,7 +80,7 @@ export default function MePage() {
       )}
 
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-        {convs === null && Array.from({ length: 3 }).map((_, i) => <div key={i} className="skeleton" />)}
+        {convs === null && Array.from({ length: 3 }).map((_, i) => <SkeletonCard key={i} />)}
         {convs?.map((c) => (
           <Link key={c.id} href={`/chat/${c.id}`} className="card">
             <Avatar uuid={c.personaUuid} sex={c.sex} age={c.age} />

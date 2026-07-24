@@ -8,6 +8,7 @@ import { apiGet } from "../lib/api";
 import PersonaCard from "../components/PersonaCard";
 import DotDivider from "../components/DotDivider";
 import Avatar from "../components/Avatar";
+import { SkeletonCard } from "../components/ui";
 
 // 헤더 장식용 아바타 시드 (고정 — 서버/클라 렌더 일치)
 const HERO_SEEDS = [
@@ -90,7 +91,7 @@ export default function Home() {
       <p className="meta" style={{ margin: "4px 0 14px" }}>매일 새로운 이웃을 소개해드려요</p>
       <div className="card-grid">
         {featured === null
-          ? Array.from({ length: 4 }).map((_, i) => <div key={i} className="skeleton" />)
+          ? Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)
           : featured.map((p) => <PersonaCard key={p.uuid} p={p} />)}
       </div>
 

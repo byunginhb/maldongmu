@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { PersonaCard as Card } from "@maldongmu/shared";
 import { apiGet } from "../../lib/api";
 import PersonaCard from "../../components/PersonaCard";
+import { SkeletonCard } from "../../components/ui";
 
 // DB의 province 실제 값 기준
 const PROVINCES = [
@@ -132,7 +133,7 @@ export default function SearchPage() {
         {items.map((p) => (
           <PersonaCard key={p.uuid} p={p} />
         ))}
-        {loading && Array.from({ length: 4 }).map((_, i) => <div key={`s${i}`} className="skeleton" />)}
+        {loading && Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={`s${i}`} />)}
       </div>
 
       {searched && !loading && items.length === 0 && (
