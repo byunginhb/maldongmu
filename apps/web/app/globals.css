@@ -374,13 +374,6 @@ h2.dot-title { font-size: 18px; margin: 0; }
 .stat-card b { font-size: 20px; display: block; }
 
 /* ---------- 이웃 인터뷰 (페르소나 설문조사) ---------- */
-.iv-banner { display: flex; align-items: center; gap: 14px; width: 100%; text-align: left; background: var(--paper); border: 1px solid var(--line); border-radius: 16px; padding: 16px; margin-bottom: 32px; cursor: pointer; font-family: inherit; }
-.iv-banner:active { background: var(--sand); }
-.iv-banner-faces { display: flex; flex-shrink: 0; }
-.iv-banner-faces span { width: 30px; height: 30px; border-radius: 8px; overflow: hidden; margin-left: -9px; border: 2px solid var(--paper); display: inline-flex; }
-.iv-banner-faces span:first-child { margin-left: 0; }
-.iv-banner-arrow { margin-left: auto; color: var(--brown-soft); font-size: 18px; }
-
 .iv-steps { list-style: none; margin: 20px 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
 .iv-step { display: flex; align-items: center; gap: 10px; padding: 7px 0; color: var(--brown-soft); font-size: 14px; }
 .iv-step-dot { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--line); flex-shrink: 0; display: grid; place-items: center; font-size: 11px; line-height: 1; }

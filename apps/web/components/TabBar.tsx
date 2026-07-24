@@ -36,11 +36,21 @@ const ChatIcon = ({ on }: { on: boolean }) => (
     />
   </svg>
 );
+/* 설문 클립보드 — 인터뷰 */
+const InterviewIcon = ({ on }: { on: boolean }) => (
+  <svg width="20" height="20" viewBox="0 0 16 16" shapeRendering="crispEdges" aria-hidden>
+    <path
+      d="M6 1h4v1H6zM3 2h10v1H3zM3 2h1v13H3zM12 2h1v13H12zM3 14h10v1H3zM5 5h6v1H5zM5 8h6v1H5zM5 11h4v1H5z"
+      fill={on ? "var(--coral)" : "var(--brown-soft)"}
+    />
+  </svg>
+);
 
 const TABS = [
   { href: "/", label: "홈", Icon: HomeIcon },
   { href: "/search", label: "검색", Icon: SearchIcon },
   { href: "/meet", label: "만남", Icon: MeetIcon },
+  { href: "/interview", label: "인터뷰", Icon: InterviewIcon },
   { href: "/me", label: "내 대화", Icon: ChatIcon },
 ];
 
