@@ -19,6 +19,24 @@ interface Me {
 
 const STATUS_LABEL: Record<string, string> = { active: "진행 중", done: "완료", failed: "실패", aborted: "취소됨" };
 
+/** 지난 인터뷰 목록 — 입력 화면·크레딧 소진 화면 양쪽에서 공유 */
+function PastList({ past, onOpen }: { past: InterviewListItem[]; onOpen: (id: string) => void }) {
+  if (past.length === 0) return null;
+  return (
+    <>
+      <h2 className="dot-title" style={{ marginTop: 32 }}>지난 인터뷰</h2>
+      <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 8 }}>
+        {past.map((p) => (
+          <button key={p.id} className="iv-block" style={{ textAlign: "left", cursor: "pointer", marginBottom: 0 }} onClick={() => onOpen(p.id)}>
+            <p style={{ margin: 0, fontWeight: 600 }}>{p.topic || "이웃 인터뷰"}</p>
+            <p className="meta" style={{ margin: "2px 0 0" }}>{STATUS_LABEL[p.status] || p.status} · {p.createdAt?.slice(0, 10)}</p>
+          </button>
+        ))}
+      </div>
+    </>
+  );
+}
+
 /** 괄호 (표정·몸짓) 을 이탤릭으로 구분 */
 function renderNv(text: string): ReactNode[] {
   return text.split(/(\([^)]*\))/g).map((p, i) =>
@@ -240,10 +258,13 @@ export default function InterviewLandingPage() {
           </div>
         </>
       ) : limited || (credits && credits.remaining <= 0) ? (
-        <div className="iv-block">
-          <p style={{ marginTop: 0 }}>이웃 인터뷰는 계정당 2번 체험할 수 있어요. 더 해보고 싶다면 피드백을 남겨주세요 — 확인하고 열어드릴게요.</p>
-          <button className="btn-ghost" onClick={() => router.push("/me")}>피드백 남기기</button>
-        </div>
+        <>
+          <div className="iv-block">
+            <p style={{ marginTop: 0 }}>이웃 인터뷰는 계정당 2번 체험할 수 있어요. 더 해보고 싶다면 피드백을 남겨주세요 — 확인하고 열어드릴게요.</p>
+            <button className="btn-ghost" onClick={() => router.push("/me")}>피드백 남기기</button>
+          </div>
+          <PastList past={past} onOpen={(id) => router.push(`/interview/${id}`)} />
+        </>
       ) : (
         <>
           {credits && (
@@ -267,19 +288,7 @@ export default function InterviewLandingPage() {
           </button>
           <p className="meta" style={{ textAlign: "center", margin: "10px 0 0" }}>이웃 3명이 각자의 눈으로 답해드려요</p>
 
-          {past.length > 0 && (
-            <>
-              <h2 className="dot-title" style={{ marginTop: 32 }}>지난 인터뷰</h2>
-              <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 8 }}>
-                {past.map((p) => (
-                  <button key={p.id} className="iv-block" style={{ textAlign: "left", cursor: "pointer", marginBottom: 0 }} onClick={() => router.push(`/interview/${p.id}`)}>
-                    <p style={{ margin: 0, fontWeight: 600 }}>{p.topic || "이웃 인터뷰"}</p>
-                    <p className="meta" style={{ margin: "2px 0 0" }}>{STATUS_LABEL[p.status] || p.status} · {p.createdAt?.slice(0, 10)}</p>
-                  </button>
-                ))}
-              </div>
-            </>
-          )}
+          <PastList past={past} onOpen={(id) => router.push(`/interview/${id}`)} />
         </>
       )}
 
