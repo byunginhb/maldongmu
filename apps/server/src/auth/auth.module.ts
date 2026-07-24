@@ -7,9 +7,13 @@ import { OauthService } from "./oauth.service";
 
 @Module({
   imports: [
-    JwtModule.register({
-      secret: process.env.JWT_SECRET || "dev-secret",
-      signOptions: { expiresIn: "180d" },
+    // registerAsync: 팩토리가 DI 단계(ConfigModule의 .env 로드 후)에 실행돼 실제 JWT_SECRET을 읽는다.
+    // register()는 import 시점(ConfigModule.forRoot 전)에 평가돼 항상 dev-secret으로 폴백되던 버그가 있었음.
+    JwtModule.registerAsync({
+      useFactory: () => ({
+        secret: process.env.JWT_SECRET || "dev-secret",
+        signOptions: { expiresIn: "180d" },
+      }),
     }),
   ],
   controllers: [AuthController],
