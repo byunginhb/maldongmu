@@ -407,3 +407,22 @@ h2.dot-title { font-size: 18px; margin: 0; }
 .iv-sample-tag { display: inline-block; font-size: 11px; color: var(--brown-soft); border: 1px solid var(--line); border-radius: 99px; padding: 2px 8px; margin-bottom: 10px; }
 
 @media (prefers-reduced-motion: reduce) { .iv-step.on .iv-step-dot { animation: none; } }
+
+/* 인터뷰 리포트 — 실무 리포트 서식용 보강 */
+.iv-meta-row { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 13px; color: var(--brown-soft); margin: 2px 0 16px; }
+.iv-badge { display: inline-block; font-size: 11px; font-weight: 600; border-radius: 99px; padding: 1px 8px; border: 1px solid currentColor; }
+.iv-badge.pos { color: var(--green); }
+.iv-badge.neu { color: var(--brown-soft); }
+.iv-badge.neg { color: var(--red); }
+.iv-report h4 { font-size: 13px; font-weight: 700; margin: 12px 0 4px; }
+.iv-report h4.pos { color: var(--green); }
+.iv-report h4.neg { color: var(--red); }
+.iv-finding { margin: 0 0 10px; }
+.iv-finding b { display: block; }
+.iv-q { color: var(--brown-soft); font-size: 13px; font-weight: 600; margin: 12px 0 2px; }
+.iv-accordion { width: 100%; text-align: left; background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; margin-bottom: 10px; cursor: pointer; font-family: inherit; }
+.iv-accordion-head { display: flex; align-items: center; gap: 10px; }
+.iv-accordion .who { font-weight: 600; font-size: 14px; }
+.iv-accordion .chev { margin-left: auto; color: var(--brown-soft); font-size: 12px; transition: transform 0.15s ease; }
+.iv-accordion.open .chev { transform: rotate(90deg); }
+.iv-accordion-sum { font-size: 13px; color: var(--brown-soft); margin: 8px 0 0; }
