@@ -50,7 +50,7 @@ const TABS = [
   { href: "/search", label: "검색", Icon: SearchIcon },
   { href: "/meet", label: "만남", Icon: MeetIcon },
   { href: "/interview", label: "인터뷰", Icon: InterviewIcon },
-  { href: "/me", label: "수첩", Icon: NotebookIcon },
+  { href: "/me", label: "이웃 수첩", Icon: NotebookIcon },
 ];
 
 export default function TabBar() {

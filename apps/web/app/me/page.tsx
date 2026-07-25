@@ -144,6 +144,11 @@ export default function MePage() {
               {RARE.has(c.occupation) && <span className="notebook-rare">귀한 이웃</span>}
             </Link>
           ))}
+          <Link href="/" className="notebook-cell" aria-label="새 이웃 만나러 가기">
+            <span className="notebook-add">?</span>
+            <p className="notebook-name" style={{ color: "var(--brown-soft)" }}>새 이웃</p>
+            <p className="notebook-job">추가해볼까요?</p>
+          </Link>
         </div>
       )}
 

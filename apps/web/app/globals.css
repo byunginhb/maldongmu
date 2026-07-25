@@ -453,3 +453,5 @@ h2.dot-title { font-size: 18px; margin: 0; }
 .notebook-name { margin: 2px 0 0; font-size: 13px; font-weight: 600; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .notebook-job { margin: 0; font-size: 11px; color: var(--brown-soft); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .notebook-rare { font-size: 10px; color: var(--brown-soft); background: var(--sand); border-radius: 99px; padding: 1px 7px; margin-top: 1px; }
+.notebook-add { width: 64px; height: 64px; border-radius: 14px; border: 2px dashed var(--line); display: grid; place-items: center; font-size: 26px; color: var(--brown-soft); }
+.notebook-cell:active .notebook-add { border-color: var(--coral); color: var(--coral); }

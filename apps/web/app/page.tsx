@@ -98,8 +98,8 @@ export default function Home() {
       <p className="meta" style={{ margin: "4px 0 14px" }}>매일 새로운 이웃을 소개해드려요</p>
       <div className="card-grid">
         {featured === null
-          ? Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)
-          : featured.map((p) => <PersonaCard key={p.uuid} p={p} />)}
+          ? Array.from({ length: 5 }).map((_, i) => <SkeletonCard key={i} />)
+          : featured.slice(0, 5).map((p) => <PersonaCard key={p.uuid} p={p} />)}
       </div>
 
       <DotDivider />
@@ -119,7 +119,7 @@ export default function Home() {
           <h2 className="dot-title">요즘 인기</h2>
           <p className="meta" style={{ margin: "2px 0 12px" }}>이번 주에 대화가 많았던 이웃들이에요</p>
           <div className="card-grid">
-            {popular.slice(0, 6).map((p) => (
+            {popular.slice(0, 3).map((p) => (
               <PersonaCard key={p.uuid} p={p} />
             ))}
           </div>
