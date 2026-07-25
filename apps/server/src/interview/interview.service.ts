@@ -159,7 +159,7 @@ export class InterviewService implements OnModuleInit {
       // 3) 질문지: 조사 목적에 충실한 공통 3 + 페르소나별 맞춤 2 (한 콜)
       if (!s.questions_json) {
         const pickCards = picks.map((pk) => this.personas.card(pk.uuid));
-        const parsed = parseJsonLoose(await this.llm.complete([{ role: "user", content: questionsPrompt(topic, pickCards) }]));
+        const parsed = parseJsonLoose(await this.llm.complete([{ role: "user", content: questionsPrompt(topic, pickCards, subject) }]));
         const q = normalizeQuestions(parsed, picks.length);
         this.db.prepare(`UPDATE interview_sessions SET questions_json = ?, updated_at = datetime('now') WHERE id = ?`).run(JSON.stringify(q), id);
         s = this.session(id);
@@ -175,7 +175,7 @@ export class InterviewService implements OnModuleInit {
         if (done) continue;
         const detail = this.personas.detail(picks[i].uuid);
         const merged = [...q.common, ...q.tailored[i]];
-        const answer = await this.llm.complete(interviewMessages(detail, topic, merged));
+        const answer = await this.llm.complete(interviewMessages(detail, topic, merged, subject));
         this.db
           .prepare(
             `INSERT INTO interview_transcripts (id, session_id, persona_uuid, order_idx, status, content)
