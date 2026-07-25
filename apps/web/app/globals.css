@@ -123,6 +123,16 @@ h2.dot-title { font-size: 18px; margin: 0; }
   .card-grid { grid-template-columns: 1fr 1fr; }
 }
 
+/* 히어로 CTA — "누굴 만날지 모르는" 설렘 강조 */
+.hero-cta { text-align: center; }
+.hero-cta-faces { display: inline-flex; align-items: center; justify-content: center; margin-bottom: 12px; }
+.hero-cta-faces > span { margin-left: -8px; width: 36px; height: 36px; border: 2px solid var(--cream); border-radius: 12px; overflow: hidden; display: inline-flex; align-items: center; justify-content: center; background: var(--sand); }
+.hero-cta-faces > span:first-child { margin-left: 0; }
+.hero-q { font-size: 18px; font-weight: 700; color: var(--brown-soft); }
+.btn-hero { height: 54px; font-size: 16px; gap: 8px; animation: hero-breathe 2.8s ease-in-out infinite; }
+@keyframes hero-breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.018); } }
+@media (prefers-reduced-motion: reduce) { .btn-hero { animation: none; } }
+
 /* 버튼 */
 .btn-cta {
   display: flex;

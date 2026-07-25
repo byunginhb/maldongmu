@@ -25,6 +25,13 @@ const HERO_MESSAGES = [
   <>스무 살의 고민부터 일흔의 지혜까지 — <b>다른 세대와의 대화</b>가 여기선 어렵지 않아요</>,
 ];
 
+// 히어로 CTA 위 "누굴 만날지 모르는" 미스터리 얼굴 (고정 시드)
+const MEET_FACES = [
+  { uuid: "meet-a", sex: "여자", age: 31 },
+  { uuid: "meet-b", sex: "남자", age: 58 },
+  { uuid: "meet-c", sex: "여자", age: 24 },
+];
+
 // 고민 기반 추천 진입 칩
 const CONCERNS = ["일·직장", "연애·썸", "가족", "친구·관계", "돈·미래", "건강·체력", "공부·진로", "외로움·수다"];
 
@@ -87,12 +94,29 @@ export default function Home() {
       </header>
 
       {/* 히어로: 첫 화면에서 바로 대화 진입 (화면당 coral CTA 1개) */}
-      <button className="btn-cta" onClick={meetRandom} disabled={randomLoading}>
-        {randomLoading ? "찾는 중..." : "아무나 만나기"}
-      </button>
-      <p className="meta" style={{ textAlign: "center", margin: "8px 0 28px" }}>
-        버튼 하나로 지금 바로 이야기가 시작돼요
-      </p>
+      <div className="hero-cta">
+        <div className="hero-cta-faces" aria-hidden>
+          {MEET_FACES.map((f) => (
+            <span key={f.uuid}><Avatar uuid={f.uuid} sex={f.sex} age={f.age} size={36} radius={11} /></span>
+          ))}
+          <span className="hero-q">?</span>
+        </div>
+        <button className="btn-cta btn-hero" onClick={meetRandom} disabled={randomLoading}>
+          {randomLoading ? (
+            "인연을 찾는 중..."
+          ) : (
+            <>
+              <svg width="17" height="17" viewBox="0 0 16 16" shapeRendering="crispEdges" aria-hidden>
+                <path d="M7 2h2v5H7zM7 9h2v5H7zM2 7h5v2H2zM9 7h5v2H9z" fill="#fff" />
+              </svg>
+              오늘의 인연 만나기
+            </>
+          )}
+        </button>
+        <p className="meta" style={{ textAlign: "center", margin: "10px 0 30px" }}>
+          어떤 이웃을 만날지는 눌러봐야 알아요
+        </p>
+      </div>
 
       <h2 className="dot-title">오늘의 이웃</h2>
       <p className="meta" style={{ margin: "4px 0 14px" }}>매일 새로운 이웃을 소개해드려요</p>
