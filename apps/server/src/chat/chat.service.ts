@@ -69,6 +69,7 @@ export class ChatService {
       .prepare(
         `SELECT c.id, c.persona_uuid as personaUuid, c.title, c.created_at as createdAt,
                 c.last_message_at as lastMessageAt,
+                (SELECT COUNT(*) FROM messages m WHERE m.conversation_id = c.id AND m.role = 'user') as userMsgs,
                 p.name, p.age, p.sex, p.occupation, p.one_liner as oneLiner
          FROM conversations c LEFT JOIN personas p ON p.uuid = c.persona_uuid
          WHERE c.user_id = ? ORDER BY c.last_message_at DESC`,

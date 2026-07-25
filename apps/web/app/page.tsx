@@ -86,15 +86,13 @@ export default function Home() {
         </div>
       </header>
 
-      <h2 className="dot-title">요즘 이런 고민이 있다면</h2>
-      <p className="meta" style={{ margin: "4px 0 14px" }}>골라주시면 어울리는 말동무를 찾아드려요</p>
-      <div className="chip-wrap" style={{ marginBottom: 32 }}>
-        {CONCERNS.map((c) => (
-          <button key={c} className="chip" onClick={() => router.push(`/recommend?concern=${encodeURIComponent(c)}`)}>
-            {c}
-          </button>
-        ))}
-      </div>
+      {/* 히어로: 첫 화면에서 바로 대화 진입 (화면당 coral CTA 1개) */}
+      <button className="btn-cta" onClick={meetRandom} disabled={randomLoading}>
+        {randomLoading ? "찾는 중..." : "아무나 만나기"}
+      </button>
+      <p className="meta" style={{ textAlign: "center", margin: "8px 0 28px" }}>
+        버튼 하나로 지금 바로 이야기가 시작돼요
+      </p>
 
       <h2 className="dot-title">오늘의 이웃</h2>
       <p className="meta" style={{ margin: "4px 0 14px" }}>매일 새로운 이웃을 소개해드려요</p>
@@ -106,6 +104,16 @@ export default function Home() {
 
       <DotDivider />
 
+      <h2 className="dot-title">요즘 이런 고민이 있다면</h2>
+      <p className="meta" style={{ margin: "4px 0 14px" }}>골라주시면 어울리는 말동무를 찾아드려요</p>
+      <div className="chip-wrap" style={{ marginBottom: 32 }}>
+        {CONCERNS.map((c) => (
+          <button key={c} className="chip" onClick={() => router.push(`/recommend?concern=${encodeURIComponent(c)}`)}>
+            {c}
+          </button>
+        ))}
+      </div>
+
       {popular.length > 0 && (
         <>
           <h2 className="dot-title">요즘 인기</h2>
@@ -115,13 +123,8 @@ export default function Home() {
               <PersonaCard key={p.uuid} p={p} />
             ))}
           </div>
-          <DotDivider />
         </>
       )}
-
-      <button className="btn-cta" onClick={meetRandom} disabled={randomLoading}>
-        {randomLoading ? "찾는 중..." : "아무나 만나기"}
-      </button>
     </main>
   );
 }

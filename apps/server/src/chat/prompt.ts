@@ -14,6 +14,42 @@ function placeOf(p: { province?: string; district?: string }): string {
   return (p.district || p.province || "").replace("-", " ");
 }
 
+// province(DB 축약형 17종)별 사투리 힌트. 강도어를 문구에 못 박아 과적용 방지.
+// 광역시가 별도 값이라 접두 매칭 금지 — 17개 값을 전부 명시.
+const DIALECT: Record<string, string> = {
+  서울: "수도권 표준어로 지역 억양은 거의 없음",
+  경기: "수도권 표준어로 지역 억양은 거의 없음",
+  인천: "수도권 표준어로 지역 억양은 거의 없음",
+  강원: "강원도의 느릿하고 순한 억양을 아주 옅게",
+  충청남: "충청도의 느긋하게 끝을 늘이는 말씨를 아주 절제해서 살짝",
+  충청북: "충청도의 느긋하게 끝을 늘이는 말씨를 아주 절제해서 살짝",
+  대전: "충청도의 느긋하게 끝을 늘이는 말씨를 아주 절제해서 살짝",
+  세종: "충청도의 느긋하게 끝을 늘이는 말씨를 아주 절제해서 살짝",
+  전라남: "전라도의 정겨운 억양을 옅게(어미 남용 금지, 억양 위주)",
+  전북: "전라도의 정겨운 억양을 옅게(어미 남용 금지, 억양 위주)",
+  광주: "전라도의 정겨운 억양을 옅게(어미 남용 금지, 억양 위주)",
+  경상남: "경상도의 억양과 짧고 힘 있는 어조를 옅게(어미보다 억양 위주)",
+  경상북: "경상도의 억양과 짧고 힘 있는 어조를 옅게(어미보다 억양 위주)",
+  부산: "경상도의 억양과 짧고 힘 있는 어조를 옅게(어미보다 억양 위주)",
+  대구: "경상도의 억양과 짧고 힘 있는 어조를 옅게(어미보다 억양 위주)",
+  울산: "경상도의 억양과 짧고 힘 있는 어조를 옅게(어미보다 억양 위주)",
+  제주: "제주 말은 워낙 어려우니 표준어를 기본으로, 아주 가끔 '~수다','~마씸' 정도만 옅게",
+};
+function dialectHint(province?: string): string {
+  return DIALECT[(province || "").trim()] || "표준어";
+}
+
+// 나이대별 어휘·말의 호흡.
+function registerHint(age?: number): string {
+  const a = Number(age) || 0;
+  if (a >= 70) return "예스럽고 느린 말씨에 외래어는 거의 쓰지 않음";
+  if (a >= 55) return "원숙하고 정감 있는 말씨, 외래어는 절제";
+  if (a >= 40) return "생활에 밴 담백하고 편안한 말씨";
+  if (a >= 27) return "또래에게 하듯 편안하고 무던한 말씨";
+  if (a >= 20) return "요즘 젊은 세대의 편안한 말씨에 외래어·줄임말이 자연스러움";
+  return "학생다운 밝고 솔직한 말씨";
+}
+
 export function buildSystemPrompt(p: any): string {
   return `${BASE_PROMPT}
 
@@ -21,6 +57,7 @@ export function buildSystemPrompt(p: any): string {
 - 이름: ${p.name} (${p.sex}, ${p.age}세)
 - 사는 곳: ${placeOf(p)}
 - 직업: ${p.occupation}
+- 말투: (한국어로 이야기할 때) ${dialectHint(p.province)}. ${registerHint(p.age)}. 대화 내내 이 말투를 일정하게 유지.
 - 소개: ${p.one_liner ?? p.oneLiner ?? ""}
 - 성격과 배경: ${p.cultural_background ?? ""}
 - 일: ${p.professional_persona ?? ""}
@@ -33,7 +70,7 @@ export function buildSystemPrompt(p: any): string {
 - 취미: ${p.hobbies_and_interests ?? ""}
 - 앞으로의 목표: ${p.career_goals_and_ambitions ?? ""}
 
-이제 위 인물로서, 말동무의 원칙에 따라 대화를 시작하세요.`;
+이제 위 인물로서, 특히 "말투"를 대화 내내 흐트러뜨리지 말고, 말동무의 원칙에 따라 대화를 시작하세요.`;
 }
 
 /**

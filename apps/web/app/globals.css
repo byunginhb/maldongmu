@@ -443,3 +443,13 @@ h2.dot-title { font-size: 18px; margin: 0; }
 .iv-accordion .chev { margin-left: auto; color: var(--brown-soft); font-size: 12px; transition: transform 0.15s ease; }
 .iv-accordion.open .chev { transform: rotate(90deg); }
 .iv-accordion-sum { font-size: 13px; color: var(--brown-soft); margin: 8px 0 0; }
+
+/* 이웃 수첩 (내 대화 컬렉션) */
+.notebook-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px 10px; }
+@media (min-width: 768px) { .notebook-grid { grid-template-columns: repeat(4, 1fr); } }
+.notebook-cell { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 5px; padding: 4px 2px; }
+.notebook-cell:active { transform: scale(0.96); }
+.notebook-cell .avatar { border-radius: 14px; overflow: hidden; }
+.notebook-name { margin: 2px 0 0; font-size: 13px; font-weight: 600; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.notebook-job { margin: 0; font-size: 11px; color: var(--brown-soft); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.notebook-rare { font-size: 10px; color: var(--brown-soft); background: var(--sand); border-radius: 99px; padding: 1px 7px; margin-top: 1px; }

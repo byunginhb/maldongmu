@@ -28,12 +28,11 @@ const MeetIcon = ({ on }: { on: boolean }) => (
     />
   </svg>
 );
-const ChatIcon = ({ on }: { on: boolean }) => (
+/* 수첩(노트) — 이웃 수첩 */
+const NotebookIcon = ({ on }: { on: boolean }) => (
   <svg width="20" height="20" viewBox="0 0 16 16" shapeRendering="crispEdges" aria-hidden>
-    <path
-      d="M3 2h10v1H3zM2 3h12v7H2zM3 10h4v1H3zM4 11h2v1H4zM4 12h1v1H4z"
-      fill={on ? "var(--coral)" : "var(--brown-soft)"}
-    />
+    <path d="M4 2h9v12H4z" fill={on ? "var(--coral)" : "var(--brown-soft)"} />
+    <path d="M6 2h1v12H6zM8 5h3v1H8zM8 8h3v1H8zM8 11h3v1H8z" fill="var(--paper)" />
   </svg>
 );
 /* 설문 클립보드 — 인터뷰 */
@@ -51,7 +50,7 @@ const TABS = [
   { href: "/search", label: "검색", Icon: SearchIcon },
   { href: "/meet", label: "만남", Icon: MeetIcon },
   { href: "/interview", label: "인터뷰", Icon: InterviewIcon },
-  { href: "/me", label: "내 대화", Icon: ChatIcon },
+  { href: "/me", label: "수첩", Icon: NotebookIcon },
 ];
 
 export default function TabBar() {
