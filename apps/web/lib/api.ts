@@ -107,6 +107,10 @@ export function apiPost<T>(path: string, body?: unknown): Promise<T> {
   return request<T>(path, { method: "POST", body: body ? JSON.stringify(body) : undefined });
 }
 
+export function apiDelete<T>(path: string): Promise<T> {
+  return request<T>(path, { method: "DELETE" });
+}
+
 /** 소셜 로그인 시작 — 서버가 OAuth로 리다이렉트. 현재(게스트) 토큰을 넘겨 이력 이관 */
 export function socialLoginUrl(provider: "google" | "kakao"): string {
   const t = getToken();
@@ -233,6 +237,9 @@ export function listInterviews(): Promise<InterviewListItem[]> {
 }
 export function getInterviewCredits(): Promise<InterviewCredits> {
   return apiGet("/interviews/credits");
+}
+export function deleteInterview(id: string): Promise<{ ok: boolean }> {
+  return apiDelete(`/interviews/${id}`);
 }
 
 /* ---------- 어드민 ---------- */

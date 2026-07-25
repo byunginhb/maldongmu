@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Req, UseGuards } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Post, Req, UseGuards } from "@nestjs/common";
 import { ThrottlerGuard, Throttle } from "@nestjs/throttler";
 import { AuthGuard } from "../auth/auth.guard";
 import { InterviewService } from "./interview.service";
@@ -30,5 +30,10 @@ export class InterviewController {
   @Get(":id")
   get(@Req() req: any, @Param("id") id: string) {
     return this.interview.getSnapshot(req.userId, id);
+  }
+
+  @Delete(":id")
+  remove(@Req() req: any, @Param("id") id: string) {
+    return this.interview.remove(req.userId, id);
   }
 }

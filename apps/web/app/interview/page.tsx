@@ -6,6 +6,7 @@ import {
   apiGet,
   createInterview,
   listInterviews,
+  deleteInterview,
   InterviewLimitError,
   type InterviewCredits,
   type InterviewListItem,
@@ -19,18 +20,36 @@ interface Me {
 
 const STATUS_LABEL: Record<string, string> = { active: "진행 중", done: "완료", failed: "실패", aborted: "취소됨" };
 
+const TrashIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 16 16" shapeRendering="crispEdges" aria-hidden>
+    <path
+      d="M6 1h4v1H6zM3 3h10v1H3zM4 4h1v10H4zM11 4h1v10H11zM4 14h8v1H4zM6 5h1v8H6zM9 5h1v8H9z"
+      fill="var(--brown-soft)"
+    />
+  </svg>
+);
+
 /** 지난 인터뷰 목록 — 입력 화면·크레딧 소진 화면 양쪽에서 공유 */
-function PastList({ past, onOpen }: { past: InterviewListItem[]; onOpen: (id: string) => void }) {
+function PastList({ past, onOpen, onDelete }: { past: InterviewListItem[]; onOpen: (id: string) => void; onDelete: (id: string) => void }) {
   if (past.length === 0) return null;
   return (
     <>
       <h2 className="dot-title" style={{ marginTop: 32 }}>지난 인터뷰</h2>
       <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 8 }}>
         {past.map((p) => (
-          <button key={p.id} className="iv-block" style={{ textAlign: "left", cursor: "pointer", marginBottom: 0 }} onClick={() => onOpen(p.id)}>
-            <p style={{ margin: 0, fontWeight: 600 }}>{p.topic || "이웃 인터뷰"}</p>
-            <p className="meta" style={{ margin: "2px 0 0" }}>{STATUS_LABEL[p.status] || p.status} · {p.createdAt?.slice(0, 10)}</p>
-          </button>
+          <div key={p.id} className="iv-block" style={{ marginBottom: 0, display: "flex", alignItems: "center", gap: 10, padding: "12px 14px" }}>
+            <div style={{ flex: 1, minWidth: 0, cursor: "pointer" }} onClick={() => onOpen(p.id)}>
+              <p style={{ margin: 0, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.topic || "이웃 인터뷰"}</p>
+              <p className="meta" style={{ margin: "2px 0 0" }}>{STATUS_LABEL[p.status] || p.status} · {p.createdAt?.slice(0, 10)}</p>
+            </div>
+            <button
+              onClick={() => onDelete(p.id)}
+              aria-label="삭제"
+              style={{ flexShrink: 0, background: "none", border: "none", padding: 8, display: "flex", alignItems: "center" }}
+            >
+              <TrashIcon />
+            </button>
+          </div>
         ))}
       </div>
     </>
@@ -238,6 +257,16 @@ export default function InterviewLandingPage() {
     }
   };
 
+  const removePast = async (id: string) => {
+    if (!confirm("이 인터뷰를 삭제할까요? 되돌릴 수 없어요.")) return;
+    setPast((list) => list.filter((p) => p.id !== id)); // 낙관적 제거
+    try {
+      await deleteInterview(id);
+    } catch {
+      listInterviews().then(setPast).catch(() => {}); // 실패 시 목록 복구
+    }
+  };
+
   const isUrl = /https?:\/\//i.test(input);
 
   return (
@@ -263,7 +292,7 @@ export default function InterviewLandingPage() {
             <p style={{ marginTop: 0 }}>이웃 인터뷰는 계정당 2번 체험할 수 있어요. 더 해보고 싶다면 피드백을 남겨주세요 — 확인하고 열어드릴게요.</p>
             <button className="btn-ghost" onClick={() => router.push("/me")}>피드백 남기기</button>
           </div>
-          <PastList past={past} onOpen={(id) => router.push(`/interview/${id}`)} />
+          <PastList past={past} onOpen={(id) => router.push(`/interview/${id}`)} onDelete={removePast} />
         </>
       ) : (
         <>
@@ -286,9 +315,9 @@ export default function InterviewLandingPage() {
           <button className="btn-cta" style={{ marginTop: 16 }} onClick={start} disabled={busy || input.trim().length < 5}>
             {busy ? "인터뷰를 준비하고 있어요…" : "인터뷰 시작하기"}
           </button>
-          <p className="meta" style={{ textAlign: "center", margin: "10px 0 0" }}>이웃 3명이 각자의 눈으로 답해드려요</p>
+          <p className="meta" style={{ textAlign: "center", margin: "10px 0 0" }}>인터뷰 내용과 어울리는 이웃 3명이 각자의 눈으로 답해드려요</p>
 
-          <PastList past={past} onOpen={(id) => router.push(`/interview/${id}`)} />
+          <PastList past={past} onOpen={(id) => router.push(`/interview/${id}`)} onDelete={removePast} />
         </>
       )}
 

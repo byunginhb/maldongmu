@@ -377,8 +377,22 @@ export class InterviewService implements OnModuleInit {
     return this.db
       .prepare(
         `SELECT id, topic, status, input_kind as inputKind, created_at as createdAt FROM interview_sessions
-         WHERE user_id = ? ORDER BY created_at DESC LIMIT 50`,
+         WHERE user_id = ? AND status != 'deleted' ORDER BY created_at DESC LIMIT 50`,
       )
       .all(userId);
+  }
+
+  /** 인터뷰 삭제 (소유자 스코프). 목록에서만 감추는 소프트 삭제 —
+   *  used 카운트('aborted' 외 전부)에는 'deleted'도 잡혀 크레딧이 환급되지 않는다
+   *  (삭제→재시도로 2회 제한 우회 방지). 전사는 지워 용량 회수. */
+  remove(userId: string, id: string) {
+    const s = this.db.prepare(`SELECT id FROM interview_sessions WHERE id = ? AND user_id = ?`).get(id, userId);
+    if (!s) throw new NotFoundException("interview not found");
+    const tx = this.db.transaction(() => {
+      this.db.prepare(`DELETE FROM interview_transcripts WHERE session_id = ?`).run(id);
+      this.db.prepare(`UPDATE interview_sessions SET status = 'deleted', updated_at = datetime('now') WHERE id = ?`).run(id);
+    });
+    tx();
+    return { ok: true };
   }
 }

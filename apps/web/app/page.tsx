@@ -56,7 +56,16 @@ export default function Home() {
     <main className="page">
       <header style={{ marginBottom: 28 }}>
         <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>
-          <h1 className="dot-title" style={{ color: "var(--coral)", margin: 0 }}>말동무</h1>
+          <h1 className="dot-title" style={{ color: "var(--coral)", margin: 0, display: "flex", alignItems: "center", gap: 9 }}>
+            <svg width="26" height="26" viewBox="0 0 16 16" shapeRendering="crispEdges" aria-hidden style={{ flexShrink: 0 }}>
+              <path
+                d="M4 1h8v1H4zM2 2h12v1H2zM2 3h12v6H2zM2 9h12v1H2zM4 10h8v1H4zM4 11h2v1H4zM4 12h1v1H4z"
+                fill="var(--coral)"
+              />
+              <path d="M5 5h1v1H5zM8 5h1v1H8zM11 5h1v1h-1z" fill="var(--paper)" />
+            </svg>
+            말동무
+          </h1>
           <div className="hero-avatars" aria-hidden>
             {HERO_SEEDS.map((s) => (
               <span key={s.uuid}>

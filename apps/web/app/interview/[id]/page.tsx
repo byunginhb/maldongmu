@@ -142,6 +142,11 @@ export default function InterviewSessionPage({ params }: { params: Promise<{ id:
           })}
         </ul>
       )}
+      {snap.status === "active" && (
+        <p className="meta" style={{ margin: "4px 0 0" }}>
+          인터뷰는 시간이 조금 걸려요. 다른 곳에 다녀오셔도 계속 진행되고, 다시 오시면 이어서 보여드려요.
+        </p>
+      )}
 
       {/* 선정된 이웃 3명 + 근거 */}
       {snap.picks.length > 0 && !showSteps && (
