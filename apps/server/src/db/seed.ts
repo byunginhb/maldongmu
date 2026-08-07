@@ -1,4 +1,5 @@
 import type Database from "better-sqlite3";
+import { GRANNY_PERSONAS } from "./granny";
 
 /**
  * 운영자가 직접 추가하는 커스텀 페르소나.
@@ -129,7 +130,8 @@ export function seedCustomPersonas(db: Database.Database) {
   );
 
   const run = db.transaction(() => {
-    for (const p of CUSTOM_PERSONAS) {
+    // 커스텀 페르소나 + 욕쟁이 할매 5인 (할매는 PINNED에 넣지 않아 '오늘의 이웃'엔 안 뜬다)
+    for (const p of [...CUSTOM_PERSONAS, ...GRANNY_PERSONAS]) {
       upsertCard.run(p.uuid, p.name, p.one_liner, p.age, p.sex, p.occupation, p.province, p.district);
       upsertDetail.run(p.uuid, ...detailCols.map((c) => p.details[c] ?? ""));
       deleteFts.run(p.uuid);

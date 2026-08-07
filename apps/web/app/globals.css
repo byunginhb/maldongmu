@@ -465,3 +465,31 @@ h2.dot-title { font-size: 18px; margin: 0; }
 .notebook-rare { font-size: 10px; color: var(--brown-soft); background: var(--sand); border-radius: 99px; padding: 1px 7px; margin-top: 1px; }
 .notebook-add { width: 64px; height: 64px; border-radius: 14px; border: 2px dashed var(--line); display: grid; place-items: center; font-size: 26px; color: var(--brown-soft); }
 .notebook-cell:active .notebook-add { border-color: var(--coral); color: var(--coral); }
+
+/* 욕쟁이 할매 — 홈 상단 배너 (coral CTA 아님: 카드형 메뉴) */
+.granny-banner {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--sand); border: 1px solid var(--line); border-radius: 16px;
+  padding: 12px 14px; margin: 0 0 18px; text-decoration: none; color: var(--brown);
+}
+.granny-banner:active { transform: scale(0.99); }
+.granny-banner-faces { display: inline-flex; align-items: center; flex-shrink: 0; }
+.granny-banner-faces > span { margin-left: -12px; width: 34px; height: 34px; border: 2px solid var(--sand); border-radius: 10px; overflow: hidden; display: inline-flex; }
+.granny-banner-faces > span:first-child { margin-left: 0; }
+.granny-banner-text { display: flex; flex-direction: column; min-width: 0; line-height: 1.35; }
+.granny-banner-text b { font-size: 15px; font-weight: 700; }
+.granny-banner-go { margin-left: auto; color: var(--coral); font-size: 18px; font-weight: 700; flex-shrink: 0; }
+
+/* 욕쟁이 할매 — 목록 페이지 */
+.granny-list { display: flex; flex-direction: column; gap: 12px; }
+.granny-item {
+  display: flex; align-items: center; gap: 14px; width: 100%; text-align: left;
+  background: var(--paper); border: 1px solid var(--line); border-radius: 16px;
+  padding: 14px 16px; cursor: pointer; font-family: inherit; color: var(--brown);
+}
+.granny-item:active { transform: scale(0.98); background: var(--sand); }
+.granny-item:disabled { opacity: 0.6; }
+.granny-item-body { display: flex; flex-direction: column; min-width: 0; gap: 1px; }
+.granny-region { font-size: 12px; font-weight: 700; color: var(--coral); }
+.granny-name { font-size: 15px; font-weight: 600; }
+.granny-go { margin-left: auto; color: var(--brown-soft); font-size: 13px; font-weight: 600; flex-shrink: 0; }

@@ -3,6 +3,7 @@ import { nanoid } from "nanoid";
 import { DbService } from "../db/db.service";
 import { PersonasService } from "../personas/personas.service";
 import { buildSystemPrompt, greetingText } from "./prompt";
+import { GRANNY_BY_UUID, grannyOverlay } from "../db/granny";
 
 // 프롬프트 캐시 효율을 위한 계단식 히스토리 윈도우:
 // 항상 "최근 N개"로 자르면 매 턴 프리픽스가 바뀌어 캐시가 깨진다.
@@ -134,10 +135,11 @@ export class ChatService {
       )
       .all(conversationId, start) as any[];
 
+    const granny = GRANNY_BY_UUID.get(conv.persona_uuid);
     return {
       conv,
       messages: [
-        { role: "system" as const, content: buildSystemPrompt(detail) },
+        { role: "system" as const, content: buildSystemPrompt(detail, granny && grannyOverlay(granny.region)) },
         ...history.map((m) => ({ role: m.role as "user" | "assistant", content: m.content })),
         { role: "user" as const, content: userText },
       ],
@@ -156,7 +158,9 @@ export class ChatService {
     if (count > 0) throw new ConflictException("conversation already started");
 
     const p = this.personas.card(conv.persona_uuid) as any;
-    return { conv, text: greetingText(p, lang) };
+    // 욕쟁이 할매는 첫인사부터 걸쭉하게 (일반 인사 대신 캐릭터 인사)
+    const granny = GRANNY_BY_UUID.get(conv.persona_uuid);
+    return { conv, text: granny ? granny.greeting : greetingText(p, lang) };
   }
 
   /** 인사말 저장: user 메시지 없이 assistant만. 동시 요청이 겹쳐도 빈 방일 때만 저장 */

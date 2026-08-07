@@ -16,6 +16,11 @@ export class PersonasController {
     return this.personas.occupations();
   }
 
+  @Get("grannies")
+  grannies() {
+    return this.personas.grannies();
+  }
+
   @Post("recommend")
   @UseGuards(AuthGuard)
   recommend(@Req() req: any, @Body() body: { concern: string; detail?: string }) {

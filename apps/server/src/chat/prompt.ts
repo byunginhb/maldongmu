@@ -50,7 +50,9 @@ function registerHint(age?: number): string {
   return "학생다운 밝고 솔직한 말씨";
 }
 
-export function buildSystemPrompt(p: any): string {
+export function buildSystemPrompt(p: any, overlay?: string): string {
+  // overlay(욕쟁이 할매 등 컨셉)는 맨 뒤 = 가장 강한 지시. 인물별로 정적이라 캐시 프리픽스도 안전.
+  const tail = overlay ? `\n\n${overlay}` : "";
   return `${BASE_PROMPT}
 
 ## 당신이 연기할 인물
@@ -70,7 +72,7 @@ export function buildSystemPrompt(p: any): string {
 - 취미: ${p.hobbies_and_interests ?? ""}
 - 앞으로의 목표: ${p.career_goals_and_ambitions ?? ""}
 
-이제 위 인물로서, 특히 "말투"를 대화 내내 흐트러뜨리지 말고, 말동무의 원칙에 따라 대화를 시작하세요.`;
+이제 위 인물로서, 특히 "말투"를 대화 내내 흐트러뜨리지 말고, 말동무의 원칙에 따라 대화를 시작하세요.${tail}`;
 }
 
 /**

@@ -1,6 +1,7 @@
 import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
 import { DbService } from "../db/db.service";
 import { PINNED_PERSONA_UUIDS } from "../db/seed";
+import { GRANNY_PERSONAS } from "../db/granny";
 import { LlmService } from "../llm/llm.service";
 
 const CARD_COLS = `uuid, name, one_liner as oneLiner, age, sex, occupation, province, district`;
@@ -67,6 +68,24 @@ export class PersonasService {
       }
     }
     return [...pinned, ...rows];
+  }
+
+  /** 욕쟁이 할매 5인 (지역별) — 메뉴/목록용 카드 + 지역 라벨. 정적 데이터라 DB 조회 불필요. */
+  grannies() {
+    return {
+      items: GRANNY_PERSONAS.map((g) => ({
+        uuid: g.uuid,
+        name: g.name,
+        oneLiner: g.one_liner,
+        age: g.age,
+        sex: g.sex,
+        occupation: g.occupation,
+        province: g.province,
+        district: g.district,
+        region: g.region,
+        label: g.label,
+      })),
+    };
   }
 
   random() {

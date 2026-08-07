@@ -184,6 +184,17 @@ export function getOccupations(): Promise<{ items: OccupationEntry[] }> {
   return apiGet("/personas/occupations");
 }
 
+/* ---------- 욕쟁이 할매 ---------- */
+export interface GrannyCard extends PersonaCard {
+  region: string;
+  label: string;
+}
+
+/** 지역별 욕쟁이 할매 목록 (공개) */
+export function getGrannies(): Promise<{ items: GrannyCard[] }> {
+  return apiGet("/personas/grannies");
+}
+
 /* ---------- 이웃 인터뷰 (페르소나 설문조사) ---------- */
 export interface InterviewPick extends PersonaCard {
   reason: string;
