@@ -1,0 +1,40 @@
+{
+  "expo": {
+    "name": "말동무",
+    "slug": "maldongmu",
+    "scheme": "maldongmu",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "backgroundColor": "#f2e9d9",
+    "android": {
+      "package": "app.maldongmu.twa",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundColor": "#e8613c"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "app.maldongmu.twa"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 180,
+          "resizeMode": "contain",
+          "backgroundColor": "#f2e9d9"
+        }
+      ],
+      "./withReleaseSigning"
+    ]
+  }
+}
