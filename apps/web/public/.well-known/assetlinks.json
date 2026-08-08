@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "app.maldongmu.twa",
+      "sha256_cert_fingerprints": [
+        "E4:27:04:D8:A0:20:8F:1C:FD:C8:8C:F3:A1:99:04:A0:DD:F6:0F:20:56:AD:4F:14:C4:72:7C:B7:6F:B0:66:5B"
+      ]
+    }
+  }
+]
