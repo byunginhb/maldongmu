@@ -27,12 +27,13 @@ export class AuthController {
   start(
     @Param("provider") provider: string,
     @Query("token") token: string | undefined,
+    @Query("app") app: string | undefined,
     @Res() res: Response,
   ) {
     if (provider !== "google" && provider !== "kakao") {
       return res.status(404).send("unknown provider");
     }
-    return res.redirect(this.oauth.authorizeUrl(provider, token));
+    return res.redirect(this.oauth.authorizeUrl(provider, token, app === "1"));
   }
 
   @Get(":provider/callback")

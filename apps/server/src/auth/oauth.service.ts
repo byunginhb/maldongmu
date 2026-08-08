@@ -17,8 +17,9 @@ export class OauthService {
     return this.dbs.db;
   }
 
-  /** OAuth 시작 URL 생성. state에 현재 게스트 id를 서명해 넣어 콜백에서 이력 이관 */
-  authorizeUrl(provider: Provider, guestToken?: string): string {
+  /** OAuth 시작 URL 생성. state에 현재 게스트 id를 서명해 넣어 콜백에서 이력 이관.
+   *  app=true면 콜백을 maldongmu:// 딥링크로 돌려보내 네이티브 앱(WebView)이 토큰을 받게 한다. */
+  authorizeUrl(provider: Provider, guestToken?: string, app?: boolean): string {
     let guestId: string | null = null;
     if (guestToken) {
       try {
@@ -27,7 +28,7 @@ export class OauthService {
         /* 무시 — 게스트 이관 없이 진행 */
       }
     }
-    const state = this.jwt.sign({ g: guestId, p: provider }, { expiresIn: "10m" });
+    const state = this.jwt.sign({ g: guestId, p: provider, a: app ? 1 : 0 }, { expiresIn: "10m" });
     const redirectUri = `${serverUrl()}/api/auth/${provider}/callback`;
 
     if (provider === "google") {
@@ -52,10 +53,12 @@ export class OauthService {
   /** 콜백 처리 → 웹으로 리다이렉트할 URL 반환 */
   async handleCallback(provider: Provider, code: string, state: string): Promise<string> {
     let guestId: string | null = null;
+    let isApp = false;
     try {
-      const s = this.jwt.verify<{ g: string | null; p: string }>(state);
+      const s = this.jwt.verify<{ g: string | null; p: string; a?: number }>(state);
       if (s.p !== provider) throw new Error("provider mismatch");
       guestId = s.g;
+      isApp = s.a === 1;
     } catch {
       throw new BadRequestException("invalid state");
     }
@@ -89,6 +92,8 @@ export class OauthService {
     }
 
     const token = this.jwt.sign({ sub: userId, type: provider });
+    // 네이티브 앱: 커스텀 스킴 딥링크로 토큰 전달 (앱이 WebView에 심음). 웹: 기존 콜백 페이지.
+    if (isApp) return `maldongmu://auth?token=${encodeURIComponent(token)}`;
     return `${webUrl()}/auth/callback?token=${encodeURIComponent(token)}`;
   }
 
