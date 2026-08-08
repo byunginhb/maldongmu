@@ -50,7 +50,11 @@ export default function PrivacyPage() {
         <p style={h}>6. 이용자의 권리</p>
         <p style={p}>
           이용자는 언제든지 자신의 대화 이력·계정 정보의 열람, 정정, 삭제를 요청할 수 있습니다.
-          문의처로 요청 시 지체 없이 처리합니다.
+          문의처로 요청 시 지체 없이 처리합니다. 계정과 대화 이력의 삭제 절차는{" "}
+          <Link href="/account/delete" style={{ color: "var(--coral-deep)", fontWeight: 600 }}>
+            계정 삭제 요청
+          </Link>{" "}
+          페이지에서 안내하고 있습니다.
         </p>
 
         <p style={h}>7. 쿠키 및 저장소</p>
