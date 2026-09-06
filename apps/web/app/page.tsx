@@ -10,7 +10,7 @@ import DotDivider from "../components/DotDivider";
 import Avatar from "../components/Avatar";
 import { SkeletonCard } from "../components/ui";
 
-// 헤더 장식용 아바타 시드 (고정 — 서버/클라 렌더 일치)
+// 헤더 장식용 아바타 시드 (고정 — 같은 인물은 항상 같은 사진)
 const HERO_SEEDS = [
   { uuid: "hero-haenyeo", sex: "여자", age: 68 },
   { uuid: "hero-farmer", sex: "남자", age: 55 },

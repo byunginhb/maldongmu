@@ -6,7 +6,8 @@
 ## 구조
 - `apps/server` — NestJS :4000. SQLite(better-sqlite3) + OpenRouter SSE 채팅. `pnpm dev:server`
 - `apps/web` — Next.js :3000. 모바일 퍼스트, Vercel 배포 예정. `pnpm dev:web`
-- `packages/shared` — 공용 타입 + 픽셀 아바타 생성기(`pixelAvatarSvg`, uuid 시드 결정적)
+- `packages/shared` — 공용 타입 + 레거시 SVG 아바타 생성기
+- `apps/web/public/avatars/v1` — 성별·연령대별 사진형 WebP 아바타 48종 (uuid로 결정적 선택)
 - `scripts/etl/build_db.py` — parquet → maldongmu.db (완료됨, 재실행 불필요)
 
 ## 데이터

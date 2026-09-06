@@ -8,7 +8,8 @@
 
 - `apps/server` — NestJS API 서버 (SSE 채팅, OpenRouter, SQLite)
 - `apps/web` — Next.js 웹 (모바일 퍼스트, Vercel 배포)
-- `packages/shared` — 공용 타입 + 픽셀 아바타 생성기
+- `packages/shared` — 공용 타입
+- `apps/web/public/avatars/v1` — 성별·연령대별 사진형 WebP 아바타 48종
 - `scripts/etl` — parquet → SQLite 변환 (1회성)
 
 ## 개발 시작

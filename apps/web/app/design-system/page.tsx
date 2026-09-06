@@ -47,8 +47,8 @@ export default function DesignSystemPage() {
     <main className="page">
       <h1 className="dot-title">말동무 디자인 시스템</h1>
       <p className="meta" style={{ margin: "6px 0 0" }}>
-        레트로 픽셀 감성 + 따뜻한 동네 분위기. 픽셀은 아바타·제목·소소한 장식 딱 3곳에만, 나머지는
-        모던하고 부드럽게. 화면당 강조(coral)는 1개. 그림자·그라데이션·이모지 남발 금지.
+        따뜻한 동네 분위기의 실제 사진형 아바타와 절제된 도트 타이포. 도트는 제목·소소한 장식에만 쓰고,
+        나머지는 모던하고 부드럽게. 화면당 강조(coral)는 1개. 그림자·그라데이션·이모지 남발 금지.
       </p>
       <DotDivider />
 
@@ -119,7 +119,7 @@ export default function DesignSystemPage() {
         ))}
       </Block>
 
-      <Block title="아바타" sub="shared 패키지 생성기 · 같은 uuid = 같은 얼굴">
+      <Block title="아바타" sub="성별·연령대별 사진 세트 · 같은 uuid = 같은 얼굴">
         <div className="ds-row">
           {SAMPLE.concat([{ uuid: "ds-poet", name: "", age: 27, sex: "여자", occupation: "", region: "" }]).map((p) => (
             <Avatar key={p.uuid} uuid={p.uuid} sex={p.sex} age={p.age} size={48} radius={12} />
@@ -147,7 +147,7 @@ export default function DesignSystemPage() {
           <ul style={{ margin: "6px 0 0", paddingLeft: 18 }}>
             <li>여백으로 숨 쉬게 — 카드 사이 12px, 섹션 사이 32px</li>
             <li>다정한 존댓말 카피</li>
-            <li>아바타는 항상 shared 생성기 (같은 인물 = 같은 얼굴)</li>
+            <li>아바타는 항상 공용 사진 세트 사용 (같은 인물 = 같은 얼굴)</li>
           </ul>
           <p style={{ margin: "14px 0 0", color: "var(--red)", fontWeight: 700 }}>Don&apos;t</p>
           <ul style={{ margin: "6px 0 0", paddingLeft: 18 }}>

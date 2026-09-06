@@ -18,7 +18,7 @@ const FINDING_MESSAGES = [
   "이야기가 잘 통할 분을 고르고 있어요...",
 ];
 
-/** 로딩 연출: 픽셀 아바타 3개가 번갈아 다른 얼굴로 바뀌며 "찾는 중"을 표현 */
+/** 로딩 연출: 사진 아바타 3개가 번갈아 다른 얼굴로 바뀌며 "찾는 중"을 표현 */
 function FindingLoader() {
   const [tick, setTick] = useState(0);
   useEffect(() => {
