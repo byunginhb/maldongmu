@@ -1,8 +1,9 @@
-import type { PersonaCard } from "@maldongmu/shared";
+import type { PersonaCard, ChatStreamEvent } from "@maldongmu/shared";
 
 export const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
 let token: string | null = null;
+let guestRequest: Promise<string> | null = null;
 
 export function getToken(): string | null {
   if (token) return token;
@@ -23,10 +24,16 @@ export function clearToken() {
 export async function ensureGuest(): Promise<string> {
   const t = getToken();
   if (t) return t;
-  const res = await fetch(`${API}/api/auth/guest`, { method: "POST" });
-  const data = await res.json();
-  setToken(data.token);
-  return data.token;
+  if (!guestRequest) {
+    guestRequest = (async () => {
+      const res = await fetch(`${API}/api/auth/guest`, { method: "POST" });
+      if (!res.ok) throw new Error("연결하지 못했어요. 다시 시도해주세요.");
+      const data = await res.json();
+      setToken(data.token);
+      return data.token as string;
+    })().finally(() => { guestRequest = null; });
+  }
+  return guestRequest;
 }
 
 /** 게스트 대화 한도 초과 → 로그인 필요 */
@@ -81,7 +88,8 @@ async function handleError(res: Response): Promise<never> {
     // 토큰 만료/무효 → 재발급 후 재시도할 수 있게 초기화
     clearToken();
   }
-  throw new Error(`API ${res.status}`);
+  const body = await res.json().catch(() => null);
+  throw new Error(typeof body?.message === "string" ? body.message : `API ${res.status}`);
 }
 
 async function request<T>(path: string, init?: RequestInit, retried = false): Promise<T> {
@@ -119,45 +127,76 @@ export function socialLoginUrl(provider: "google" | "kakao"): string {
 }
 
 /** SSE 스트림 공통부. onDelta로 토큰 단위 수신 */
-async function streamSse(path: string, body: unknown | undefined, onDelta: (text: string) => void): Promise<void> {
+async function streamSse(path: string, body: unknown | undefined, onDelta: (text: string) => void,
+  options: { signal?: AbortSignal; onEvent?: (event: ChatStreamEvent) => void } = {}): Promise<void> {
   const t = await ensureGuest();
   const res = await fetch(`${API}/api${path}`, {
     method: "POST",
+    signal: options.signal,
     headers: { Authorization: `Bearer ${t}`, "Content-Type": "application/json" },
     body: body ? JSON.stringify(body) : undefined,
   });
   if (res.status === 403) await extract403(res);
-  if (!res.ok || !res.body) throw new Error(`API ${res.status}`);
+  if (!res.ok) await handleError(res);
+  if (!res.body) throw new Error("대화를 연결하지 못했어요");
   const reader = res.body.getReader();
   const decoder = new TextDecoder();
   let buf = "";
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    buf += decoder.decode(value, { stream: true });
-    const lines = buf.split("\n");
-    buf = lines.pop() || "";
-    for (const line of lines) {
-      if (!line.startsWith("data:")) continue;
-      try {
-        const json = JSON.parse(line.slice(5).trim());
-        if (json.delta) onDelta(json.delta);
-        if (json.error) throw new Error(json.error);
-      } catch (e) {
-        if (e instanceof SyntaxError) continue;
-        throw e;
+  let completed = false;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+      const lines = buf.split("\n");
+      buf = lines.pop() || "";
+      for (const line of lines) {
+        if (!line.startsWith("data:")) continue;
+        try {
+          const json = JSON.parse(line.slice(5).trim());
+          if (json.delta) onDelta(json.delta);
+          if (json.error) throw new Error(json.error);
+          if (json.type && json.type !== "delta") options.onEvent?.(json as ChatStreamEvent);
+          if (json.done || json.type === "done") completed = true;
+        } catch (e) {
+          if (e instanceof SyntaxError) continue;
+          throw e;
+        }
       }
     }
+    if (!completed && !options.signal?.aborted) throw new Error("연결이 끊겼어요. 저장된 대화를 확인해주세요.");
+  } finally {
+    await reader.cancel().catch(() => {});
+    reader.releaseLock();
   }
 }
 
 /** SSE 채팅 스트림 */
-export function streamChat(conversationId: string, message: string, onDelta: (text: string) => void): Promise<void> {
-  return streamSse(`/chat/${conversationId}`, { message }, onDelta);
+export function streamChat(conversationId: string, message: string, onDelta: (text: string) => void,
+  options?: { signal?: AbortSignal; onEvent?: (event: ChatStreamEvent) => void }): Promise<void> {
+  return streamSse(`/chat/${conversationId}`, { message }, onDelta, options);
+}
+
+export interface ConversationMessage {
+  id?: string;
+  role: "user" | "assistant";
+  content: string;
+  speakerUuid?: string | null;
+}
+
+export interface ConversationSnapshot {
+  id: string;
+  persona: PersonaCard;
+  personas?: PersonaCard[]; // Optional until the server rollout.
+  messages: ConversationMessage[];
+}
+
+export function chatFeatures(): Promise<{ groupChat: boolean }> {
+  return apiGet<{ groupChat: boolean }>("/chat/features").catch(() => ({ groupChat: false }));
 }
 
 /** 첫 만남 인사 스트림 — 빈 대화방에서 페르소나가 먼저 말을 건넨다 (이미 시작된 방이면 409) */
-export function fetchGreeting(conversationId: string, lang?: string): Promise<{ greeting: string }> {
+export function fetchGreeting(conversationId: string, lang?: string): Promise<{ greeting: string; messages?: ConversationMessage[] }> {
   return apiPost(`/chat/${conversationId}/greeting`, lang ? { lang } : undefined);
 }
 

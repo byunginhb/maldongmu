@@ -9,6 +9,7 @@ import PersonaCard from "../components/PersonaCard";
 import DotDivider from "../components/DotDivider";
 import Avatar from "../components/Avatar";
 import { SkeletonCard } from "../components/ui";
+import TodayFriends from "../components/TodayFriends";
 
 // 헤더 장식용 아바타 시드 (고정 — 같은 인물은 항상 같은 사진)
 const HERO_SEEDS = [
@@ -140,6 +141,8 @@ export default function Home() {
           어떤 이웃을 만날지는 눌러봐야 알아요
         </p>
       </div>
+
+      <TodayFriends />
 
       <h2 className="dot-title">오늘의 이웃</h2>
       <p className="meta" style={{ margin: "4px 0 14px" }}>매일 새로운 이웃을 소개해드려요</p>

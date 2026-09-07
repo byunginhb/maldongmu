@@ -1,189 +1,217 @@
 "use client";
 
-import { use, useCallback, useEffect, useRef, useState } from "react";
+import { use, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { PersonaCard as Card } from "@maldongmu/shared";
-import { apiGet, streamChat, fetchGreeting, LoginRequiredError, QuotaExceededError } from "../../../lib/api";
+import type { PersonaCard as Card, ChatStreamEvent } from "@maldongmu/shared";
+import { apiGet, apiPost, chatFeatures, streamChat, fetchGreeting, LoginRequiredError, QuotaExceededError,
+  type ConversationSnapshot, type ConversationMessage } from "../../../lib/api";
 import Avatar from "../../../components/Avatar";
 import LoginSheet from "../../../components/LoginSheet";
 import QuotaSheet from "../../../components/QuotaSheet";
+import FriendPicker from "../../../components/FriendPicker";
 
-interface Msg {
-  role: "user" | "assistant";
-  content: string;
-  streaming?: boolean;
-}
-
-interface ConvRes {
-  id: string;
-  persona: Card;
-  messages: { role: "user" | "assistant"; content: string }[];
-}
+interface Msg extends ConversationMessage { streaming?: boolean }
+const TOPICS = ["오늘 있었던 소소한 일", "평생 한 가지 음식만 먹는다면?", "요즘 나를 웃게 하는 것"];
 
 export default function ChatPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
+  return <ChatRoom key={id} id={id} />;
+}
+
+function ChatRoom({ id }: { id: string }) {
   const router = useRouter();
-  const [persona, setPersona] = useState<Card | null>(null);
+  const [participants, setParticipants] = useState<Card[]>([]);
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [stopping, setStopping] = useState(false);
+  const [groupEnabled, setGroupEnabled] = useState(false);
+  const [showPicker, setShowPicker] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
   const [showQuota, setShowQuota] = useState(false);
+  const [error, setError] = useState("");
+  const [turn, setTurn] = useState(0);
   const bodyRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const greetedRef = useRef(false);
+  const active = useRef<{ controller: AbortController; finished: Promise<void> } | null>(null);
+  const transition = useRef(false);
+  const mounted = useRef(true);
+  const nearBottom = useRef(true);
+  const isGroup = participants.length === 2;
+  const persona = participants[0];
 
-  /** 첫 만남: 인물 카드로 만든 가벼운 인사를 즉시 띄운다 (LLM 대기 없음) */
-  const runGreeting = useCallback(async () => {
-    try {
-      const { greeting } = await fetchGreeting(
-        id,
-        typeof navigator !== "undefined" ? navigator.language : undefined,
-      );
-      setMsgs([{ role: "assistant", content: greeting }]);
-    } catch {
-      setMsgs([]); // 실패·중복(409) 시 기존 빈 화면으로 — 사용자가 먼저 말 걸면 됨
-    } finally {
-      inputRef.current?.focus();
-    }
+  const applySnapshot = (c: ConversationSnapshot) => {
+    setParticipants(c.personas ?? [c.persona]);
+    setMsgs(c.messages);
+  };
+
+  useEffect(() => {
+    mounted.current = true;
+    let alive = true;
+    chatFeatures().then((f) => { if (alive) setGroupEnabled(f.groupChat); });
+    (async () => {
+      try {
+        let c = await apiGet<ConversationSnapshot>(`/conversations/${id}`);
+        if (!alive) return;
+        if (!c.messages.length) {
+          try {
+            const greeting = await fetchGreeting(id, navigator.language);
+            c = { ...c, messages: greeting.messages ?? [{ role: "assistant", content: greeting.greeting }] };
+          } catch {
+            c = await apiGet<ConversationSnapshot>(`/conversations/${id}`);
+          }
+        }
+        if (alive) applySnapshot(c);
+      } catch {
+        if (alive) setError("대화를 불러오지 못했어요. 새로고침해 다시 연결해주세요.");
+      } finally {
+        if (alive) setLoading(false);
+      }
+    })();
+    return () => { alive = false; mounted.current = false; active.current?.controller.abort(); };
   }, [id]);
 
   useEffect(() => {
-    apiGet<ConvRes>(`/conversations/${id}`)
-      .then((c) => {
-        setPersona(c.persona);
-        setMsgs(c.messages.map((m) => ({ role: m.role, content: m.content })));
-        if (c.messages.length === 0 && !greetedRef.current) {
-          greetedRef.current = true; // StrictMode 이중 실행 가드
-          runGreeting();
-        }
-      })
-      .catch(() => router.replace("/"));
-  }, [id, router, runGreeting]);
-
-  useEffect(() => {
-    bodyRef.current?.scrollTo({ top: bodyRef.current.scrollHeight });
+    if (nearBottom.current) bodyRef.current?.scrollTo({ top: bodyRef.current.scrollHeight });
   }, [msgs]);
 
-  const send = async () => {
-    const text = input.trim();
-    if (!text || busy) return;
-    setInput("");
-    setBusy(true);
-    setMsgs((m) => [...m, { role: "user", content: text }, { role: "assistant", content: "", streaming: true }]);
-    try {
-      await streamChat(id, text, (delta) => {
-        setMsgs((m) => {
-          const copy = [...m];
-          const last = copy[copy.length - 1];
-          copy[copy.length - 1] = { ...last, content: last.content + delta };
-          return copy;
-        });
-      });
-      setMsgs((m) => {
-        const copy = [...m];
-        copy[copy.length - 1] = { ...copy[copy.length - 1], streaming: false };
-        return copy;
-      });
-    } catch (e) {
-      if (e instanceof LoginRequiredError || e instanceof QuotaExceededError) {
-        // 보낸 메시지와 빈 말풍선을 되돌리고 안내 시트 표시
-        setMsgs((m) => m.slice(0, -2));
-        setInput(text);
-        if (e instanceof QuotaExceededError) setShowQuota(true);
-        else setShowLogin(true);
-      } else {
-        setMsgs((m) => {
-          const copy = [...m];
-          copy[copy.length - 1] = {
-            role: "assistant",
-            content: copy[copy.length - 1].content || "죄송해요, 답을 하지 못했어요. 다시 한번 말씀해주시겠어요?",
-            streaming: false,
-          };
-          return copy;
-        });
-      }
-    } finally {
-      setBusy(false);
+  const interrupt = async () => {
+    const job = active.current;
+    job?.controller.abort();
+    // The acknowledgement includes partial bubbles and releases the server generation lock.
+    const [c] = await Promise.all([
+      apiPost<ConversationSnapshot>(`/chat/${id}/stop`),
+      job?.finished,
+    ]);
+    if (mounted.current) applySnapshot(c);
+  };
+
+  const stop = async () => {
+    if (transition.current) return;
+    transition.current = true;
+    setStopping(true);
+    try { await interrupt(); }
+    catch { setError("대화가 멈췄는지 확인하지 못했어요. 잠시 후 다시 시도해주세요."); }
+    finally {
+      transition.current = false;
+      setStopping(false);
       inputRef.current?.focus();
     }
+  };
+
+  const send = async (suggestion?: string) => {
+    const text = (suggestion ?? input).trim();
+    if (!text || loading || transition.current || (active.current && !isGroup)) return;
+    transition.current = true;
+    if (active.current) {
+      setStopping(true);
+      try { await interrupt(); }
+      catch {
+        setError("아직 대화가 멈추지 않았어요. 잠시 후 다시 보내주세요.");
+        transition.current = false;
+        setStopping(false);
+        return;
+      }
+      setStopping(false);
+    }
+    if (!mounted.current) return;
+    setInput("");
+    setError("");
+    setBusy(true);
+    setTurn(0);
+    nearBottom.current = true;
+    const controller = new AbortController();
+    setMsgs((m) => [...m, { role: "user", content: text }, ...(!isGroup ? [{ role: "assistant" as const, content: "", streaming: true }] : [])]);
+    const onEvent = (event: ChatStreamEvent) => {
+      if (!mounted.current || controller.signal.aborted) return;
+      if (event.type === "speaker") {
+        setTurn(event.turn);
+        setMsgs((m) => [...m, { id: event.messageId, role: "assistant", speakerUuid: event.speakerUuid, content: "", streaming: true }]);
+      } else if (event.type === "messageEnd") {
+        setMsgs((m) => m.map((message) => ({ ...message, streaming: false })));
+      }
+    };
+    const finished = (async () => {
+      try {
+        await streamChat(id, text, (delta) => {
+          if (!mounted.current || controller.signal.aborted) return;
+          setMsgs((m) => m.map((message, i) => i === m.length - 1 && message.role === "assistant"
+            ? { ...message, content: message.content + delta } : message));
+        }, { signal: controller.signal, onEvent });
+      } catch (e) {
+        if (!controller.signal.aborted && mounted.current) {
+          if (e instanceof LoginRequiredError) { setShowLogin(true); setInput(text); }
+          else if (e instanceof QuotaExceededError) { setShowQuota(true); setInput(text); }
+          else setError(e instanceof Error ? e.message : "연결을 잠시 쉬고 있어요. 다시 이야기해주세요.");
+          try {
+            const c = await apiGet<ConversationSnapshot>(`/conversations/${id}`);
+            if (mounted.current && !controller.signal.aborted) applySnapshot(c);
+          } catch { /* Preserve visible messages if reconnecting fails. */ }
+        }
+      } finally {
+        if (active.current?.controller === controller) active.current = null;
+        if (mounted.current) {
+          setMsgs((m) => m.filter((message) => message.content).map((message) => ({ ...message, streaming: false })));
+          setBusy(false);
+        }
+      }
+    })();
+    active.current = { controller, finished };
+    transition.current = false;
+    await finished;
   };
 
   return (
     <div className="chat-page">
       <header className="chat-head">
-        <button
-          onClick={() => router.push("/me")}
-          style={{ background: "none", border: "none", fontSize: 18, color: "var(--brown)", padding: "4px 6px" }}
-          aria-label="뒤로"
-        >
-          ←
-        </button>
-        {persona && (
-          <>
-            <Avatar uuid={persona.uuid} sex={persona.sex} age={persona.age} size={36} radius={10} />
-            <div style={{ minWidth: 0 }}>
-              <p style={{ margin: 0, fontSize: 15, fontWeight: 600, lineHeight: 1.3 }}>{persona.name}</p>
-              <p className="meta" style={{ margin: 0, fontSize: 12, lineHeight: 1.3 }}>
-                {persona.age}세 · {persona.occupation}
-              </p>
-            </div>
-          </>
-        )}
+        <button className="chat-back" onClick={() => router.push("/me")} aria-label="이웃 수첩으로">←</button>
+        <div className="chat-faces">
+          {participants.map((p) => <Avatar key={p.uuid} uuid={p.uuid} sex={p.sex} age={p.age} size={isGroup ? 30 : 36} radius={10} />)}
+        </div>
+        <div className="chat-heading">
+          <p>{participants.map((p) => p.name).join(" · ") || "대화 불러오는 중"}</p>
+          <span className="meta">{isGroup ? "나까지 셋이서 수다" : persona ? `${persona.age}세 · ${persona.occupation}` : "잠시만 기다려주세요"}</span>
+        </div>
+        {!isGroup && persona && groupEnabled && <button className="btn-ghost invite-friend" disabled={busy || loading} onClick={() => setShowPicker(true)}>+ 친구 초대</button>}
       </header>
-
-      <div className="chat-body" ref={bodyRef}>
-        {msgs.length > 0 && msgs.length <= 2 && (
-          <p className="meta" style={{ textAlign: "center", fontSize: 11, margin: "0 0 4px" }}>
-            말동무의 인물들은 한국의 실제 데이터를 기반으로 만들어진 페르소나예요
-          </p>
-        )}
-        {msgs.length === 0 && persona && (
-          <p className="empty">
-            {persona.name}님이 기다리고 있어요.
-            <br />
-            먼저 인사를 건네볼까요?
-            <br />
-            <span style={{ fontSize: 12, opacity: 0.8 }}>
-              (말동무의 인물들은 한국의 실제 데이터를 기반으로 만들어진 페르소나예요)
-            </span>
-          </p>
-        )}
-        {msgs.map((m, i) =>
-          m.role === "user" ? (
-            <div key={i} className="bubble user">{m.content}</div>
-          ) : (
-            <div key={i} className="bubble-row">
-              {persona && (
-                <span className="bubble-avatar">
-                  <Avatar uuid={persona.uuid} sex={persona.sex} age={persona.age} size={28} radius={8} />
-                </span>
-              )}
-              <div className="bubble persona">
-                {m.content}
-                {m.streaming && <span className="cursor-blink">▮</span>}
-              </div>
-            </div>
-          ),
-        )}
+      {isGroup && <p className="group-chat-guide">친구들이 짧게 이야기한 뒤 기다려요. 언제든 끼어들어도 좋아요.</p>}
+      <div className="chat-body" ref={bodyRef} role="log" aria-label="대화 내용" aria-live="off"
+        onScroll={(e) => { const el = e.currentTarget; nearBottom.current = el.scrollHeight - el.scrollTop - el.clientHeight < 100; }}>
+        {loading && <p className="empty">대화를 불러오고 있어요…</p>}
+        {msgs.length > 0 && msgs.length <= 2 && <p className="meta chat-disclosure">말동무의 친구들은 AI 페르소나예요</p>}
+        {!loading && !msgs.length && persona && <p className="empty">{persona.name}님이 기다리고 있어요.<br />먼저 인사를 건네볼까요?</p>}
+        {msgs.map((m, i) => {
+          const speaker = participants.find((p) => p.uuid === m.speakerUuid) ?? persona;
+          return m.role === "user"
+            ? <div key={m.id ?? `local-${i}`} className="bubble user">{m.content}</div>
+            : <div key={m.id ?? `local-${i}`} className={`bubble-row ${isGroup && speaker?.uuid === participants[1]?.uuid ? "friend-two" : ""}`}>
+                {speaker && <Avatar uuid={speaker.uuid} sex={speaker.sex} age={speaker.age} size={28} radius={8} />}
+                <div className="speaker-message">
+                  {isGroup && <span className="speaker-name">{speaker?.name}</span>}
+                  <div className="bubble persona">{m.content || (m.streaming ? "…" : "")}{m.streaming && <span className="cursor-blink" aria-hidden>▮</span>}</div>
+                </div>
+              </div>;
+        })}
+        {isGroup && !loading && !msgs.some((m) => m.role === "user") && <div className="group-topic-list">
+          <p className="meta">이런 이야기로 시작해볼까요?</p>
+          {TOPICS.map((topic) => <button key={topic} className="chip" disabled={busy} onClick={() => send(topic)}>{topic}</button>)}
+        </div>}
       </div>
-
-      <div className="chat-input-row">
-        <input
-          ref={inputRef}
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.nativeEvent.isComposing) send();
-          }}
-          placeholder="메시지를 입력해주세요"
-          maxLength={2000}
-        />
-        <button className="chat-send" onClick={send} disabled={busy || !input.trim()} aria-label="보내기">
-          ↑
-        </button>
-      </div>
-
+      {error && <div className="chat-error" role="alert">{error}</div>}
+      {isGroup && !loading && <div className="group-turn-status">
+        <span className="meta" role="status">{stopping ? "친구들이 말을 멈추고 있어요…" : busy ? `친구들이 이야기 중이에요${turn ? ` · ${turn}/4` : ""}` : "이제 당신 이야기를 들려주세요"}</span>
+        {busy && <button className="btn-ghost" onClick={stop} disabled={stopping}>나도 한마디</button>}
+      </div>}
+      <form className="chat-input-row" onSubmit={(e) => { e.preventDefault(); send(); }}>
+        <input ref={inputRef} value={input} onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter" && e.nativeEvent.isComposing) e.preventDefault(); }}
+          aria-label="메시지" placeholder={isGroup && busy ? "한마디 보내고 대화에 끼어들기" : "메시지를 입력해주세요"}
+          maxLength={2000} disabled={loading || !persona} />
+        <button type="submit" className="chat-send" disabled={loading || stopping || (!isGroup && busy) || !input.trim() || !persona} aria-label={busy && isGroup ? "끼어들어 보내기" : "보내기"}>↑</button>
+      </form>
+      {showPicker && persona && <FriendPicker conversationId={id} currentUuid={persona.uuid}
+        onClose={() => setShowPicker(false)} onAdded={(c) => { applySnapshot(c); setShowPicker(false); nearBottom.current = true; }} />}
       {showLogin && <LoginSheet onClose={() => setShowLogin(false)} />}
       {showQuota && <QuotaSheet onClose={() => setShowQuota(false)} />}
     </div>

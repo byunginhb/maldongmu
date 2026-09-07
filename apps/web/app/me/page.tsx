@@ -19,6 +19,10 @@ interface ConvItem {
   sex: string;
   occupation: string;
   oneLiner: string;
+  secondPersonaUuid?: string | null;
+  secondName?: string;
+  secondSex?: string;
+  secondAge?: number;
 }
 
 interface Me {
@@ -55,16 +59,18 @@ export default function MePage() {
   };
 
   // 실제로 대화한(내가 말 건넨) 이웃만, 인물 단위로 묶어 최근 대화방으로 연결
-  const talked = new Set((convs ?? []).filter((c) => c.userMsgs > 0).map((c) => c.personaUuid));
+  const groups = (convs ?? []).filter((c) => c.secondPersonaUuid);
+  const solo = (convs ?? []).filter((c) => !c.secondPersonaUuid);
+  const talked = new Set(solo.filter((c) => c.userMsgs > 0).map((c) => c.personaUuid));
   const seen = new Set<string>();
-  const neighbors = (convs ?? []).filter((c) => {
+  const neighbors = solo.filter((c) => {
     if (!talked.has(c.personaUuid) || seen.has(c.personaUuid)) return false;
     seen.add(c.personaUuid);
     return true; // 목록은 lastMessageAt DESC → 인물별 최근 대화방
   });
   // 오늘 새로 만난 이웃 수 (인물별 가장 이른 대화 생성일이 오늘)
   const firstMet: Record<string, string> = {};
-  for (const c of convs ?? []) {
+  for (const c of solo) {
     if (!talked.has(c.personaUuid)) continue;
     if (!firstMet[c.personaUuid] || c.createdAt < firstMet[c.personaUuid]) firstMet[c.personaUuid] = c.createdAt;
   }
@@ -80,7 +86,7 @@ export default function MePage() {
             ? " "
             : neighbors.length > 0
               ? `${me?.nickname ? `${me.nickname}님, ` : ""}지금까지 ${neighbors.length}명의 이웃을 만났어요`
-              : "아직 만난 이웃이 없어요"}
+              : groups.length ? "친구들과 나눈 이야기를 이어가볼까요?" : "아직 만난 이웃이 없어요"}
       </p>
 
       {newToday > 0 && (
@@ -133,6 +139,19 @@ export default function MePage() {
         </div>
       )}
 
+      {groups.length > 0 && <section className="notebook-groups">
+        <h2 className="dot-title">셋이서 수다</h2>
+        <p className="meta">함께 놀던 친구들이 기다리고 있어요.</p>
+        {groups.map((c) => <Link key={c.id} href={`/chat/${c.id}`} className="group-conversation-card">
+          <span className="chat-faces">
+            <Avatar uuid={c.personaUuid} sex={c.sex} age={c.age} size={40} />
+            <Avatar uuid={c.secondPersonaUuid!} sex={c.secondSex} age={c.secondAge} size={40} />
+          </span>
+          <span><b>{c.name} · {c.secondName}</b><span className="meta">나까지 셋이서 · 이어서 이야기하기</span></span>
+          <span aria-hidden>→</span>
+        </Link>)}
+      </section>}
+
       {/* 만난 이웃 그리드 */}
       {neighbors.length > 0 && (
         <div className="notebook-grid">
@@ -153,7 +172,7 @@ export default function MePage() {
       )}
 
       {/* 빈 상태 (로딩·에러 아님) */}
-      {convs !== null && !error && neighbors.length === 0 && (
+      {convs !== null && !error && neighbors.length === 0 && groups.length === 0 && (
         <div className="empty">
           아직 만난 이웃이 없어요.
           <br />

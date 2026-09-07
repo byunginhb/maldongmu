@@ -265,6 +265,61 @@ h2.dot-title { font-size: 18px; margin: 0; }
 }
 .chat-send:disabled { opacity: 0.4; }
 
+/* Two friends, one shared conversation. */
+.chat-input-row input { min-width: 0; }
+.chat-back { background: none; border: none; color: var(--brown); font-size: 20px; min-width: 36px; min-height: 44px; padding: 0; }
+.chat-faces { display: flex; align-items: center; gap: 3px; flex-shrink: 0; }
+.chat-heading { flex: 1; min-width: 0; }
+.chat-heading p { margin: 0; font-size: 15px; font-weight: 600; line-height: 1.4; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chat-heading .meta { display: block; font-size: 12px; line-height: 1.4; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.invite-friend { flex-shrink: 0; min-height: 44px; padding: 6px 10px; font-size: 12px; }
+.group-chat-guide { margin: 0; padding: 9px 16px; font-size: 12px; color: var(--brown-soft); border-bottom: 1px solid var(--line); }
+.chat-disclosure { text-align: center; font-size: 11px; margin: 0 0 4px; }
+.speaker-message { max-width: 78%; min-width: 0; }
+.speaker-message .bubble { max-width: 100%; }
+.speaker-name { display: block; margin: 0 0 4px 4px; font-size: 12px; color: var(--brown-soft); }
+.friend-two .bubble.persona { background: var(--paper); border: 1px solid var(--line); }
+.group-turn-status { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 48px; padding: 6px 16px; border-top: 1px solid var(--line); }
+.group-turn-status .meta { font-size: 12px; }
+.group-turn-status button { min-height: 44px; flex-shrink: 0; font-size: 13px; }
+.group-topic-list { margin: 16px 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.group-topic-list p { width: 100%; margin: 0; }
+.group-topic-list button { min-height: 44px; white-space: normal; text-align: left; }
+.chat-error { padding: 10px 16px; margin: 0; color: var(--red); font-size: 13px; }
+.today-friends { margin: 0 0 28px; }
+.today-friends-button { width: 100%; display: flex; align-items: center; gap: 12px; text-align: left; color: var(--brown); background: var(--paper); border: 1px solid var(--line); border-radius: 16px; padding: 16px; }
+.today-friends-copy { flex: 1; min-width: 0; }
+.today-friends-copy b { display: block; font-size: 15px; }
+.today-friends-copy .meta { display: block; margin-top: 4px; font-size: 12px; }
+.today-friends-button:disabled { opacity: 0.65; }
+.friend-dialog { width: min(540px, calc(100vw - 24px)); max-height: calc(100dvh - 32px); padding: 20px; border: 1px solid var(--line); border-radius: 20px; color: var(--brown); background: var(--cream); overflow-y: auto; }
+.friend-dialog::backdrop { background: rgba(61, 43, 31, 0.35); }
+.friend-picker-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.friend-picker-head h2 { margin: 0 0 6px; }
+.friend-picker-head p { margin: 0 0 16px; font-size: 12px; }
+.friend-picker-head button { min-height: 44px; flex-shrink: 0; }
+.friend-picker-list { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; max-height: 42dvh; min-height: 100px; overflow-y: auto; }
+.friend-option { display: flex; align-items: center; gap: 10px; width: 100%; padding: 12px; text-align: left; border: 1px solid var(--line); border-radius: 14px; color: var(--brown); background: var(--paper); }
+.friend-option.selected { border-color: var(--brown); background: var(--sand); }
+.friend-option > span:nth-child(2) { flex: 1; min-width: 0; }
+.friend-option b { font-size: 14px; }
+.friend-option .meta { display: block; font-size: 12px; }
+.friend-intro { display: block; font-size: 12px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.friend-invite-note { font-size: 12px; margin: 14px 0; }
+.friend-pagination { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; }
+.friend-pagination button { min-height: 44px; }
+.notebook-groups { margin-bottom: 28px; }
+.notebook-groups > .meta { margin: 4px 0 12px; }
+.group-conversation-card { display: flex; align-items: center; gap: 12px; border: 1px solid var(--line); border-radius: 16px; background: var(--paper); padding: 14px; margin-top: 10px; }
+.group-conversation-card > span:nth-child(2) { flex: 1; min-width: 0; }
+.group-conversation-card b { font-size: 14px; }
+.group-conversation-card .meta { display: block; font-size: 12px; }
+@media (max-width: 380px) {
+  .today-friends-button { flex-wrap: wrap; }
+  .today-friends-copy { flex-basis: 65%; }
+  .chat-head { gap: 6px; padding-inline: 10px; }
+}
+
 /* 하단 탭바 */
 .tabbar {
   position: fixed;
