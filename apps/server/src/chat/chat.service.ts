@@ -1,4 +1,4 @@
-import { ConflictException, ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
 import { nanoid } from "nanoid";
 import { DbService } from "../db/db.service";
 import { PersonasService } from "../personas/personas.service";
@@ -21,7 +21,9 @@ export class ChatService {
     return this.dbs.db;
   }
 
-  createConversation(userId: string, personaUuid: string) {
+  createConversation(userId: string, personaUuid: string, secondPersonaUuid?: string) {
+    if (typeof personaUuid !== "string" || !personaUuid) throw new BadRequestException("친구를 골라주세요");
+    if (secondPersonaUuid === personaUuid) throw new BadRequestException("서로 다른 친구를 골라주세요");
     const user = this.db.prepare(`SELECT * FROM users WHERE id = ?`).get(userId) as any;
     if (!user) throw new NotFoundException("user not found");
 
@@ -36,14 +38,18 @@ export class ChatService {
     }
 
     const persona = this.personas.card(personaUuid) as any;
+    const secondPersona = secondPersonaUuid ? this.personas.card(secondPersonaUuid) as any : null;
     const id = nanoid(12);
-    this.db
-      .prepare(`INSERT INTO conversations (id, user_id, persona_uuid, title) VALUES (?, ?, ?, ?)`)
-      .run(id, userId, personaUuid, `${persona.name}님과의 대화`);
-    this.db
-      .prepare(`INSERT INTO usage_events (user_id, persona_uuid, event) VALUES (?, ?, 'chat_start')`)
-      .run(userId, personaUuid);
-    return { id, persona };
+    this.db.transaction(() => {
+      this.db
+        .prepare(`INSERT INTO conversations (id, user_id, persona_uuid, second_persona_uuid, title) VALUES (?, ?, ?, ?, ?)`)
+        .run(id, userId, personaUuid, secondPersonaUuid ?? null,
+          secondPersona ? `${persona.name}·${secondPersona.name}와 셋이서 수다` : `${persona.name}님과의 대화`);
+      this.db
+        .prepare(`INSERT INTO usage_events (user_id, persona_uuid, event) VALUES (?, ?, 'chat_start')`)
+        .run(userId, personaUuid);
+    })();
+    return { id, persona, personas: secondPersona ? [persona, secondPersona] : [persona] };
   }
 
   countUserMessages(userId: string): number {
@@ -68,11 +74,14 @@ export class ChatService {
   listConversations(userId: string) {
     return this.db
       .prepare(
-        `SELECT c.id, c.persona_uuid as personaUuid, c.title, c.created_at as createdAt,
+        `SELECT c.id, c.persona_uuid as personaUuid, c.second_persona_uuid as secondPersonaUuid,
+                p2.name as secondName, p2.sex as secondSex, p2.age as secondAge,
+                c.title, c.created_at as createdAt,
                 c.last_message_at as lastMessageAt,
                 (SELECT COUNT(*) FROM messages m WHERE m.conversation_id = c.id AND m.role = 'user') as userMsgs,
                 p.name, p.age, p.sex, p.occupation, p.one_liner as oneLiner
          FROM conversations c LEFT JOIN personas p ON p.uuid = c.persona_uuid
+         LEFT JOIN personas p2 ON p2.uuid = c.second_persona_uuid
          WHERE c.user_id = ? ORDER BY c.last_message_at DESC`,
       )
       .all(userId);
@@ -85,12 +94,14 @@ export class ChatService {
     if (!conv) throw new NotFoundException("conversation not found");
     const messages = this.db
       .prepare(
-        `SELECT id, role, content, created_at as createdAt FROM messages
+        `SELECT id, role, content, speaker_uuid as speakerUuid, created_at as createdAt FROM messages
          WHERE conversation_id = ? ORDER BY created_at, rowid`,
       )
       .all(id);
     const persona = this.personas.card(conv.persona_uuid);
-    return { ...conv, persona, messages };
+    const participants = conv.second_persona_uuid
+      ? [persona, this.personas.card(conv.second_persona_uuid)] : [persona];
+    return { ...conv, persona, personas: participants, messages };
   }
 
   buildLlmMessages(userId: string, conversationId: string, userText: string) {
@@ -99,28 +110,7 @@ export class ChatService {
       .get(conversationId, userId) as any;
     if (!conv) throw new NotFoundException("conversation not found");
 
-    // 게스트는 대화방당 메시지 N개까지 → 이후 로그인 유도
-    const user = this.db
-      .prepare(`SELECT type, message_limit FROM users WHERE id = ?`)
-      .get(userId) as any;
-    if (user?.type === "guest") {
-      const msgLimit = Number(process.env.GUEST_MESSAGE_LIMIT || 5);
-      const sent = (
-        this.db
-          .prepare(`SELECT COUNT(*) as c FROM messages WHERE conversation_id = ? AND role = 'user'`)
-          .get(conversationId) as any
-      ).c;
-      if (sent >= msgLimit) {
-        throw new ForbiddenException({ code: "LOGIN_REQUIRED", message: "로그인이 필요해요" });
-      }
-    } else if (user) {
-      // 로그인 사용자: 전체 메시지 한도(기본 100)에서 차감. 피드백을 주면 운영자가 늘려줌
-      const limit = user.message_limit ?? Number(process.env.LOGIN_MESSAGE_LIMIT || 100);
-      const used = this.countUserMessages(userId);
-      if (used >= limit) {
-        throw new ForbiddenException({ code: "QUOTA_EXCEEDED", message: "대화 한도에 도달했어요" });
-      }
-    }
+    this.assertMessageQuota(userId, conversationId);
 
     const detail = this.personas.detail(conv.persona_uuid);
     const total = (
@@ -144,6 +134,31 @@ export class ChatService {
         { role: "user" as const, content: userText },
       ],
     };
+  }
+
+  assertMessageQuota(userId: string, conversationId: string) {
+    // Shared by 1:1 and group rounds. The caller reserves a group user message before awaiting the LLM.
+    const user = this.db
+      .prepare(`SELECT type, message_limit FROM users WHERE id = ?`)
+      .get(userId) as any;
+    if (user?.type === "guest") {
+      const msgLimit = Number(process.env.GUEST_MESSAGE_LIMIT || 5);
+      const sent = (
+        this.db
+          .prepare(`SELECT COUNT(*) as c FROM messages WHERE conversation_id = ? AND role = 'user'`)
+          .get(conversationId) as any
+      ).c;
+      if (sent >= msgLimit) {
+        throw new ForbiddenException({ code: "LOGIN_REQUIRED", message: "로그인이 필요해요" });
+      }
+    } else if (user) {
+      // 로그인 사용자: 전체 메시지 한도(기본 100)에서 차감. 피드백을 주면 운영자가 늘려줌
+      const limit = user.message_limit ?? Number(process.env.LOGIN_MESSAGE_LIMIT || 100);
+      const used = this.countUserMessages(userId);
+      if (used >= limit) {
+        throw new ForbiddenException({ code: "QUOTA_EXCEEDED", message: "대화 한도에 도달했어요" });
+      }
+    }
   }
 
   /** 첫 만남 인사: LLM 대기 없이 인물 카드로 즉시 생성. 언어는 브라우저 힌트 기준. */

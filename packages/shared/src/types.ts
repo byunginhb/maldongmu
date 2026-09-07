@@ -41,7 +41,15 @@ export interface ChatMessage {
   role: "user" | "assistant";
   content: string;
   createdAt: string;
+  speakerUuid?: string | null;
 }
+
+/** Group streams identify every bubble; 1:1 delta/done events stay compatible. */
+export type ChatStreamEvent =
+  | { type: "speaker"; speakerUuid: string; messageId: string; turn: number; maxTurns: number }
+  | { type: "delta"; delta: string }
+  | { type: "messageEnd" }
+  | { type: "done"; waitingForUser?: boolean };
 
 export interface SearchFilters {
   q?: string;

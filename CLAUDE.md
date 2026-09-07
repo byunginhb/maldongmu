@@ -22,6 +22,8 @@
 - 서버 .env: .env.example 참고 (OPENROUTER_API_KEY 필요)
 - 디자인: coral CTA 화면당 1개, 도트 폰트(NeoDunggeunmo)는 제목 전용, 그림자 금지 — DESIGN.md 참고
 - 카피 톤: 다정한 존댓말 ("오늘은 누구랑 얘기할까요?")
+- 셋이서 수다: `group-chat.service.ts`, 친구 2명/묶음 4답변/답변당 180토큰/하루 20묶음.
+  생성은 사용자 메시지를 먼저 저장한 뒤 시작하고, 취소 시 부분 답변을 보존한다. 배포·검증은 `docs/group-chat.md`.
 
 ## 현재 상태 (2026-07-17)
 - 완료: 스캐폴딩, ETL(100만), 서버 코어 API, 웹 MVP(홈/검색/페르소나/SSE채팅/내 대화),

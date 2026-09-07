@@ -105,6 +105,13 @@ export class DbService implements OnModuleDestroy {
     }
     // 인터뷰 시도 레이트리밋용 per-user 조회 인덱스 (환불불가 카운터)
     this.db.exec(`CREATE INDEX IF NOT EXISTS idx_usage_user ON usage_events(user_id, event, created_at)`);
+    // Additive migration: old 1:1 conversations/messages remain valid.
+    for (const [table, column] of [["conversations", "second_persona_uuid"], ["messages", "speaker_uuid"]]) {
+      const columns = this.db.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[];
+      if (!columns.some((c) => c.name === column)) {
+        this.db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} TEXT`);
+      }
+    }
   }
 
   onModuleDestroy() {

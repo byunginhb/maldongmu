@@ -27,12 +27,13 @@ export class LlmService {
     );
   }
 
-  async *stream(messages: LlmMessage[]): AsyncGenerator<
+  async *stream(messages: LlmMessage[], options: { maxTokens?: number; signal?: AbortSignal; model?: string } = {}): AsyncGenerator<
     { type: "delta"; text: string } | { type: "usage"; promptTokens: number; completionTokens: number }
   > {
-    const model = process.env.OPENROUTER_MODEL || "google/gemini-2.5-flash";
+    const model = options.model || process.env.OPENROUTER_MODEL || "google/gemini-2.5-flash";
     const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
+      signal: options.signal,
       headers: {
         Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
         "Content-Type": "application/json",
@@ -44,6 +45,9 @@ export class LlmService {
         messages: this.withCacheControl(model, messages),
         stream: true,
         usage: { include: true },
+        ...(options.maxTokens ? { max_tokens: options.maxTokens } : {}),
+        // The default model supports disabling thinking; do not impose that on custom models.
+        ...(options.maxTokens && model === "google/gemini-2.5-flash" ? { reasoning: { effort: "none" } } : {}),
       }),
     });
 
@@ -56,32 +60,38 @@ export class LlmService {
     const decoder = new TextDecoder();
     let buf = "";
 
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      buf += decoder.decode(value, { stream: true });
-      const lines = buf.split("\n");
-      buf = lines.pop() || "";
-      for (const line of lines) {
-        const trimmed = line.trim();
-        if (!trimmed.startsWith("data:")) continue;
-        const data = trimmed.slice(5).trim();
-        if (data === "[DONE]") return;
-        try {
-          const json = JSON.parse(data);
-          const delta = json.choices?.[0]?.delta?.content;
-          if (delta) yield { type: "delta", text: delta };
-          if (json.usage) {
-            yield {
-              type: "usage",
-              promptTokens: json.usage.prompt_tokens || 0,
-              completionTokens: json.usage.completion_tokens || 0,
-            };
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += decoder.decode(value, { stream: true });
+        const lines = buf.split("\n");
+        buf = lines.pop() || "";
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed.startsWith("data:")) continue;
+          const data = trimmed.slice(5).trim();
+          if (data === "[DONE]") return;
+          try {
+            const json = JSON.parse(data);
+            if (json.error) throw new Error(json.error.message || "OpenRouter stream error");
+            const delta = json.choices?.[0]?.delta?.content;
+            if (delta) yield { type: "delta", text: delta };
+            if (json.usage) {
+              yield {
+                type: "usage",
+                promptTokens: json.usage.prompt_tokens || 0,
+                completionTokens: json.usage.completion_tokens || 0,
+              };
+            }
+          } catch (error) {
+            if (!(error instanceof SyntaxError)) throw error;
           }
-        } catch {
-          /* partial line, skip */
         }
       }
+    } finally {
+      await reader.cancel().catch(() => {});
+      reader.releaseLock();
     }
   }
 

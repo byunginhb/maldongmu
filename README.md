@@ -14,6 +14,8 @@
 
 ## 개발 시작
 
+셋이서 수다(친구 두 명과 대화)의 기능·사용량 제한·서버 배포 순서는 [docs/group-chat.md](docs/group-chat.md)를 참고하세요.
+
 ```bash
 pnpm install
 
