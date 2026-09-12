@@ -186,6 +186,7 @@ export interface ConversationMessage {
 
 export interface ConversationSnapshot {
   id: string;
+  mode?: "dating" | null; // null/undefined = 일반 대화
   persona: PersonaCard;
   personas?: PersonaCard[]; // Optional until the server rollout.
   messages: ConversationMessage[];
@@ -221,6 +222,12 @@ export function recommendPersonas(concern: string, detail?: string): Promise<{ i
 /** 만나기 어려운 직업 대표 페르소나 목록 (공개) */
 export function getOccupations(): Promise<{ items: OccupationEntry[] }> {
   return apiGet("/personas/occupations");
+}
+
+/* ---------- 가상 연애 ---------- */
+/** 성별·나이대에 맞는 소개팅 상대 후보 (공개, LLM 없음). 대화 시작은 POST /conversations { mode: "dating" } */
+export function datingCandidates(sex: string, ageMin: number, ageMax: number): Promise<{ items: PersonaCard[] }> {
+  return apiGet(`/personas/dating?sex=${encodeURIComponent(sex)}&ageMin=${ageMin}&ageMax=${ageMax}`);
 }
 
 /* ---------- 욕쟁이 할매 ---------- */

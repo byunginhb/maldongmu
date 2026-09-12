@@ -19,6 +19,7 @@ interface ConvItem {
   sex: string;
   occupation: string;
   oneLiner: string;
+  mode?: "dating" | null;
   secondPersonaUuid?: string | null;
   secondName?: string;
   secondSex?: string;
@@ -60,7 +61,11 @@ export default function MePage() {
 
   // 실제로 대화한(내가 말 건넨) 이웃만, 인물 단위로 묶어 최근 대화방으로 연결
   const groups = (convs ?? []).filter((c) => c.secondPersonaUuid);
-  const solo = (convs ?? []).filter((c) => !c.secondPersonaUuid);
+  // 가상 연애: 실제로 말을 건넨 방만, 인물당 최근 방 하나 (후보 3명을 눌러보기만 한 빈 방은 숨김)
+  const seenDate = new Set<string>();
+  const dates = (convs ?? []).filter((c) => c.mode === "dating" && !c.secondPersonaUuid && c.userMsgs > 0
+    && !seenDate.has(c.personaUuid) && !!seenDate.add(c.personaUuid));
+  const solo = (convs ?? []).filter((c) => !c.secondPersonaUuid && c.mode !== "dating");
   const talked = new Set(solo.filter((c) => c.userMsgs > 0).map((c) => c.personaUuid));
   const seen = new Set<string>();
   const neighbors = solo.filter((c) => {
@@ -86,7 +91,7 @@ export default function MePage() {
             ? " "
             : neighbors.length > 0
               ? `${me?.nickname ? `${me.nickname}님, ` : ""}지금까지 ${neighbors.length}명의 이웃을 만났어요`
-              : groups.length ? "친구들과 나눈 이야기를 이어가볼까요?" : "아직 만난 이웃이 없어요"}
+              : groups.length || dates.length ? "나눈 이야기를 이어가볼까요?" : "아직 만난 이웃이 없어요"}
       </p>
 
       {newToday > 0 && (
@@ -152,6 +157,16 @@ export default function MePage() {
         </Link>)}
       </section>}
 
+      {dates.length > 0 && <section className="notebook-groups">
+        <h2 className="dot-title">가상 연애</h2>
+        <p className="meta">설레는 이야기를 이어가볼까요?</p>
+        {dates.map((c) => <Link key={c.id} href={`/chat/${c.id}`} className="group-conversation-card">
+          <Avatar uuid={c.personaUuid} sex={c.sex} age={c.age} size={40} />
+          <span><b>{c.name}</b><span className="meta">{c.age}세 · {c.occupation} · 이어서 만나기</span></span>
+          <span aria-hidden>→</span>
+        </Link>)}
+      </section>}
+
       {/* 만난 이웃 그리드 */}
       {neighbors.length > 0 && (
         <div className="notebook-grid">
@@ -172,7 +187,7 @@ export default function MePage() {
       )}
 
       {/* 빈 상태 (로딩·에러 아님) */}
-      {convs !== null && !error && neighbors.length === 0 && groups.length === 0 && (
+      {convs !== null && !error && neighbors.length === 0 && groups.length === 0 && dates.length === 0 && (
         <div className="empty">
           아직 만난 이웃이 없어요.
           <br />

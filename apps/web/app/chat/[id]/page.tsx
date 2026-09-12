@@ -21,6 +21,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
 function ChatRoom({ id }: { id: string }) {
   const router = useRouter();
   const [participants, setParticipants] = useState<Card[]>([]);
+  const [mode, setMode] = useState<ConversationSnapshot["mode"]>(null);
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(true);
@@ -39,10 +40,12 @@ function ChatRoom({ id }: { id: string }) {
   const mounted = useRef(true);
   const nearBottom = useRef(true);
   const isGroup = participants.length === 2;
+  const isDating = mode === "dating";
   const persona = participants[0];
 
   const applySnapshot = (c: ConversationSnapshot) => {
     setParticipants(c.personas ?? [c.persona]);
+    setMode(c.mode ?? null);
     setMsgs(c.messages);
   };
 
@@ -171,9 +174,9 @@ function ChatRoom({ id }: { id: string }) {
         </div>
         <div className="chat-heading">
           <p>{participants.map((p) => p.name).join(" · ") || "대화 불러오는 중"}</p>
-          <span className="meta">{isGroup ? "나까지 셋이서 수다" : persona ? `${persona.age}세 · ${persona.occupation}` : "잠시만 기다려주세요"}</span>
+          <span className="meta">{isGroup ? "나까지 셋이서 수다" : persona ? `${isDating ? "가상 연애 · " : ""}${persona.age}세 · ${persona.occupation}` : "잠시만 기다려주세요"}</span>
         </div>
-        {!isGroup && persona && groupEnabled && <button className="btn-ghost invite-friend" disabled={busy || loading} onClick={() => setShowPicker(true)}>+ 친구 초대</button>}
+        {!isGroup && !isDating && persona && groupEnabled && <button className="btn-ghost invite-friend" disabled={busy || loading} onClick={() => setShowPicker(true)}>+ 친구 초대</button>}
       </header>
       {isGroup && <p className="group-chat-guide">친구들이 짧게 이야기한 뒤 기다려요. 언제든 끼어들어도 좋아요.</p>}
       <div className="chat-body" ref={bodyRef} role="log" aria-label="대화 내용" aria-live="off"

@@ -1,0 +1,4 @@
+{"t":0,"agent":"a30082e","agent_type":"unknown","event":"agent_stop","success":true,"duration_ms":0}
+{"t":0,"agent":"ad0a0b6","agent_type":"unknown","event":"agent_stop","success":true,"duration_ms":0}
+{"t":0,"agent":"af30e7a","agent_type":"unknown","event":"agent_stop","success":true,"duration_ms":0}
+{"t":0,"agent":"system","event":"skill_invoked","skill_name":"artifact-design"}
