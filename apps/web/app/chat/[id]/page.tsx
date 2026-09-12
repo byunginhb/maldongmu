@@ -189,7 +189,6 @@ function ChatRoom({ id }: { id: string }) {
         {!isGroup && !isDating && persona && groupEnabled && <button className="btn-ghost invite-friend" disabled={busy || loading} onClick={() => setShowPicker(true)}>+ 친구 초대</button>}
       </header>
       {isGroup && <p className="group-chat-guide">친구들이 짧게 이야기한 뒤 기다려요. 언제든 끼어들어도 좋아요.</p>}
-      {isDating && !loading && <AffectionMeter score={affection.score} change={affection.change} note={affection.note} />}
       <div className="chat-body" ref={bodyRef} role="log" aria-label="대화 내용" aria-live="off"
         onScroll={(e) => { const el = e.currentTarget; nearBottom.current = el.scrollHeight - el.scrollTop - el.clientHeight < 100; }}>
         {loading && <p className="empty">대화를 불러오고 있어요…</p>}
@@ -217,6 +216,7 @@ function ChatRoom({ id }: { id: string }) {
         <span className="meta" role="status">{stopping ? "친구들이 말을 멈추고 있어요…" : busy ? `친구들이 이야기 중이에요${turn ? ` · ${turn}/4` : ""}` : "이제 당신 이야기를 들려주세요"}</span>
         {busy && <button className="btn-ghost" onClick={stop} disabled={stopping}>나도 한마디</button>}
       </div>}
+      {isDating && !loading && <AffectionMeter score={affection.score} change={affection.change} note={affection.note} />}
       <form className="chat-input-row" onSubmit={(e) => { e.preventDefault(); send(); }}>
         <input ref={inputRef} value={input} onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter" && e.nativeEvent.isComposing) e.preventDefault(); }}
