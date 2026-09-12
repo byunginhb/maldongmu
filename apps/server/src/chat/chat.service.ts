@@ -2,7 +2,7 @@ import { BadRequestException, ConflictException, ForbiddenException, Injectable,
 import { nanoid } from "nanoid";
 import { DbService } from "../db/db.service";
 import { PersonasService } from "../personas/personas.service";
-import { buildSystemPrompt, greetingText } from "./prompt";
+import { buildSystemPrompt, greetingText, datingGreetingText, DATING_OVERLAY } from "./prompt";
 import { GRANNY_BY_UUID, grannyOverlay } from "../db/granny";
 
 // 프롬프트 캐시 효율을 위한 계단식 히스토리 윈도우:
@@ -21,9 +21,10 @@ export class ChatService {
     return this.dbs.db;
   }
 
-  createConversation(userId: string, personaUuid: string, secondPersonaUuid?: string) {
+  createConversation(userId: string, personaUuid: string, secondPersonaUuid?: string, mode?: "dating") {
     if (typeof personaUuid !== "string" || !personaUuid) throw new BadRequestException("친구를 골라주세요");
     if (secondPersonaUuid === personaUuid) throw new BadRequestException("서로 다른 친구를 골라주세요");
+    if (mode === "dating" && GRANNY_BY_UUID.has(personaUuid)) throw new BadRequestException("이 분과는 가상 연애를 할 수 없어요");
     const user = this.db.prepare(`SELECT * FROM users WHERE id = ?`).get(userId) as any;
     if (!user) throw new NotFoundException("user not found");
 
@@ -42,9 +43,10 @@ export class ChatService {
     const id = nanoid(12);
     this.db.transaction(() => {
       this.db
-        .prepare(`INSERT INTO conversations (id, user_id, persona_uuid, second_persona_uuid, title) VALUES (?, ?, ?, ?, ?)`)
-        .run(id, userId, personaUuid, secondPersonaUuid ?? null,
-          secondPersona ? `${persona.name}·${secondPersona.name}와 셋이서 수다` : `${persona.name}님과의 대화`);
+        .prepare(`INSERT INTO conversations (id, user_id, persona_uuid, second_persona_uuid, mode, title) VALUES (?, ?, ?, ?, ?, ?)`)
+        .run(id, userId, personaUuid, secondPersonaUuid ?? null, mode ?? null,
+          secondPersona ? `${persona.name}·${secondPersona.name}와 셋이서 수다`
+            : mode === "dating" ? `${persona.name}님과 가상 연애` : `${persona.name}님과의 대화`);
       this.db
         .prepare(`INSERT INTO usage_events (user_id, persona_uuid, event) VALUES (?, ?, 'chat_start')`)
         .run(userId, personaUuid);
@@ -74,7 +76,7 @@ export class ChatService {
   listConversations(userId: string) {
     return this.db
       .prepare(
-        `SELECT c.id, c.persona_uuid as personaUuid, c.second_persona_uuid as secondPersonaUuid,
+        `SELECT c.id, c.persona_uuid as personaUuid, c.second_persona_uuid as secondPersonaUuid, c.mode,
                 p2.name as secondName, p2.sex as secondSex, p2.age as secondAge,
                 c.title, c.created_at as createdAt,
                 c.last_message_at as lastMessageAt,
@@ -126,10 +128,11 @@ export class ChatService {
       .all(conversationId, start) as any[];
 
     const granny = GRANNY_BY_UUID.get(conv.persona_uuid);
+    const overlay = granny ? grannyOverlay(granny.region) : conv.mode === "dating" ? DATING_OVERLAY : undefined;
     return {
       conv,
       messages: [
-        { role: "system" as const, content: buildSystemPrompt(detail, granny && grannyOverlay(granny.region)) },
+        { role: "system" as const, content: buildSystemPrompt(detail, overlay) },
         ...history.map((m) => ({ role: m.role as "user" | "assistant", content: m.content })),
         { role: "user" as const, content: userText },
       ],
@@ -175,7 +178,7 @@ export class ChatService {
     const p = this.personas.card(conv.persona_uuid) as any;
     // 욕쟁이 할매는 첫인사부터 걸쭉하게 (일반 인사 대신 캐릭터 인사)
     const granny = GRANNY_BY_UUID.get(conv.persona_uuid);
-    return { conv, text: granny ? granny.greeting : greetingText(p, lang) };
+    return { conv, text: granny ? granny.greeting : conv.mode === "dating" ? datingGreetingText(p, lang) : greetingText(p, lang) };
   }
 
   /** 인사말 저장: user 메시지 없이 assistant만. 동시 요청이 겹쳐도 빈 방일 때만 저장 */

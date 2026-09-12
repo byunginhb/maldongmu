@@ -97,6 +97,7 @@ export class GroupChatService {
     this.dbs.db.transaction(() => {
       const conv = this.chat.getConversation(userId, id);
       if (conv.second_persona_uuid) throw new ConflictException("친구는 두 명까지 함께할 수 있어요");
+      if (conv.mode === "dating") throw new BadRequestException("가상 연애 중에는 친구를 초대할 수 없어요");
       if (conv.persona_uuid === uuid) throw new BadRequestException("이미 함께 있는 친구예요");
       const friend = this.personas.card(uuid) as PersonaCard;
       const first = conv.persona as PersonaCard;

@@ -35,8 +35,8 @@ export class ChatController {
   }
 
   @Post("conversations")
-  create(@Req() req: any, @Body() body: { personaUuid: string }) {
-    return this.chat.createConversation(req.userId, body.personaUuid);
+  create(@Req() req: any, @Body() body: { personaUuid: string; mode?: string }) {
+    return this.chat.createConversation(req.userId, body.personaUuid, undefined, body?.mode === "dating" ? "dating" : undefined);
   }
 
   @Post("feedback")

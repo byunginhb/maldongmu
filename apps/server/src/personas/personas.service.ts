@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
 import { DbService } from "../db/db.service";
 import { PINNED_PERSONA_UUIDS } from "../db/seed";
 import { GRANNY_PERSONAS } from "../db/granny";
@@ -269,6 +269,29 @@ ${list}
       items.push({ ...persona, reason: `${persona.name} 이야기를 나누기 좋은 분이에요` });
     }
 
+    return { items };
+  }
+
+  /** 가상 연애 상대 후보: 성별·나이대에 맞고 배우자가 없는 이웃을 rowid 랜덤 시크로 뽑는다 (LLM·풀스캔 없음) */
+  dating(sex: string, ageMin: number, ageMax: number, count = 3) {
+    if (sex !== "남자" && sex !== "여자") throw new BadRequestException("성별을 골라주세요");
+    if (!Number.isInteger(ageMin) || !Number.isInteger(ageMax) || ageMin < 20 || ageMax > 99 || ageMin > ageMax) {
+      throw new BadRequestException("나이대를 골라주세요");
+    }
+    const max = (this.db.prepare(`SELECT MAX(rowid) AS n FROM personas`).get() as any).n || 0;
+    // 커스텀 페르소나(고정 노출 2명 + 욕쟁이 할매)는 제외. 결혼 상태는 상세 테이블에만 있어 uuid PK 조인.
+    const custom = [...PINNED_PERSONA_UUIDS, ...GRANNY_PERSONAS.map((g) => g.uuid)];
+    const pick = this.db.prepare(
+      `SELECT ${CARD_COLS.replace(/uuid,/, "p.uuid,")} FROM personas p JOIN persona_details d ON d.uuid = p.uuid
+       WHERE p.rowid >= ? AND p.sex = ? AND p.age BETWEEN ? AND ? AND IFNULL(d.marital_status, '') != '배우자있음'
+         AND p.uuid NOT IN (${custom.map(() => "?").join(",")}) ORDER BY p.rowid LIMIT 1`,
+    );
+    const items: any[] = [];
+    // ponytail: 시도 횟수만 제한. 조건이 너무 좁으면 3명 미만으로 돌려준다
+    for (let i = 0; items.length < count && i < count * 4; i++) {
+      const row = pick.get(Math.floor(Math.random() * max) + 1, sex, ageMin, ageMax, ...custom) as any;
+      if (row && !items.some((r) => r.uuid === row.uuid)) items.push(row);
+    }
     return { items };
   }
 

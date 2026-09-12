@@ -24,6 +24,8 @@
 - 카피 톤: 다정한 존댓말 ("오늘은 누구랑 얘기할까요?")
 - 셋이서 수다: `group-chat.service.ts`, 친구 2명/묶음 4답변/답변당 180토큰/하루 20묶음.
   생성은 사용자 메시지를 먼저 저장한 뒤 시작하고, 취소 시 부분 답변을 보존한다. 배포·검증은 `docs/group-chat.md`.
+- 가상 연애: `prompts/dating.md` 정적 오버레이(인물 정보 뒤에 붙음) + `conversations.mode='dating'`.
+  상대 후보는 `GET /personas/dating?sex&ageMin&ageMax` — rowid 랜덤 시크, 배우자 있음·커스텀(c0de) 제외, LLM 없음. 웹 `/dating`.
 
 ## 현재 상태 (2026-07-17)
 - 완료: 스캐폴딩, ETL(100만), 서버 코어 API, 웹 MVP(홈/검색/페르소나/SSE채팅/내 대화),

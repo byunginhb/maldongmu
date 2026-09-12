@@ -8,6 +8,8 @@ import { join } from "path";
  * 프롬프트 구조: [기본(정적)] → [인물 정보(페르소나별)] → [히스토리] 순으로 변하는 것일수록 뒤에.
  */
 const BASE_PROMPT = readFileSync(join(__dirname, "../../prompts/base.md"), "utf8").trim();
+/** 가상 연애 오버레이 — prompts/dating.md. base.md와 같은 이유로 완전 정적. 인물 정보 뒤(가장 강한 지시)에 붙는다. */
+export const DATING_OVERLAY = readFileSync(join(__dirname, "../../prompts/dating.md"), "utf8").trim();
 
 /** district는 "경기-성남시"(도-시) 형태라 하이픈만 공백으로 → "경기 성남시". 없으면 province 폴백. */
 function placeOf(p: { province?: string; district?: string }): string {
@@ -93,4 +95,16 @@ export function greetingText(
   if (l.startsWith("ja"))
     return `こんにちは、${place}に住んでいる${p.name}です。よろしくお願いします！今日は何を話しましょうか？`;
   return `안녕하세요, 저는 ${place}에 사는 ${p.name}입니다. 반가워요! 오늘은 어떤 이야기를 나눠볼까요?`;
+}
+
+/** 가상 연애 첫 만남 — 소개팅 자리에 막 도착한 상황. LLM 없이 즉시. */
+export function datingGreetingText(p: { name: string }, lang?: string): string {
+  const l = (lang || "").toLowerCase();
+  if (l.startsWith("en"))
+    return `(smiling shyly) Hi… are you the one I was set up with today? I'm ${p.name}. It's my first time doing this, so I'm a little nervous. Did you wait long?`;
+  if (l.startsWith("zh"))
+    return `（有点害羞地笑着）你好……请问是今天介绍认识的那位吗？我是${p.name}。第一次这样见面，有点紧张。等很久了吗？`;
+  if (l.startsWith("ja"))
+    return `（少し照れながら）こんにちは…今日ご紹介いただいた方ですよね？${p.name}です。こういう場は初めてで、少し緊張しています。お待たせしましたか？`;
+  return `(살짝 웃으며) 안녕하세요… 혹시 오늘 소개받기로 한 분 맞으세요? 저는 ${p.name}입니다. 이런 자리는 처음이라 조금 떨리네요. 많이 기다리셨어요?`;
 }

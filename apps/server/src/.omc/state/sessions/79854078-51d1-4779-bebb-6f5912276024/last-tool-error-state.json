@@ -1,0 +1,7 @@
+{
+  "tool_name": "Bash",
+  "tool_input_preview": "{\"command\":\"cd /Users/byungin/Documents/projects/maldongmu/apps/server\\nnode -e '\\nconst { createRequire } = require(\\\"module\\\");\\nconst { createHmac } = require(\\\"crypto\\\");\\nconst fs = require(\\\"fs\\...",
+  "error": "Exit code 1\nnode:internal/modules/cjs/loader:1433\n  throw err;\n  ^\n\nError: Cannot find module 'jsonwebtoken'\nRequire stack:\n- /Users/byungin/Documents/projects/maldongmu/apps/server/package.json\n    at Function._resolveFilename (node:internal/modules/cjs/loader:1430:15)\n    at defaultResolveImpl (node:internal/modules/cjs/loader:1040:19)\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1045:22)\n    at Function._load (node:internal/modules/cjs/loader:1216:25)\n    at wrapModuleLoad ...",
+  "timestamp": "2026-07-23T17:33:59.609Z",
+  "retry_count": 1
+}

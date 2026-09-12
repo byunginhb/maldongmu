@@ -5,7 +5,7 @@
     "build": "nest build",
     "start": "node dist/main.js",
     "start:dev": "nest start --watch",
-    "test:chat": "pnpm build && node --test test/group-chat.test.cjs test/llm-stream.test.cjs"
+    "test:chat": "pnpm build && node --test test/group-chat.test.cjs test/llm-stream.test.cjs test/dating.test.cjs"
   },
   "dependencies": {
     "@maldongmu/shared": "workspace:*",

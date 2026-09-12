@@ -30,6 +30,12 @@ export class PersonasController {
     return this.personas.recommend(req.userId, concern, detail);
   }
 
+  /** 가상 연애 상대 후보 (공개, LLM 없음). :uuid 라우트보다 먼저 선언 */
+  @Get("dating")
+  dating(@Query("sex") sex?: string, @Query("ageMin") ageMin?: string, @Query("ageMax") ageMax?: string) {
+    return this.personas.dating(String(sex || ""), Number(ageMin), Number(ageMax));
+  }
+
   @Get("random")
   random() {
     return this.personas.random();
