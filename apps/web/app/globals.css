@@ -548,3 +548,17 @@ h2.dot-title { font-size: 18px; margin: 0; }
 .granny-region { font-size: 12px; font-weight: 700; color: var(--coral); }
 .granny-name { font-size: 15px; font-weight: 600; }
 .granny-go { margin-left: auto; color: var(--brown-soft); font-size: 13px; font-weight: 600; flex-shrink: 0; }
+
+/* 가상 연애 — 호감도 게이지 (HUD가 아니라 상대의 마음을 살피는 작은 안내) */
+.affection { padding: 10px 16px 8px; border-bottom: 1px solid var(--line); background: var(--paper); }
+.affection-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.affection-score { position: relative; display: inline-flex; align-items: baseline; gap: 6px; font-size: 15px; font-weight: 600; }
+.affection-bump { display: inline-block; animation: affection-bump 0.5s ease; }
+.affection-delta { position: absolute; right: 0; top: -14px; font-size: 12px; font-weight: 700; animation: affection-float 1.8s ease forwards; pointer-events: none; }
+.affection-delta.up { color: var(--coral); }
+.affection-delta.down { color: var(--red); }
+.affection-track { height: 6px; margin-top: 6px; background: var(--sand); border-radius: 99px; overflow: hidden; }
+.affection-fill { height: 100%; background: var(--coral); border-radius: 99px; transition: width 0.9s cubic-bezier(0.22, 1, 0.36, 1); }
+.affection-note { margin: 6px 0 0; font-size: 12px; color: var(--brown-soft); animation: finding-fade 0.4s ease; }
+@keyframes affection-bump { 0% { transform: scale(1); } 35% { transform: scale(1.25); } 100% { transform: scale(1); } }
+@keyframes affection-float { 0% { opacity: 0; transform: translateY(6px); } 20% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-12px); } }

@@ -182,6 +182,8 @@ export interface ConversationMessage {
   role: "user" | "assistant";
   content: string;
   speakerUuid?: string | null;
+  affection?: number | null;
+  affectionNote?: string | null;
 }
 
 export interface ConversationSnapshot {

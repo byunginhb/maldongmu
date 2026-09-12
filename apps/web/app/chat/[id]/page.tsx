@@ -9,8 +9,12 @@ import Avatar from "../../../components/Avatar";
 import LoginSheet from "../../../components/LoginSheet";
 import QuotaSheet from "../../../components/QuotaSheet";
 import FriendPicker from "../../../components/FriendPicker";
+import AffectionMeter from "../../../components/AffectionMeter";
 
 interface Msg extends ConversationMessage { streaming?: boolean }
+interface Affection { score: number; change: number; note: string }
+// 첫 만남의 첫인상 (서버 AFFECTION.start와 동일). 아직 심판 결과가 없을 때 표시
+const FIRST_IMPRESSION: Affection = { score: 25, change: 0, note: "첫 만남이에요. 편하게 말을 건네보세요." };
 const TOPICS = ["오늘 있었던 소소한 일", "평생 한 가지 음식만 먹는다면?", "요즘 나를 웃게 하는 것"];
 
 export default function ChatPage({ params }: { params: Promise<{ id: string }> }) {
@@ -22,6 +26,7 @@ function ChatRoom({ id }: { id: string }) {
   const router = useRouter();
   const [participants, setParticipants] = useState<Card[]>([]);
   const [mode, setMode] = useState<ConversationSnapshot["mode"]>(null);
+  const [affection, setAffection] = useState<Affection>(FIRST_IMPRESSION);
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(true);
@@ -47,6 +52,9 @@ function ChatRoom({ id }: { id: string }) {
     setParticipants(c.personas ?? [c.persona]);
     setMode(c.mode ?? null);
     setMsgs(c.messages);
+    // 새로고침해도 마지막 호감도부터 이어서 (변화량은 다시 띄우지 않음)
+    const judged = [...c.messages].reverse().find((m) => typeof m.affection === "number");
+    if (judged) setAffection({ score: judged.affection!, change: 0, note: judged.affectionNote ?? "" });
   };
 
   useEffect(() => {
@@ -133,6 +141,8 @@ function ChatRoom({ id }: { id: string }) {
         setMsgs((m) => [...m, { id: event.messageId, role: "assistant", speakerUuid: event.speakerUuid, content: "", streaming: true }]);
       } else if (event.type === "messageEnd") {
         setMsgs((m) => m.map((message) => ({ ...message, streaming: false })));
+      } else if (event.type === "affection") {
+        setAffection({ score: event.score, change: event.change, note: event.note });
       }
     };
     const finished = (async () => {
@@ -179,6 +189,7 @@ function ChatRoom({ id }: { id: string }) {
         {!isGroup && !isDating && persona && groupEnabled && <button className="btn-ghost invite-friend" disabled={busy || loading} onClick={() => setShowPicker(true)}>+ 친구 초대</button>}
       </header>
       {isGroup && <p className="group-chat-guide">친구들이 짧게 이야기한 뒤 기다려요. 언제든 끼어들어도 좋아요.</p>}
+      {isDating && !loading && <AffectionMeter score={affection.score} change={affection.change} note={affection.note} />}
       <div className="chat-body" ref={bodyRef} role="log" aria-label="대화 내용" aria-live="off"
         onScroll={(e) => { const el = e.currentTarget; nearBottom.current = el.scrollHeight - el.scrollTop - el.clientHeight < 100; }}>
         {loading && <p className="empty">대화를 불러오고 있어요…</p>}
