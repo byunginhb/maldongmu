@@ -32,6 +32,12 @@ const OCCUPATION_GROUPS: { key: string; label: string; occupations: string[]; bl
   { key: "writer", label: "문학작가", occupations: ["문학작가"], blurb: "글로 세상을 담는 사람" },
 ];
 
+/** 사진 아바타 키 — apps/web/components/Avatar.tsx와 같은 규칙(성별·연령대별 6장, uuid 끝 8자리 hex). 성별은 호출부에서 고정. */
+function avatarKey(uuid: string, age: number): string {
+  const bucket = age < 30 ? 20 : age < 45 ? 30 : age < 65 ? 50 : 70;
+  return `${bucket}-${Number.parseInt(uuid.slice(-8), 16) % 6 || 0}`;
+}
+
 @Injectable()
 export class PersonasService {
   // 직업 큐레이션 그룹 캐시 (occupation 무인덱스 풀스캔을 하루 1회로 제한)
@@ -287,10 +293,14 @@ ${list}
          AND p.uuid NOT IN (${custom.map(() => "?").join(",")}) ORDER BY p.rowid LIMIT 1`,
     );
     const items: any[] = [];
+    // 같은 사진이 두 번 보이면 몰입이 깨진다 → 사진 키가 겹치는 후보는 건너뛴다 (같은 uuid도 자연히 걸러짐)
+    const photos = new Set<string>();
     // ponytail: 시도 횟수만 제한. 조건이 너무 좁으면 3명 미만으로 돌려준다
-    for (let i = 0; items.length < count && i < count * 4; i++) {
+    for (let i = 0; items.length < count && i < count * 6; i++) {
       const row = pick.get(Math.floor(Math.random() * max) + 1, sex, ageMin, ageMax, ...custom) as any;
-      if (row && !items.some((r) => r.uuid === row.uuid)) items.push(row);
+      if (!row || photos.has(avatarKey(row.uuid, row.age))) continue;
+      photos.add(avatarKey(row.uuid, row.age));
+      items.push(row);
     }
     return { items };
   }

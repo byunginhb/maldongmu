@@ -37,23 +37,26 @@ test("dating conversation gets its title, greeting, overlay and blocks friend in
   assert.throws(() => f.chat.createConversation("owner", "c0de0003911a5100000000000000d003", undefined, "dating"), (e) => e.getStatus() === 400);
 });
 
-test("dating candidates match sex/age, skip spouses and custom personas, and validate input", (t) => {
+test("dating candidates match sex/age, skip spouses/custom personas/duplicate photos, and validate input", (t) => {
   const f = fixture(); t.after(f.close);
   f.db.exec(`CREATE TABLE persona_details (uuid TEXT PRIMARY KEY, marital_status TEXT);`);
+  // uuid 끝 8자리 hex % 6 = 사진 번호: w20a·w20b는 같은 사진(0), w20d는 다른 사진(1)
   const rows = [
-    ["w20a", "여자", 24, "미혼"], ["w20b", "여자", 27, "이혼"], ["w20c", "여자", 29, "배우자있음"],
-    ["m20", "남자", 25, "미혼"], ["w30", "여자", 34, "미혼"], ["c0de0003911a5100000000000000d003", "여자", 22, "미혼"],
+    ["w20a-00000000", "여자", 24, "미혼"], ["w20b-00000006", "여자", 27, "이혼"], ["w20d-00000001", "여자", 21, "미혼"],
+    ["w20c-00000002", "여자", 29, "배우자있음"], ["m20-00000003", "남자", 25, "미혼"], ["w30-00000004", "여자", 34, "미혼"],
+    ["c0de0003911a5100000000000000d003", "여자", 22, "미혼"],
   ];
   for (const [uuid, sex, age, marital] of rows) {
     f.db.prepare("INSERT INTO personas VALUES (?, ?, ?, ?, ?, ?, ?, ?)").run(uuid, uuid, age, sex, "직업", "서울", "서울-마포구", "소개");
     f.db.prepare("INSERT INTO persona_details VALUES (?, ?)").run(uuid, marital);
   }
   const personas = new PersonasService({ db: f.db }, null);
-  for (let i = 0; i < 20; i++) {
+  for (let i = 0; i < 30; i++) {
     const { items } = personas.dating("여자", 20, 29);
-    assert.ok(items.length >= 1 && items.length <= 3);
+    assert.ok(items.length >= 1 && items.length <= 2, "only two distinct photos are eligible");
     assert.equal(new Set(items.map((p) => p.uuid)).size, items.length);
-    for (const p of items) assert.ok(["w20a", "w20b"].includes(p.uuid), p.uuid);
+    for (const p of items) assert.ok(["w20a-00000000", "w20b-00000006", "w20d-00000001"].includes(p.uuid), p.uuid);
+    assert.ok(!(items.some((p) => p.uuid === "w20a-00000000") && items.some((p) => p.uuid === "w20b-00000006")), "same photo twice");
     assert.ok("oneLiner" in items[0]);
   }
   assert.throws(() => personas.dating("기타", 20, 29), (e) => e.getStatus() === 400);
