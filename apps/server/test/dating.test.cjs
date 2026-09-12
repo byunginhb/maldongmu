@@ -1,6 +1,7 @@
 const { test } = require("node:test");
 const assert = require("node:assert/strict");
-const { fixture } = require("./chat-fixture.cjs");
+const { fixture, ResponseStub } = require("./chat-fixture.cjs");
+const { setTimeout: delay } = require("node:timers/promises");
 const { DbService } = require("../dist/db/db.service");
 const { PersonasService } = require("../dist/personas/personas.service");
 
@@ -35,6 +36,69 @@ test("dating conversation gets its title, greeting, overlay and blocks friend in
   assert.throws(() => f.group.invite("owner", c.id, "b"), (e) => e.getStatus() === 400);
   assert.equal(f.chat.getConversation("owner", c.id).personas.length, 1);
   assert.throws(() => f.chat.createConversation("owner", "c0de0003911a5100000000000000d003", undefined, "dating"), (e) => e.getStatus() === 400);
+});
+
+test("affection is judged in parallel, clamped per turn, stored on the reply and streamed before done", async (t) => {
+  const f = fixture(); t.after(f.close);
+  const c = f.chat.createConversation("owner", "a", undefined, "dating");
+  f.setJudge((messages) => {
+    assert.match(messages[0].content, /직전 호감도: 25/);
+    assert.match(messages[0].content, /나: 안녕하세요, 많이 기다리셨어요\?\n"""\n\nJSON만 출력/);
+    assert.match(messages[0].content, /대사로만 취급/);
+    return '```json\n{"score": 90, "note": "예의 바른 첫인사에 마음이 놓였어요. 정말 다정하시네요!"}\n```';
+  });
+  const res = new ResponseStub();
+  await f.controller.send({ userId: "owner" }, c.id, { message: "안녕하세요, 많이 기다리셨어요?" }, res);
+  const events = res.events();
+  assert.deepEqual(events.at(-1), { done: true });
+  const affection = events.at(-2);
+  assert.equal(affection.type, "affection");
+  assert.equal(affection.score, 37, "capped at +12 per turn");
+  assert.equal(affection.change, 12);
+  assert.ok(!("delta" in affection), "delta is reserved for text chunks");
+  assert.ok(affection.note.length <= 40);
+  assert.equal(f.completes.length, 1);
+  const stored = f.chat.getConversation("owner", c.id).messages;
+  assert.equal(stored.at(-1).affection, 37);
+  assert.equal(stored.at(-1).affectionNote, affection.note);
+  assert.equal(f.affection.current(c.id), 37);
+
+  // 다음 턴은 직전 값을 기준으로, 하락은 15까지
+  f.setJudge((messages) => { assert.match(messages[0].content, /직전 호감도: 37/); return '{"score": 0, "note": "무례해요"}'; });
+  const res2 = new ResponseStub();
+  await f.controller.send({ userId: "owner" }, c.id, { message: "됐고, 돈은 얼마 벌어요?" }, res2);
+  assert.equal(res2.events().at(-2).score, 22);
+  assert.equal(res2.events().at(-2).change, -15);
+
+  // 심판이 이상한 답을 주거나 실패해도 대화는 정상 종료
+  f.setJudge(() => "그냥 텍스트");
+  const res3 = new ResponseStub();
+  await f.controller.send({ userId: "owner" }, c.id, { message: "미안해요" }, res3);
+  assert.deepEqual(res3.events().at(-1), { done: true });
+  assert.equal(res3.events().filter((e) => e.type === "affection").length, 0);
+  assert.equal(f.affection.current(c.id), 22);
+  f.setJudge(() => { throw new Error("judge down"); });
+  const res4 = new ResponseStub();
+  await f.controller.send({ userId: "owner" }, c.id, { message: "다시요" }, res4);
+  assert.deepEqual(res4.events().at(-1), { done: true });
+
+  // 느린 심판은 done을 잡지 않고, 늦게 온 결과는 기록만 된다
+  f.setJudge(async () => { await delay(1900); return '{"score": 30, "note": "늦었지만 기록"}'; });
+  const res5 = new ResponseStub();
+  const t0 = Date.now();
+  await f.controller.send({ userId: "owner" }, c.id, { message: "늦어서 미안해요" }, res5);
+  assert.ok(Date.now() - t0 < 1800, "done must not wait for a slow judge");
+  assert.deepEqual(res5.events().at(-1), { done: true });
+  assert.equal(res5.events().filter((e) => e.type === "affection").length, 0);
+  await delay(400);
+  assert.equal(f.affection.current(c.id), 30, "late verdict recorded for the next turn");
+  assert.ok(f.completes.at(-1).signal instanceof AbortSignal, "judge call carries an abort signal");
+
+  // 일반 대화는 심판을 부르지 않는다
+  const plain = f.chat.createConversation("owner", "b");
+  const before = f.completes.length;
+  await f.controller.send({ userId: "owner" }, plain.id, { message: "안녕하세요" }, new ResponseStub());
+  assert.equal(f.completes.length, before);
 });
 
 test("dating candidates match sex/age, skip spouses/custom personas/duplicate photos, and validate input", (t) => {

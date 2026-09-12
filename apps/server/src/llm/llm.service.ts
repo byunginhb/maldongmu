@@ -96,10 +96,11 @@ export class LlmService {
   }
 
   /** 비스트리밍 단발 호출 (추천 등 JSON 응답이 필요한 곳에서 사용) */
-  async complete(messages: LlmMessage[], modelOverride?: string): Promise<string> {
+  async complete(messages: LlmMessage[], modelOverride?: string, signal?: AbortSignal): Promise<string> {
     const model = modelOverride || process.env.OPENROUTER_MODEL || "google/gemini-2.5-flash";
     const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
+      signal,
       headers: {
         Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
         "Content-Type": "application/json",

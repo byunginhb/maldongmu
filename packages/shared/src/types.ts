@@ -42,6 +42,9 @@ export interface ChatMessage {
   content: string;
   createdAt: string;
   speakerUuid?: string | null;
+  /** 가상 연애: 이 답변 시점의 호감도(0~100)와 상대의 속마음 한 줄 */
+  affection?: number | null;
+  affectionNote?: string | null;
 }
 
 /** Group streams identify every bubble; 1:1 delta/done events stay compatible. */
@@ -49,6 +52,7 @@ export type ChatStreamEvent =
   | { type: "speaker"; speakerUuid: string; messageId: string; turn: number; maxTurns: number }
   | { type: "delta"; delta: string }
   | { type: "messageEnd" }
+  | { type: "affection"; score: number; change: number; note: string } // change: 직전 대비 변화량 (delta는 텍스트 이벤트 예약어)
   | { type: "done"; waitingForUser?: boolean };
 
 export interface SearchFilters {

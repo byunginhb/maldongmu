@@ -2,6 +2,7 @@ const Database = require("better-sqlite3");
 const { DbService } = require("../dist/db/db.service");
 const { ChatService } = require("../dist/chat/chat.service");
 const { GroupChatService } = require("../dist/chat/group-chat.service");
+const { AffectionService } = require("../dist/chat/affection.service");
 const { ChatController } = require("../dist/chat/chat.controller");
 const { EventEmitter } = require("node:events");
 
@@ -30,7 +31,13 @@ function fixture(stream) {
     detail(uuid) { return { ...this.card(uuid), cultural_background: "친구와 일상을 나누는 걸 좋아해요." }; },
   };
   const calls = [];
+  const completes = [];
+  let judge = () => '{"score": 33, "note": "조금 궁금해졌어요"}';
   const llm = {
+    async complete(messages, model, signal) {
+      completes.push({ messages, model, signal });
+      return judge(messages);
+    },
     async *stream(messages, options) {
       calls.push({ messages, options });
       if (stream) { yield* stream(messages, options, calls.length); return; }
@@ -42,8 +49,9 @@ function fixture(stream) {
   };
   const chat = new ChatService({ db }, personas);
   const group = new GroupChatService({ db }, personas, chat, llm);
-  const controller = new ChatController(chat, llm, group);
-  return { db, cards, personas, llm, calls, chat, group, controller, close: () => db.close() };
+  const affection = new AffectionService({ db }, llm);
+  const controller = new ChatController(chat, llm, group, affection);
+  return { db, cards, personas, llm, calls, completes, setJudge: (fn) => { judge = fn; }, chat, group, affection, controller, close: () => db.close() };
 }
 
 class ResponseStub extends EventEmitter {

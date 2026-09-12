@@ -96,7 +96,8 @@ export class ChatService {
     if (!conv) throw new NotFoundException("conversation not found");
     const messages = this.db
       .prepare(
-        `SELECT id, role, content, speaker_uuid as speakerUuid, created_at as createdAt FROM messages
+        `SELECT id, role, content, speaker_uuid as speakerUuid, affection, affection_note as affectionNote,
+                created_at as createdAt FROM messages
          WHERE conversation_id = ? ORDER BY created_at, rowid`,
       )
       .all(id);
@@ -219,6 +220,7 @@ export class ChatService {
     tokensIn: number,
     tokensOut: number,
   ) {
+    const assistantId = nanoid(12);
     this.db
       .prepare(`INSERT INTO messages (id, conversation_id, role, content) VALUES (?, ?, 'user', ?)`)
       .run(nanoid(12), conversationId, userText);
@@ -227,7 +229,7 @@ export class ChatService {
         `INSERT INTO messages (id, conversation_id, role, content, tokens_in, tokens_out)
          VALUES (?, ?, 'assistant', ?, ?, ?)`,
       )
-      .run(nanoid(12), conversationId, assistantText, tokensIn, tokensOut);
+      .run(assistantId, conversationId, assistantText, tokensIn, tokensOut);
     this.db
       .prepare(`UPDATE conversations SET last_message_at = datetime('now') WHERE id = ?`)
       .run(conversationId);
@@ -236,5 +238,6 @@ export class ChatService {
         `INSERT INTO usage_events (user_id, persona_uuid, event, tokens) VALUES (?, ?, 'message', ?)`,
       )
       .run(userId, personaUuid, tokensIn + tokensOut);
+    return assistantId;
   }
 }

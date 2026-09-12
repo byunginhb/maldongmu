@@ -1,9 +1,11 @@
 import { BadRequestException, Body, Controller, Get, Param, Post, Req, Res, UseGuards } from "@nestjs/common";
 import { Response } from "express";
+import { setTimeout as delay } from "node:timers/promises";
 import { ChatService } from "./chat.service";
 import { LlmMessage, LlmService } from "../llm/llm.service";
 import { AuthGuard } from "../auth/auth.guard";
 import { GroupChatService, GROUP_LIMITS } from "./group-chat.service";
+import { AffectionService } from "./affection.service";
 
 @Controller()
 @UseGuards(AuthGuard)
@@ -12,6 +14,7 @@ export class ChatController {
     private readonly chat: ChatService,
     private readonly llm: LlmService,
     private readonly group: GroupChatService,
+    private readonly affection: AffectionService,
   ) {}
 
   @Get("chat/features")
@@ -103,10 +106,18 @@ export class ChatController {
         res.end();
       } else {
         const { conv, messages } = this.chat.buildLlmMessages(req.userId, conversationId, userText);
-        await this.relay(res, messages, (full, tokensIn, tokensOut) =>
-          this.chat.saveTurn(req.userId, conversationId, conv.persona_uuid, userText, full, tokensIn, tokensOut),
-          job.controller.signal,
-        );
+        // 가상 연애: 호감도 심판을 답변 생성과 병렬로 (사용자 메시지만 보면 되므로 답변을 기다릴 필요 없음)
+        const judging = conversation.mode === "dating"
+          ? this.affection.estimate(conversationId, conversation.persona, userText, job.controller.signal).catch(() => undefined) : null;
+        await this.relay(res, messages, async (full, tokensIn, tokensOut) => {
+          const assistantId = this.chat.saveTurn(req.userId, conversationId, conv.persona_uuid, userText, full, tokensIn, tokensOut);
+          if (!judging) return;
+          // 답변이 끝난 뒤 1.5초까지만 기다린다. 늦게 온 결과는 기록만 해두고(다음 턴·새로고침에 반영) done을 잡지 않는다.
+          const result = await Promise.race([judging, delay(1500, undefined)]);
+          if (!result) { judging.then((late) => late && this.affection.record(assistantId, late)); return; }
+          this.affection.record(assistantId, result);
+          return { type: "affection", ...result };
+        }, job.controller.signal);
       }
     } finally {
       res.off("close", disconnect);
@@ -114,11 +125,11 @@ export class ChatController {
     }
   }
 
-  /** OpenRouter 스트림을 SSE로 릴레이하고, 완료 시 onDone으로 저장 위임 */
+  /** OpenRouter 스트림을 SSE로 릴레이하고, 완료 시 onDone으로 저장 위임. onDone이 이벤트를 돌려주면 done 앞에 흘려보낸다 */
   private async relay(
     res: Response,
     messages: LlmMessage[],
-    onDone: (full: string, tokensIn: number, tokensOut: number) => void,
+    onDone: (full: string, tokensIn: number, tokensOut: number) => void | Promise<object | void>,
     signal: AbortSignal,
   ) {
     res.set({
@@ -142,8 +153,9 @@ export class ChatController {
           tokensOut = ev.completionTokens;
         }
       }
-      onDone(full, tokensIn, tokensOut);
-      res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
+      const extra = await onDone(full, tokensIn, tokensOut);
+      if (extra && !res.destroyed) res.write(`data: ${JSON.stringify(extra)}\n\n`);
+      if (!res.destroyed) res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
     } catch (e: any) {
       res.write(`data: ${JSON.stringify({ error: "응답 생성에 실패했어요. 다시 시도해주세요." })}\n\n`);
       console.error("chat stream error:", e?.message);

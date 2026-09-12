@@ -105,11 +105,13 @@ export class DbService implements OnModuleDestroy {
     }
     // 인터뷰 시도 레이트리밋용 per-user 조회 인덱스 (환불불가 카운터)
     this.db.exec(`CREATE INDEX IF NOT EXISTS idx_usage_user ON usage_events(user_id, event, created_at)`);
-    // Additive migration: old 1:1 conversations/messages remain valid. mode: null(일반) | 'dating'(가상 연애)
-    for (const [table, column] of [["conversations", "second_persona_uuid"], ["messages", "speaker_uuid"], ["conversations", "mode"]]) {
+    // Additive migration: old 1:1 conversations/messages remain valid.
+    // mode: null(일반) | 'dating'(가상 연애). affection/affection_note: 가상 연애 답변에 기록되는 호감도(0~100)와 속마음 한 줄.
+    for (const [table, column, type = "TEXT"] of [["conversations", "second_persona_uuid"], ["messages", "speaker_uuid"],
+      ["conversations", "mode"], ["messages", "affection", "INTEGER"], ["messages", "affection_note"]]) {
       const columns = this.db.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[];
       if (!columns.some((c) => c.name === column)) {
-        this.db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} TEXT`);
+        this.db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${type}`);
       }
     }
   }

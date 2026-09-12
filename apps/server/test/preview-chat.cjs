@@ -6,6 +6,7 @@ const { setTimeout: delay } = require("node:timers/promises");
 const { ChatController } = require("../dist/chat/chat.controller");
 const { ChatService } = require("../dist/chat/chat.service");
 const { GroupChatService } = require("../dist/chat/group-chat.service");
+const { AffectionService } = require("../dist/chat/affection.service");
 const { LlmService } = require("../dist/llm/llm.service");
 const { AuthService } = require("../dist/auth/auth.service");
 const { fixture } = require("./chat-fixture.cjs");
@@ -28,6 +29,7 @@ Module({
   providers: [
     { provide: ChatService, useValue: f.chat },
     { provide: GroupChatService, useValue: f.group },
+    { provide: AffectionService, useValue: f.affection },
     { provide: LlmService, useValue: f.llm },
     { provide: AuthService, useValue: { verify: (token) => token === "preview-owner" ? { sub: "owner" } : null, userExists: () => true } },
   ],
