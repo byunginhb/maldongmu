@@ -35,6 +35,8 @@ body {
 a { color: inherit; text-decoration: none; }
 button { font-family: var(--font-body); cursor: pointer; }
 input { font-family: var(--font-body); }
+/* iOS Safari는 16px 미만 입력창에 포커스하면 화면을 자동 확대한다 → 모바일에서만 입력 글자를 16px로 (인라인 15px 지정도 덮어씀) */
+@media (max-width: 767px) { input, textarea, select { font-size: 16px !important; } }
 
 /* 레이아웃 */
 .page {
