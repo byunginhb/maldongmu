@@ -41,6 +41,14 @@ cp app/build/outputs/bundle/release/app-release.aab ~/android-tools/maldongmu-rn
   → `E4:27:04:D8:...:66:5B` (업로드 키 지문)이면 OK. 다르면 `-P` 옵션이 안 먹은 것(디버그 서명) → 콘솔이 거부함.
 - 툴체인 검증: 키스토어 없이도 `./gradlew bundleRelease`가 성공하는 건 2026-09-13 이 맥에서 확인함(디버그 서명본, 48MB). 서명만 채우면 됨.
 
+### ✅ U-2~U-5 자동화 (2026-09-14 제출 완료)
+
+`scripts/store/play_publish.py`가 Play Developer API로 AAB 업로드·프로덕션 릴리스·등록정보·이미지 교체·검토 제출을 한 번에 처리한다.
+- 준비물: 서비스 계정 키 `~/android-tools/play-service-account.json` (Cloud 프로젝트 `maldongmu`, Play Console 사용자 및 권한에 앱 권한 부여됨), `~/android-tools/play-venv` (google-api-python-client)
+- 실행 예는 스크립트 상단 docstring. `--commit` 없이 돌리면 검증만 하고 버린다.
+- API로 안 되는 것: 콘텐츠 등급·데이터 안전·타겟층 재설문, 스토어 태그 → 콘솔에서 직접.
+- v1.1.0: 2026-09-14 제출됨 (versionCode 2, 제목·설명·피처·스크린샷 6장 교체). 아래 U-2~U-5는 수동 절차 참고용.
+
 ### U-2. Play Console → 프로덕션 → 새 버전 만들기
 1. `maldongmu-rn-v1.1.0.aab` 업로드 (versionCode 2 > 1 확인)
 2. **출시명**: `1.1.0`
