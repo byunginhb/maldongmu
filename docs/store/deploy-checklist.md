@@ -17,7 +17,8 @@ Ben이 순서대로 하나씩 따라가는 실전 가이드. 값은 그대로 �
 | 항목 | 위치 / 상태 |
 |---|---|
 | 버전 | `mobile/app.json` → `1.1.0` / `versionCode 2` ✅ 반영됨 |
-| 업로드 키스토어 | `~/android-tools/maldongmu-upload.keystore` + `maldongmu-keystore-password.txt` — **⚠️ 이 맥엔 없음. v1.0.0 빌드한 기기(맥미니?) 또는 백업에서 가져와 `~/android-tools/`에 두세요.** 없으면 U-1 진행 불가. |
+| 업로드 키스토어 | `~/android-tools/maldongmu-upload.keystore` + `maldongmu-keystore-password.txt` — **맥미니에 있음**(다른 맥엔 없음). 다른 기기에서 빌드하려면 백업에서 `~/android-tools/`로 복사. |
+| **서명된 AAB** | **`~/android-tools/maldongmu-rn-v1.1.0.aab` ✅ 2026-09-13 맥미니에서 빌드 완료** (48MB, versionCode 2, 업로드 키 지문 `E4:27:…:66:5B` 확인) → U-1 건너뛰고 U-2로 |
 | 스크린샷 6장 · 피처 그래픽 | `docs/store/images/` ✅ 재생성됨 (사진 아바타 + 가상 연애) |
 | 스토어 문구·출시 노트 | `docs/store/listing.md` ✅ |
 
