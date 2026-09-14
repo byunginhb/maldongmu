@@ -3,6 +3,80 @@
 Ben이 순서대로 하나씩 따라가는 실전 가이드. 값은 그대로 복사해 붙이면 됩니다.
 막히면 그 단계 번호를 말해주세요 — 같이 봐드릴게요.
 
+> **이미 출시된 앱을 업데이트할 땐 아래 "UPDATE" 절만 보면 됩니다.** 그 아래 STEP 1~6은 첫 출시용(참고).
+
+---
+
+## UPDATE — v1.1.0 「가상 연애」 (2026-09-13)
+
+앱은 WebView 래퍼라 **가상 연애 기능 자체는 이미 앱에서 동작 중**(웹 배포로 반영됨).
+이번 업데이트의 목적은 (1) 스토어에서 가상 연애를 첫 훅으로 보여주기, (2) 버전 올린 AAB로 "업데이트됨" 신호 주기.
+
+### U-0. 준비물
+
+| 항목 | 위치 / 상태 |
+|---|---|
+| 버전 | `mobile/app.json` → `1.1.0` / `versionCode 2` ✅ 반영됨 |
+| 업로드 키스토어 | `~/android-tools/maldongmu-upload.keystore` + `maldongmu-keystore-password.txt` — **⚠️ 이 맥엔 없음. v1.0.0 빌드한 기기(맥미니?) 또는 백업에서 가져와 `~/android-tools/`에 두세요.** 없으면 U-1 진행 불가. |
+| 스크린샷 6장 · 피처 그래픽 | `docs/store/images/` ✅ 재생성됨 (사진 아바타 + 가상 연애) |
+| 스토어 문구·출시 노트 | `docs/store/listing.md` ✅ |
+
+### U-1. AAB 빌드 (키스토어 준비 후)
+
+```bash
+export JAVA_HOME="/opt/homebrew/opt/openjdk@17"          # 이 맥. 맥미니는 ~/android-tools/jdk-17.0.20+8/Contents/Home
+export ANDROID_HOME="$HOME/Library/Android/sdk"          # 이 맥. 맥미니는 ~/android-tools/android_sdk
+cd mobile && npm ci
+npx expo prebuild --platform android --clean --no-install
+PW="$(cat ~/android-tools/maldongmu-keystore-password.txt)"
+cd android && echo "sdk.dir=$ANDROID_HOME" > local.properties
+./gradlew bundleRelease --no-daemon \
+  -PMALDONGMU_STORE_FILE="$HOME/android-tools/maldongmu-upload.keystore" \
+  -PMALDONGMU_STORE_PASSWORD="$PW" -PMALDONGMU_KEY_ALIAS=maldongmu -PMALDONGMU_KEY_PASSWORD="$PW"
+cp app/build/outputs/bundle/release/app-release.aab ~/android-tools/maldongmu-rn-v1.1.0.aab
+```
+
+- 서명 확인: `keytool -printcert -jarfile ~/android-tools/maldongmu-rn-v1.1.0.aab | grep SHA256`
+  → `E4:27:04:D8:...:66:5B` (업로드 키 지문)이면 OK. 다르면 `-P` 옵션이 안 먹은 것(디버그 서명) → 콘솔이 거부함.
+- 툴체인 검증: 키스토어 없이도 `./gradlew bundleRelease`가 성공하는 건 2026-09-13 이 맥에서 확인함(디버그 서명본, 48MB). 서명만 채우면 됨.
+
+### U-2. Play Console → 프로덕션 → 새 버전 만들기
+1. `maldongmu-rn-v1.1.0.aab` 업로드 (versionCode 2 > 1 확인)
+2. **출시명**: `1.1.0`
+3. **출시 노트** `<ko-KR>`:
+```
+💗 가상 연애가 찾아왔어요!
+- 성별·나이대만 고르면 소개팅 자리로 바로 안내
+- 말 한마디에 움직이는 호감도 — 서두르지 않는 진짜 같은 연애
+- 친구 둘과 나까지 셋이서 수다
+- 100만 이웃의 얼굴이 사진 초상으로 새단장
+오늘은, 누구랑 설레볼까요?
+```
+4. 저장 → 아직 "검토" 누르지 말고 U-3 먼저 (등록정보와 같이 검토받는 게 한 번에 끝남)
+
+### U-3. 스토어 등록정보 갱신 (성장 → 스토어 presence → 기본 스토어 등록정보)
+- **앱 이름**: `말동무: 가상 연애와 욕쟁이 할매`
+- **간단한 설명**: `설레는 소개팅부터 욕쟁이 할매 타박까지, 100만 한국인 페르소나와 진짜 같은 대화`
+- **자세한 설명**: `listing.md` §3 전체 교체 (💗 NEW 가상 연애 절이 맨 위)
+- **그래픽 이미지(피처)**: `feature-graphic.png` 교체
+- **휴대전화 스크린샷**: 기존 4장 전부 삭제 → `screenshot-01-dating` → `02-affection` → `03-grannies` → `04-chat` → `05-home` → `06-meet` 순서로 6장
+- 스토어 설정 → 태그에 `가상 연애`, `연애 시뮬레이션` 추가
+- **저장**
+
+### U-4. 앱 콘텐츠 재확인 (정책 및 프로그램 → 앱 콘텐츠)
+- 콘텐츠 등급: 콘솔이 재설문을 요구하지 않으면 그대로. 요구하면 `listing.md` §6 답안(성적 콘텐츠 없음 / 비속어 가벼움 / UGC 예)으로 재제출
+- 데이터 안전: 변경 없음 (대화 내용이 OpenRouter로 가는 건 동일)
+- 타겟층: 만 18세 이상 유지
+
+### U-5. 검토 제출
+- 프로덕션 버전 → **버전 검토 → 프로덕션 트랙으로 출시 시작**
+- 등록정보 변경 + 새 AAB가 함께 검토됨. 보통 1~3일.
+- 게시 후 확인: 스토어 페이지 제목/스크린샷 바뀌었는지, 폰에서 앱 업데이트 후 홈에 "가상 연애 해보기" 배너 보이는지.
+
+---
+
+# (참고) 첫 출시 — v1.0.0 STEP 1~6
+
 > Claude가 미리 다 만들어둔 것: 서명 AAB, 앱 아이콘/피처그래픽/스크린샷, 스토어 문구, 설문 답안.
 > Ben만 할 수 있는 것: 본인 구글 계정으로 콘솔 클릭 + 업로드(보안상 Claude가 대신 로그인하지 않음).
 

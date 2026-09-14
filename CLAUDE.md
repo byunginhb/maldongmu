@@ -9,6 +9,7 @@
 - `packages/shared` — 공용 타입 + 레거시 SVG 아바타 생성기
 - `apps/web/public/avatars/v1` — 성별·연령대별 사진형 WebP 아바타 48종 (uuid로 결정적 선택)
 - `scripts/etl/build_db.py` — parquet → maldongmu.db (완료됨, 재실행 불필요)
+- `mobile` — Expo/RN WebView 래퍼 안드로이드 앱 (v1.1.0, versionCode 2). 스토어 문구·이미지는 `docs/store/`, 스크린샷 재합성은 `scripts/store/compose.py`, 업데이트 순서는 `docs/store/deploy-checklist.md` UPDATE 절
 
 ## 데이터
 - `apps/server/data/maldongmu.db` (5.1GB, git 제외): personas(경량 카드) / persona_details(상세, 대화 시작 시만 조회) / persona_fts(FTS5 trigram)
