@@ -48,6 +48,7 @@ cp app/build/outputs/bundle/release/app-release.aab ~/android-tools/maldongmu-rn
 - 실행 예는 스크립트 상단 docstring. `--commit` 없이 돌리면 검증만 하고 버린다.
 - API로 안 되는 것: 콘텐츠 등급·데이터 안전·타겟층 재설문, 스토어 태그 → 콘솔에서 직접.
 - v1.1.0: 2026-09-14 제출됨 (versionCode 2, 제목·설명·피처·스크린샷 6장 교체). 아래 U-2~U-5는 수동 절차 참고용.
+- v1.1.1: 2026-09-14 제출됨 (versionCode 3, 탭바 밑 여백 수정. AAB/테스트 APK: `~/android-tools/maldongmu-rn-v1.1.1*`)
 
 ### U-2. Play Console → 프로덕션 → 새 버전 만들기
 1. `maldongmu-rn-v1.1.0.aab` 업로드 (versionCode 2 > 1 확인)
