@@ -50,6 +50,15 @@ cp app/build/outputs/bundle/release/app-release.aab ~/android-tools/maldongmu-rn
 - v1.1.0: 2026-09-14 제출됨 (versionCode 2, 제목·설명·피처·스크린샷 6장 교체). 아래 U-2~U-5는 수동 절차 참고용.
 - v1.1.1: 2026-09-14 제출됨 (versionCode 3, 탭바 밑 여백 수정. AAB/테스트 APK: `~/android-tools/maldongmu-rn-v1.1.1*`)
 
+### 🌏 다국어 등록정보 + ASO (2026-09-15)
+
+- 언어: ko-KR · en-US(기본 언어) · ja-JP · zh-TW · zh-HK · zh-CN. 원본은 `docs/store/listings/<lang>/`, 이미지는 `docs/store/images/<lang>/` (ko는 루트).
+- 노출 규칙: 기기 언어와 일치하는 등록정보 → 없으면 **기본 언어(en-US)**. 국가 배포는 이미 전 세계(177개국 + 나머지 지역).
+- 한 번에 올리기: `play_publish.py --listings-dir docs/store/listings --images-root docs/store/images --default-language en-US --localize-notes --commit`
+  (새 AAB와 함께 올릴 땐 `--aab … --release-name …`도 같이. notes.txt가 언어별 출시 노트로 들어간다)
+- 문구를 바꿀 땐 `listings/<lang>/*.txt` 수정 → 위 명령. 이미지를 바꿀 땐 `compose.py <locale…>` 후 위 명령.
+- 콘솔에서 직접: 스토어 설정 → 태그 `가상 연애`·`연애 시뮬레이션`·`AI 채팅` / 스토어 등록정보 실험(A/B)로 제목·아이콘 테스트.
+
 ### U-2. Play Console → 프로덕션 → 새 버전 만들기
 1. `maldongmu-rn-v1.1.0.aab` 업로드 (versionCode 2 > 1 확인)
 2. **출시명**: `1.1.0`

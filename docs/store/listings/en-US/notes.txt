@@ -1,0 +1,2 @@
+- Cleaned up the gap below the bottom tab bar on Android
+- Virtual dating, affection meter and three-way chat, now a little tidier
