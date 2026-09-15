@@ -10,19 +10,29 @@ import {
 } from "react-native";
 import { WebView, type WebViewNavigation } from "react-native-webview";
 import type { ShouldStartLoadRequest } from "react-native-webview/lib/WebViewTypes";
-import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import * as WebBrowser from "expo-web-browser";
 import * as SplashScreen from "expo-splash-screen";
 
 const SITE = "https://www.maldongmu.app";
 const CREAM = "#f2e9d9";
+const PAPER = "#ffffff";
 const CORAL = "#e8613c";
 const BROWN = "#3d2b1f";
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
 export default function App() {
+  return (
+    <SafeAreaProvider>
+      <Shell />
+    </SafeAreaProvider>
+  );
+}
+
+function Shell() {
+  const insets = useSafeAreaInsets();
   const webRef = useRef<WebView>(null);
   const canGoBack = useRef(false);
   const [ready, setReady] = useState(false);
@@ -104,8 +114,7 @@ export default function App() {
   }, []);
 
   return (
-    <SafeAreaProvider>
-      <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
+    <SafeAreaView style={styles.safe} edges={["top"]}>
         <StatusBar style="dark" />
         {errored ? (
           <View style={styles.center}>
@@ -135,13 +144,14 @@ export default function App() {
             style={styles.web}
           />
         )}
+        {/* 시스템 내비게이션 바 영역. 웹의 탭바·채팅 입력줄(흰색)과 이어지게 흰색으로 채운다 — cream이면 탭바 밑에 띠처럼 보임 */}
+        <View style={{ height: insets.bottom, backgroundColor: PAPER }} />
         {!ready && !errored && (
           <View style={styles.center} pointerEvents="none">
             <ActivityIndicator size="large" color={CORAL} />
           </View>
         )}
-      </SafeAreaView>
-    </SafeAreaProvider>
+    </SafeAreaView>
   );
 }
 
