@@ -226,6 +226,12 @@ export function getOccupations(): Promise<{ items: OccupationEntry[] }> {
   return apiGet("/personas/occupations");
 }
 
+/* ---------- AI 답변 신고 ---------- */
+/** 불쾌한 AI 답변을 앱 안에서 바로 신고 (Play AI 생성 콘텐츠 정책) */
+export function reportMessage(conversationId: string, messageId: string, reason: string, detail?: string): Promise<{ ok: boolean }> {
+  return apiPost("/reports", { conversationId, messageId, reason, detail });
+}
+
 /* ---------- 가상 연애 ---------- */
 /** 성별·나이대에 맞는 소개팅 상대 후보 (공개, LLM 없음). 대화 시작은 POST /conversations { mode: "dating" } */
 export function datingCandidates(sex: string, ageMin: number, ageMax: number): Promise<{ items: PersonaCard[] }> {

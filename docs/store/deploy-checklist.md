@@ -50,6 +50,15 @@ cp app/build/outputs/bundle/release/app-release.aab ~/android-tools/maldongmu-rn
 - v1.1.0: 2026-09-14 제출됨 (versionCode 2, 제목·설명·피처·스크린샷 6장 교체). 아래 U-2~U-5는 수동 절차 참고용.
 - v1.1.1: 2026-09-14 제출됨 (versionCode 3, 탭바 밑 여백 수정. AAB/테스트 APK: `~/android-tools/maldongmu-rn-v1.1.1*`)
 
+### 🛡 Google Play "AI 생성 콘텐츠" 정책 대응 (2026-09-17)
+
+콘솔 메일: "사용자가 앱을 종료하지 않고도 불쾌감을 주는 AI 생성 콘텐츠를 신고할 수 있는 인앱 신고 기능을 포함하도록 업데이트하세요."
+- 대응: 채팅의 모든 AI 말풍선 아래 **"신고"** 버튼 → 사유(성적/폭력·혐오/개인정보·사칭/기타)+메모 → 서버 `reports` 저장 → `/admin`에서 확인.
+  앱은 WebView라 웹 배포(Vercel)만으로 앱에도 즉시 반영 — 새 AAB 불필요.
+- 함께 강화: base.md 안전 절(부적절 요청엔 상대 언어로 분명히 거절, 내용 되풀이 금지) + 영어/일본어/중국어 메시지엔 그 언어로만 답하도록 꼬리 힌트.
+- 콘솔에서 할 일: 정책 메일의 **"검토 요청"/이의 제기**에 "앱 내 각 AI 답변에 신고 버튼을 추가했고(웹 배포 반영), 신고는 관리자 대시보드에서 검토·조치함"이라고 회신.
+  필요 시 스크린샷: 채팅 화면의 "신고" 버튼과 신고 시트.
+
 ### 🌏 다국어 등록정보 + ASO (2026-09-15)
 
 - 언어: ko-KR · en-US(기본 언어) · ja-JP · zh-TW · zh-HK · zh-CN. 원본은 `docs/store/listings/<lang>/`, 이미지는 `docs/store/images/<lang>/` (ko는 루트).

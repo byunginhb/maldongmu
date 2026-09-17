@@ -38,6 +38,21 @@ interface UserDetail {
   user: { id: string; type: string; nickname: string | null; email: string | null; createdAt: string; interviewLimit?: number; interviewUsed?: number };
   conversations: UserConv[];
 }
+interface ReportRow {
+  id: string;
+  userId: string;
+  conversationId: string;
+  messageId: string;
+  reason: string;
+  detail: string | null;
+  content: string;
+  createdAt: string;
+  type: string;
+  nickname: string | null;
+  email: string | null;
+  personaName: string | null;
+}
+
 interface FeedbackRow {
   id: number;
   userId: string;
@@ -73,6 +88,7 @@ export default function AdminPage() {
   const [userDetail, setUserDetail] = useState<UserDetail | null>(null);
   const [convDetail, setConvDetail] = useState<ConvDetail | null>(null);
   const [feedback, setFeedback] = useState<FeedbackRow[]>([]);
+  const [reports, setReports] = useState<ReportRow[]>([]);
   const [limitInputs, setLimitInputs] = useState<Record<string, string>>({});
   const [userType, setUserType] = useState("");
   const [ivInputs, setIvInputs] = useState<Record<string, string>>({});
@@ -110,11 +126,12 @@ export default function AdminPage() {
 
   const loadAll = useCallback(async () => {
     try {
-      const [s, r, u, f] = await Promise.all([
+      const [s, r, u, f, rp] = await Promise.all([
         adminGet<Stats>("/stats?days=14"),
         adminGet<(Card & { chats: number })[]>("/personas/ranking?days=7"),
         adminGet<{ rows: UserRow[]; total: number }>("/users?page=1"),
         adminGet<FeedbackRow[]>("/feedback"),
+        adminGet<ReportRow[]>("/reports").catch(() => [] as ReportRow[]),
       ]);
       setStats(s);
       setRanking(r);
@@ -122,6 +139,7 @@ export default function AdminPage() {
       setUserTotal(u.total);
       setUserPage(1);
       setFeedback(f);
+      setReports(rp);
       setAuthed(true);
       setError("");
     } catch (e: any) {
@@ -219,6 +237,21 @@ export default function AdminPage() {
               <p className="card-meta">{p.occupation} · {p.province}</p>
             </div>
             <span className="meta">대화 {n(p.chats)}회</span>
+          </div>
+        ))}
+      </div>
+
+      <h2 className="dot-title" style={{ marginBottom: 12 }}>AI 답변 신고</h2>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 28 }}>
+        {reports.length === 0 && <p className="empty" style={{ padding: "8px 0" }}>접수된 신고가 없어요.</p>}
+        {reports.map((r) => (
+          <div key={r.id} style={{ background: "var(--paper)", border: "1px solid var(--line)", borderRadius: 16, padding: "14px 16px" }}>
+            <p className="meta" style={{ margin: "0 0 6px" }}>
+              <b style={{ color: "var(--red)" }}>{r.reason}</b> · {r.personaName || "?"} · {r.nickname || r.email || r.userId} · {r.createdAt?.slice(0, 16)}
+            </p>
+            <p style={{ margin: "0 0 6px", fontSize: 14, whiteSpace: "pre-wrap" }}>{r.content}</p>
+            {r.detail && <p className="meta" style={{ margin: 0 }}>메모: {r.detail}</p>}
+            <button className="btn-ghost" style={{ height: 32, padding: "0 12px", marginTop: 8, fontSize: 12 }} onClick={() => openConv(r.conversationId)}>대화 전체 보기</button>
           </div>
         ))}
       </div>

@@ -278,6 +278,8 @@ h2.dot-title { font-size: 18px; margin: 0; }
 .group-chat-guide { margin: 0; padding: 9px 16px; font-size: 12px; color: var(--brown-soft); border-bottom: 1px solid var(--line); }
 .chat-disclosure { text-align: center; font-size: 11px; margin: 0 0 4px; }
 .speaker-message { max-width: 78%; min-width: 0; }
+/* AI 답변 신고 — 각 페르소나 말풍선 아래 작게 (Play AI 생성 콘텐츠 정책: 앱 안에서 바로 신고 가능해야 함) */
+.bubble-report { background: none; border: none; padding: 4px 6px; margin: 0 0 0 2px; font-size: 11px; color: var(--brown-soft); text-decoration: underline; text-underline-offset: 2px; }
 .speaker-message .bubble { max-width: 100%; }
 .speaker-name { display: block; margin: 0 0 4px 4px; font-size: 12px; color: var(--brown-soft); }
 .friend-two .bubble.persona { background: var(--paper); border: 1px solid var(--line); }

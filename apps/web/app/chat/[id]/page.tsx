@@ -10,6 +10,7 @@ import LoginSheet from "../../../components/LoginSheet";
 import QuotaSheet from "../../../components/QuotaSheet";
 import FriendPicker from "../../../components/FriendPicker";
 import AffectionMeter from "../../../components/AffectionMeter";
+import ReportSheet from "../../../components/ReportSheet";
 
 interface Msg extends ConversationMessage { streaming?: boolean }
 interface Affection { score: number; change: number; note: string }
@@ -36,6 +37,7 @@ function ChatRoom({ id }: { id: string }) {
   const [showPicker, setShowPicker] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
   const [showQuota, setShowQuota] = useState(false);
+  const [reportTarget, setReportTarget] = useState<Msg | null>(null);
   const [error, setError] = useState("");
   const [turn, setTurn] = useState(0);
   const bodyRef = useRef<HTMLDivElement>(null);
@@ -143,6 +145,9 @@ function ChatRoom({ id }: { id: string }) {
         setMsgs((m) => m.map((message) => ({ ...message, streaming: false })));
       } else if (event.type === "affection") {
         setAffection({ score: event.score, change: event.change, note: event.note });
+      } else if (event.type === "saved") {
+        // 방금 스트리밍된 1:1 답변에 저장 id를 붙여 바로 신고할 수 있게
+        setMsgs((m) => m.map((message, i) => i === m.length - 1 && message.role === "assistant" ? { ...message, id: event.messageId } : message));
       }
     };
     const finished = (async () => {
@@ -203,6 +208,7 @@ function ChatRoom({ id }: { id: string }) {
                 <div className="speaker-message">
                   {isGroup && <span className="speaker-name">{speaker?.name}</span>}
                   <div className="bubble persona">{m.content || (m.streaming ? "…" : "")}{m.streaming && <span className="cursor-blink" aria-hidden>▮</span>}</div>
+                  {m.id && !m.streaming && m.content && <button className="bubble-report" onClick={() => setReportTarget(m)} aria-label="이 답변 신고하기">신고</button>}
                 </div>
               </div>;
         })}
@@ -228,6 +234,7 @@ function ChatRoom({ id }: { id: string }) {
         onClose={() => setShowPicker(false)} onAdded={(c) => { applySnapshot(c); setShowPicker(false); nearBottom.current = true; }} />}
       {showLogin && <LoginSheet onClose={() => setShowLogin(false)} />}
       {showQuota && <QuotaSheet onClose={() => setShowQuota(false)} />}
+      {reportTarget?.id && <ReportSheet conversationId={id} messageId={reportTarget.id} excerpt={reportTarget.content} onClose={() => setReportTarget(null)} />}
     </div>
   );
 }

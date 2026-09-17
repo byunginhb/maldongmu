@@ -30,6 +30,8 @@
   호감도: `affection.service.ts`가 매 턴 심판 모델(`DATING_JUDGE_MODEL`)을 답변과 병렬 호출 → `messages.affection`에 기록,
   SSE `{type:"affection", score, change, note}` 이벤트로 done 직전에 전달(필드명 `delta`는 텍스트 청크 예약). 첫인상 25, 턴당 +12/−15 클램프.
   답변 종료 후 1.5초 안에 심판이 안 끝나면 done을 먼저 보내고 결과는 DB에만 기록. 심판 호출 토큰은 usage_events에 미집계.
+- 언어: 1:1은 마지막 사용자 메시지 뒤에 `languageHint()`(ko 외 감지 시 "그 언어로만 답하라" 꼬리)를 붙여 한국어 회귀를 막는다. 저장은 원문.
+- AI 답변 신고(Play AI 생성 콘텐츠 정책): 말풍선마다 "신고" → `POST /reports`(원문 스냅샷 저장) → `/admin` "AI 답변 신고". 1:1 스트림은 `{type:"saved", messageId}`로 방금 답변 id를 알려줌.
 
 ## 현재 상태 (2026-07-17)
 - 완료: 스캐폴딩, ETL(100만), 서버 코어 API, 웹 MVP(홈/검색/페르소나/SSE채팅/내 대화),
