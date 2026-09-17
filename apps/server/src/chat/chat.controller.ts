@@ -42,6 +42,12 @@ export class ChatController {
     return this.chat.createConversation(req.userId, body.personaUuid, undefined, body?.mode === "dating" ? "dating" : undefined);
   }
 
+  /** AI 답변 신고 (앱 안에서 바로) */
+  @Post("reports")
+  report(@Req() req: any, @Body() body: { conversationId: string; messageId: string; reason: string; detail?: string }) {
+    return this.chat.saveReport(req.userId, String(body?.conversationId || ""), String(body?.messageId || ""), body?.reason, body?.detail);
+  }
+
   @Post("feedback")
   feedback(@Req() req: any, @Body() body: { content: string }) {
     return this.chat.saveFeedback(req.userId, (body.content || "").trim());
@@ -111,12 +117,12 @@ export class ChatController {
           ? this.affection.estimate(conversationId, conversation.persona, userText, job.controller.signal).catch(() => undefined) : null;
         await this.relay(res, messages, async (full, tokensIn, tokensOut) => {
           const assistantId = this.chat.saveTurn(req.userId, conversationId, conv.persona_uuid, userText, full, tokensIn, tokensOut);
-          if (!judging) return;
+          if (!judging) return { messageId: assistantId };
           // 답변이 끝난 뒤 1.5초까지만 기다린다. 늦게 온 결과는 기록만 해두고(다음 턴·새로고침에 반영) done을 잡지 않는다.
           const result = await Promise.race([judging, delay(1500, undefined)]);
-          if (!result) { judging.then((late) => late && this.affection.record(assistantId, late)); return; }
+          if (!result) { judging.then((late) => late && this.affection.record(assistantId, late)); return { messageId: assistantId }; }
           this.affection.record(assistantId, result);
-          return { type: "affection", ...result };
+          return { messageId: assistantId, extra: { type: "affection", ...result } };
         }, job.controller.signal);
       }
     } finally {
@@ -125,11 +131,11 @@ export class ChatController {
     }
   }
 
-  /** OpenRouter 스트림을 SSE로 릴레이하고, 완료 시 onDone으로 저장 위임. onDone이 이벤트를 돌려주면 done 앞에 흘려보낸다 */
+  /** OpenRouter 스트림을 SSE로 릴레이하고, 완료 시 onDone으로 저장 위임. 저장된 메시지 id(신고용)와 추가 이벤트를 done 앞에 흘려보낸다 */
   private async relay(
     res: Response,
     messages: LlmMessage[],
-    onDone: (full: string, tokensIn: number, tokensOut: number) => void | Promise<object | void>,
+    onDone: (full: string, tokensIn: number, tokensOut: number) => void | Promise<{ messageId?: string; extra?: object } | void>,
     signal: AbortSignal,
   ) {
     res.set({
@@ -153,8 +159,9 @@ export class ChatController {
           tokensOut = ev.completionTokens;
         }
       }
-      const extra = await onDone(full, tokensIn, tokensOut);
-      if (extra && !res.destroyed) res.write(`data: ${JSON.stringify(extra)}\n\n`);
+      const saved = await onDone(full, tokensIn, tokensOut);
+      if (saved?.messageId && !res.destroyed) res.write(`data: ${JSON.stringify({ type: "saved", messageId: saved.messageId })}\n\n`);
+      if (saved?.extra && !res.destroyed) res.write(`data: ${JSON.stringify(saved.extra)}\n\n`);
       if (!res.destroyed) res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
     } catch (e: any) {
       res.write(`data: ${JSON.stringify({ error: "응답 생성에 실패했어요. 다시 시도해주세요." })}\n\n`);

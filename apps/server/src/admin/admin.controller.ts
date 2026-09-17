@@ -96,6 +96,20 @@ export class AdminController {
     return { ok: true, interviewLimit: limit };
   }
 
+  /** AI 답변 신고 목록 (정책 대응 증적) */
+  @Get("reports")
+  reports() {
+    return this.db
+      .prepare(
+        `SELECT r.id, r.user_id as userId, r.conversation_id as conversationId, r.message_id as messageId,
+                r.reason, r.detail, r.content, r.created_at as createdAt,
+                u.type, u.nickname, u.email, p.name as personaName
+         FROM reports r LEFT JOIN users u ON u.id = r.user_id LEFT JOIN personas p ON p.uuid = r.persona_uuid
+         ORDER BY r.created_at DESC LIMIT 100`,
+      )
+      .all();
+  }
+
   /** 피드백 목록 */
   @Get("feedback")
   feedback() {

@@ -97,6 +97,24 @@ export function greetingText(
   return `안녕하세요, 저는 ${place}에 사는 ${p.name}입니다. 반가워요! 오늘은 어떤 이야기를 나눠볼까요?`;
 }
 
+/**
+ * 사용자 메시지의 언어를 감지해 "같은 언어로 답하라"는 꼬리 힌트를 돌려준다 (한국어면 빈 문자열).
+ * 시스템 프롬프트가 전부 한국어라 모델이 특히 거절·당황 상황에서 한국어로 돌아가는 일이 있어,
+ * 마지막 사용자 메시지 끝에 붙인다 — 프리픽스(시스템+히스토리)는 그대로라 캐시에 영향 없음.
+ */
+export function languageHint(text: string): string {
+  const count = (re: RegExp) => (text.match(re) || []).length;
+  const ko = count(/[가-힣]/g);
+  const ja = count(/[\u3040-\u30ff]/g);
+  const zh = count(/[\u4e00-\u9fff]/g);
+  const en = count(/[A-Za-z]/g);
+  const top = Math.max(ko, ja, zh, en);
+  if (!top || top === ko) return "";
+  if (top === ja) return "\n\n(말동무 안내: 위 메시지는 일본어입니다. 인물로서, 반드시 일본어로만 답하세요. / 必ず日本語だけで答えてください。)";
+  if (top === zh) return "\n\n(말동무 안내: 위 메시지는 중국어입니다. 인물로서, 반드시 중국어로만 답하세요. / 请只用中文回答。)";
+  return "\n\n(Maldongmu note: the message above is in English. Stay in character and reply only in English — never in Korean.)";
+}
+
 /** 가상 연애 첫 만남 — 소개팅 자리에 막 도착한 상황. LLM 없이 즉시. */
 export function datingGreetingText(p: { name: string }, lang?: string): string {
   const l = (lang || "").toLowerCase();

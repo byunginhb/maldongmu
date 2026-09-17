@@ -60,6 +60,18 @@ export class DbService implements OnModuleDestroy {
         content TEXT NOT NULL,
         created_at TEXT NOT NULL DEFAULT (datetime('now'))
       );
+      -- AI 답변 신고 (Play "AI 생성 콘텐츠" 정책: 앱 안에서 불쾌한 AI 콘텐츠를 신고할 수 있어야 함). content는 신고 시점 원문 스냅샷.
+      CREATE TABLE IF NOT EXISTS reports (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        conversation_id TEXT NOT NULL,
+        message_id TEXT NOT NULL,
+        persona_uuid TEXT,
+        reason TEXT NOT NULL,
+        detail TEXT,
+        content TEXT NOT NULL,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
       -- 이웃 인터뷰(페르소나 설문조사) 세션. 세션 행 = 크레딧 단위.
       CREATE TABLE IF NOT EXISTS interview_sessions (
         id TEXT PRIMARY KEY,

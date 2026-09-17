@@ -2,7 +2,7 @@ import { BadRequestException, ConflictException, ForbiddenException, Injectable,
 import { nanoid } from "nanoid";
 import { DbService } from "../db/db.service";
 import { PersonasService } from "../personas/personas.service";
-import { buildSystemPrompt, greetingText, datingGreetingText, DATING_OVERLAY } from "./prompt";
+import { buildSystemPrompt, greetingText, datingGreetingText, languageHint, DATING_OVERLAY } from "./prompt";
 import { GRANNY_BY_UUID, grannyOverlay } from "../db/granny";
 
 // 프롬프트 캐시 효율을 위한 계단식 히스토리 윈도우:
@@ -73,6 +73,24 @@ export class ChatService {
     return { ok: true };
   }
 
+  /** AI 답변 신고: 본인 대화방의 assistant 메시지만. 원문을 스냅샷으로 함께 저장 */
+  saveReport(userId: string, conversationId: string, messageId: string, reason: string, detail?: string) {
+    if (typeof reason !== "string" || !reason.trim()) throw new BadRequestException("신고 사유를 골라주세요");
+    const msg = this.db
+      .prepare(
+        `SELECT m.id, m.content, m.speaker_uuid as speakerUuid, c.persona_uuid as personaUuid FROM messages m
+         JOIN conversations c ON c.id = m.conversation_id
+         WHERE m.id = ? AND c.id = ? AND c.user_id = ? AND m.role = 'assistant'`,
+      )
+      .get(messageId, conversationId, userId) as any;
+    if (!msg) throw new NotFoundException("message not found");
+    this.db
+      .prepare(`INSERT INTO reports (id, user_id, conversation_id, message_id, persona_uuid, reason, detail, content) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`)
+      .run(nanoid(12), userId, conversationId, messageId, msg.speakerUuid ?? msg.personaUuid, reason.trim().slice(0, 40),
+        (detail || "").trim().slice(0, 500) || null, msg.content);
+    return { ok: true };
+  }
+
   listConversations(userId: string) {
     return this.db
       .prepare(
@@ -135,7 +153,8 @@ export class ChatService {
       messages: [
         { role: "system" as const, content: buildSystemPrompt(detail, overlay) },
         ...history.map((m) => ({ role: m.role as "user" | "assistant", content: m.content })),
-        { role: "user" as const, content: userText },
+        // 저장은 원문(saveTurn), 모델에는 언어 힌트를 덧붙인다
+        { role: "user" as const, content: userText + languageHint(userText) },
       ],
     };
   }

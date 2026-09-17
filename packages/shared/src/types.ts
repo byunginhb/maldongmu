@@ -53,6 +53,7 @@ export type ChatStreamEvent =
   | { type: "delta"; delta: string }
   | { type: "messageEnd" }
   | { type: "affection"; score: number; change: number; note: string } // change: 직전 대비 변화량 (delta는 텍스트 이벤트 예약어)
+  | { type: "saved"; messageId: string } // 1:1 답변이 저장된 id — 방금 받은 답변을 바로 신고할 수 있게
   | { type: "done"; waitingForUser?: boolean };
 
 export interface SearchFilters {
