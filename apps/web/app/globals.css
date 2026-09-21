@@ -525,6 +525,10 @@ h2.dot-title { font-size: 18px; margin: 0; }
 .notebook-add { width: 64px; height: 64px; border-radius: 14px; border: 2px dashed var(--line); display: grid; place-items: center; font-size: 26px; color: var(--brown-soft); }
 .notebook-cell:active .notebook-add { border-color: var(--coral); color: var(--coral); }
 
+/* 가상 연애 — 홈 최상단 히어로 (성별·나이대 칩 + coral CTA) */
+.dating-hero { background: var(--paper); border: 1px solid var(--line); border-radius: 16px; padding: 16px; margin: 0 0 18px; }
+.dating-hero .chip { height: 36px; font-size: 14px; }
+
 /* 욕쟁이 할매 — 홈 상단 배너 (coral CTA 아님: 카드형 메뉴) */
 .granny-banner {
   display: flex; align-items: center; gap: 12px;

@@ -40,7 +40,7 @@ export class AuthService {
       messageLimit: user.messageLimit ?? Number(process.env.LOGIN_MESSAGE_LIMIT || 100),
       messagesUsed,
       conversationCount: convCount,
-      guestLimit: Number(process.env.GUEST_CONVERSATION_LIMIT || 5),
+      guestMessageLimit: Number(process.env.GUEST_MESSAGE_LIMIT || 15),
     };
   }
 

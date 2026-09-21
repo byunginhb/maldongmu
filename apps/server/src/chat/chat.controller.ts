@@ -6,6 +6,7 @@ import { LlmMessage, LlmService } from "../llm/llm.service";
 import { AuthGuard } from "../auth/auth.guard";
 import { GroupChatService, GROUP_LIMITS } from "./group-chat.service";
 import { AffectionService } from "./affection.service";
+import { PersonasService } from "../personas/personas.service";
 
 @Controller()
 @UseGuards(AuthGuard)
@@ -15,11 +16,20 @@ export class ChatController {
     private readonly llm: LlmService,
     private readonly group: GroupChatService,
     private readonly affection: AffectionService,
+    private readonly personas: PersonasService,
   ) {}
 
   @Get("chat/features")
   features() {
     return { groupChat: true, maxFriends: 2, maxTurns: GROUP_LIMITS.turns };
+  }
+
+  /** 홈 최상단 훅: 성별·나이대만 받아 상대 1명을 골라 바로 소개팅 대화방을 만든다 (탐색 없이 첫 대화) */
+  @Post("conversations/dating")
+  quickDating(@Req() req: any, @Body() body: { sex: string; ageMin: number; ageMax: number }) {
+    const { items } = this.personas.dating(String(body?.sex || ""), Number(body?.ageMin), Number(body?.ageMax), 1);
+    if (!items.length) throw new BadRequestException("조건에 맞는 분을 찾지 못했어요. 다른 나이대를 골라볼까요?");
+    return this.chat.createConversation(req.userId, items[0].uuid, undefined, "dating");
   }
 
   @Post("conversations/today-friends")

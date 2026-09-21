@@ -101,6 +101,27 @@ test("affection is judged in parallel, clamped per turn, stored on the reply and
   assert.equal(f.completes.length, before);
 });
 
+test("quick dating start picks a matching partner and opens a dating room in one call", (t) => {
+  const f = fixture(); t.after(f.close);
+  const c = f.controller.quickDating({ userId: "owner" }, { sex: "여자", ageMin: 20, ageMax: 29 });
+  assert.equal(c.persona.uuid, "a");
+  assert.equal(f.chat.getConversation("owner", c.id).mode, "dating");
+  assert.throws(() => f.controller.quickDating({ userId: "owner" }, { sex: "남자", ageMin: 20, ageMax: 29 }), (e) => e.getStatus() === 400);
+  assert.throws(() => f.controller.quickDating({ userId: "owner" }, { sex: "x", ageMin: 20, ageMax: 29 }), (e) => e.getStatus() === 400);
+});
+
+test("guest message budget is shared across rooms, then login is required", (t) => {
+  const f = fixture(); t.after(f.close);
+  const limit = Number(process.env.GUEST_MESSAGE_LIMIT || 15);
+  const a = f.chat.createConversation("guest", "a");
+  const b = f.chat.createConversation("guest", "b");
+  for (let i = 0; i < limit - 1; i++) f.chat.saveTurn("guest", i % 2 ? a.id : b.id, "a", "안녕", "반가워", 0, 0);
+  f.chat.assertMessageQuota("guest", a.id);
+  f.chat.saveTurn("guest", b.id, "b", "마지막", "네", 0, 0);
+  assert.throws(() => f.chat.assertMessageQuota("guest", a.id), (e) => e.getStatus() === 403 && e.getResponse().code === "LOGIN_REQUIRED");
+  f.chat.assertMessageQuota("owner", f.chat.createConversation("owner", "a").id);
+});
+
 test("dating candidates match sex/age, skip spouses/custom personas/duplicate photos, and validate input", (t) => {
   const f = fixture(); t.after(f.close);
   f.db.exec(`CREATE TABLE persona_details (uuid TEXT PRIMARY KEY, marital_status TEXT);`);

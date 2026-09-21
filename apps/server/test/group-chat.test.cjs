@@ -23,7 +23,7 @@ test("daily pair is stable, distinct, and still uses the guest conversation limi
   assert.equal(a.personas.length, 2);
   assert.notEqual(a.personas[0].uuid, a.personas[1].uuid);
   assert.deepEqual(a.personas, b.personas);
-  for (let i = 0; i < Number(process.env.GUEST_CONVERSATION_LIMIT || 5); i++) f.group.today("guest");
+  for (let i = 0; i < Number(process.env.GUEST_CONVERSATION_LIMIT || 20); i++) f.group.today("guest");
   assert.throws(() => f.group.today("guest"), (e) => e.getStatus() === 403);
 });
 
@@ -141,7 +141,7 @@ test("quota/daily/empty-message rejection happens before generation and does not
 test("guest message cap also applies after inviting a friend", (t) => {
   const f = fixture(); t.after(f.close);
   const c = f.chat.createConversation("guest", "a");
-  for (let i = 0; i < Number(process.env.GUEST_MESSAGE_LIMIT || 5); i++) f.chat.saveTurn("guest", c.id, "a", "안녕", "반가워", 0, 0);
+  for (let i = 0; i < Number(process.env.GUEST_MESSAGE_LIMIT || 15); i++) f.chat.saveTurn("guest", c.id, "a", "안녕", "반가워", 0, 0);
   f.group.invite("guest", c.id, "b");
   assert.throws(() => f.group.reserve("guest", c.id, "더"), (e) => e.getStatus() === 403);
 });

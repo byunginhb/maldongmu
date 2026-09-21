@@ -31,7 +31,7 @@ interface Me {
   type: "guest" | "google" | "kakao";
   nickname: string | null;
   conversationCount: number;
-  guestLimit: number;
+  guestMessageLimit: number;
   messageLimit: number;
   messagesUsed: number;
 }
@@ -86,7 +86,7 @@ export default function MePage() {
       <h1 className="dot-title">이웃 수첩</h1>
       <p className="meta" style={{ margin: "6px 0 20px" }}>
         {me?.type === "guest"
-          ? `둘러보는 중이에요 (대화 ${me.conversationCount}/${me.guestLimit}회)`
+          ? `둘러보는 중이에요 (메시지 ${me.messagesUsed}/${me.guestMessageLimit}개, 로그인하면 계속)`
           : convs === null
             ? " "
             : neighbors.length > 0

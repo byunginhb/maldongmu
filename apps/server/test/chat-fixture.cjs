@@ -29,6 +29,9 @@ function fixture(stream) {
       return card;
     },
     detail(uuid) { return { ...this.card(uuid), cultural_background: "친구와 일상을 나누는 걸 좋아해요." }; },
+    dating(sex, ageMin, ageMax, count = 3) {
+      return { items: cards.filter((c) => c.sex === sex && c.age >= ageMin && c.age <= ageMax).slice(0, count) };
+    },
   };
   const calls = [];
   const completes = [];
@@ -50,7 +53,7 @@ function fixture(stream) {
   const chat = new ChatService({ db }, personas);
   const group = new GroupChatService({ db }, personas, chat, llm);
   const affection = new AffectionService({ db }, llm);
-  const controller = new ChatController(chat, llm, group, affection);
+  const controller = new ChatController(chat, llm, group, affection, personas);
   return { db, cards, personas, llm, calls, completes, setJudge: (fn) => { judge = fn; }, chat, group, affection, controller, close: () => db.close() };
 }
 

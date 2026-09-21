@@ -35,7 +35,8 @@ export class ChatService {
     if (!user) throw new NotFoundException("user not found");
 
     if (user.type === "guest") {
-      const limit = Number(process.env.GUEST_CONVERSATION_LIMIT || 5);
+      // 게스트는 메시지 총량(assertMessageQuota)으로 막는다. 방 개수 제한은 남용 방지용으로만 넉넉하게
+      const limit = Number(process.env.GUEST_CONVERSATION_LIMIT || 20);
       const count = (
         this.db.prepare(`SELECT COUNT(*) as c FROM conversations WHERE user_id = ?`).get(userId) as any
       ).c;
@@ -171,12 +172,9 @@ export class ChatService {
       .prepare(`SELECT type, message_limit FROM users WHERE id = ?`)
       .get(userId) as any;
     if (user?.type === "guest") {
-      const msgLimit = Number(process.env.GUEST_MESSAGE_LIMIT || 5);
-      const sent = (
-        this.db
-          .prepare(`SELECT COUNT(*) as c FROM messages WHERE conversation_id = ? AND role = 'user'`)
-          .get(conversationId) as any
-      ).c;
+      // 게스트 한도 = 모든 대화방을 합친 메시지 총량 (방마다 5개였던 것을 통합). 소진 시 로그인 유도(이력 이관)
+      const msgLimit = Number(process.env.GUEST_MESSAGE_LIMIT || 15);
+      const sent = this.countUserMessages(userId);
       if (sent >= msgLimit) {
         throw new ForbiddenException({ code: "LOGIN_REQUIRED", message: "로그인이 필요해요" });
       }
