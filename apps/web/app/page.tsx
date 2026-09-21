@@ -109,21 +109,7 @@ export default function Home() {
         </div>
       </header>
 
-      {/* 상단 메뉴: 욕쟁이 할매 (coral CTA 아님 — 화면당 coral 1개 원칙 유지) */}
-      <Link href="/grannies" className="granny-banner">
-        <span className="granny-banner-faces" aria-hidden>
-          {GRANNY_FACES.map((f) => (
-            <span key={f.uuid}><Avatar uuid={f.uuid} sex="여자" age={f.age} size={34} radius={10} /></span>
-          ))}
-        </span>
-        <span className="granny-banner-text">
-          <b>욕쟁이 할매</b>
-          <span className="meta">지역별 할매한테 한바탕 타박 들으러 가기</span>
-        </span>
-        <span className="granny-banner-go" aria-hidden>→</span>
-      </Link>
-
-      {/* 가상 연애 (배너 스타일은 욕쟁이 할매와 동일 → 클래스 재사용) */}
+      {/* 최상단 훅: 가상 연애 (배너 스타일은 욕쟁이 할매와 동일 → 클래스 재사용) */}
       <Link href="/dating" className="granny-banner">
         <span className="granny-banner-faces" aria-hidden>
           {DATING_FACES.map((f) => (
@@ -133,6 +119,20 @@ export default function Home() {
         <span className="granny-banner-text">
           <b>가상 연애 해보기</b>
           <span className="meta">성별과 나이대만 고르면 소개팅 자리로 안내해드려요</span>
+        </span>
+        <span className="granny-banner-go" aria-hidden>→</span>
+      </Link>
+
+      {/* 두 번째 훅: 욕쟁이 할매 (coral CTA 아님 — 화면당 coral 1개 원칙 유지) */}
+      <Link href="/grannies" className="granny-banner">
+        <span className="granny-banner-faces" aria-hidden>
+          {GRANNY_FACES.map((f) => (
+            <span key={f.uuid}><Avatar uuid={f.uuid} sex="여자" age={f.age} size={34} radius={10} /></span>
+          ))}
+        </span>
+        <span className="granny-banner-text">
+          <b>욕쟁이 할매</b>
+          <span className="meta">지역별 할매한테 한바탕 타박 들으러 가기</span>
         </span>
         {/* 화면당 coral 강조 1개 원칙: 두 번째 배너 화살표는 톤 다운 */}
         <span className="granny-banner-go" style={{ color: "var(--brown-soft)" }} aria-hidden>→</span>
