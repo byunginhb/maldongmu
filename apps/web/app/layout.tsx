@@ -3,6 +3,7 @@ import "./globals.css";
 import TabBar from "../components/TabBar";
 import Footer from "../components/Footer";
 import RegisterSW from "../components/RegisterSW";
+import Analytics from "../components/Analytics";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
@@ -56,6 +57,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Footer />
         <TabBar />
         <RegisterSW />
+        <Analytics />
       </body>
     </html>
   );

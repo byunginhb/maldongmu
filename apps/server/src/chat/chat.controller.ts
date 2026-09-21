@@ -48,6 +48,15 @@ export class ChatController {
     return this.chat.saveReport(req.userId, String(body?.conversationId || ""), String(body?.messageId || ""), body?.reason, body?.detail);
   }
 
+  /** 제품 이벤트 수집 (visit·share·review_prompt 등). 이름은 snake_case 40자, props는 JSON 1KB까지 */
+  @Post("events")
+  event(@Req() req: any, @Body() body: { name: string; props?: Record<string, unknown> }) {
+    const name = String(body?.name || "").trim();
+    if (!/^[a-z][a-z0-9_]{0,39}$/.test(name)) throw new BadRequestException("event name");
+    const props = body?.props && typeof body.props === "object" ? JSON.stringify(body.props).slice(0, 1000) : null;
+    return this.chat.saveEvent(req.userId, name, props);
+  }
+
   @Post("feedback")
   feedback(@Req() req: any, @Body() body: { content: string }) {
     return this.chat.saveFeedback(req.userId, (body.content || "").trim());

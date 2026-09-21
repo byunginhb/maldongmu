@@ -38,6 +38,12 @@ interface UserDetail {
   user: { id: string; type: string; nickname: string | null; email: string | null; createdAt: string; interviewLimit?: number; interviewUsed?: number };
   conversations: UserConv[];
 }
+interface Funnel {
+  days: number;
+  steps: { users: number; startedConversation: number; sent1: number; sent5: number; sent20: number; returned: number; loggedIn: number; dating: number };
+  sources: { source: string; surface: string; users: number }[];
+}
+
 interface ReportRow {
   id: string;
   userId: string;
@@ -89,6 +95,7 @@ export default function AdminPage() {
   const [convDetail, setConvDetail] = useState<ConvDetail | null>(null);
   const [feedback, setFeedback] = useState<FeedbackRow[]>([]);
   const [reports, setReports] = useState<ReportRow[]>([]);
+  const [funnel, setFunnel] = useState<Funnel | null>(null);
   const [limitInputs, setLimitInputs] = useState<Record<string, string>>({});
   const [userType, setUserType] = useState("");
   const [ivInputs, setIvInputs] = useState<Record<string, string>>({});
@@ -126,12 +133,13 @@ export default function AdminPage() {
 
   const loadAll = useCallback(async () => {
     try {
-      const [s, r, u, f, rp] = await Promise.all([
+      const [s, r, u, f, rp, fn] = await Promise.all([
         adminGet<Stats>("/stats?days=14"),
         adminGet<(Card & { chats: number })[]>("/personas/ranking?days=7"),
         adminGet<{ rows: UserRow[]; total: number }>("/users?page=1"),
         adminGet<FeedbackRow[]>("/feedback"),
         adminGet<ReportRow[]>("/reports").catch(() => [] as ReportRow[]),
+        adminGet<Funnel>("/funnel?days=14").catch(() => null),
       ]);
       setStats(s);
       setRanking(r);
@@ -140,6 +148,7 @@ export default function AdminPage() {
       setUserPage(1);
       setFeedback(f);
       setReports(rp);
+      setFunnel(fn);
       setAuthed(true);
       setError("");
     } catch (e: any) {
@@ -240,6 +249,31 @@ export default function AdminPage() {
           </div>
         ))}
       </div>
+
+      {funnel && (() => {
+        const s = funnel.steps;
+        const pct = (v: number) => (s.users ? `${Math.round((v / s.users) * 1000) / 10}%` : "–");
+        const rows: [string, number][] = [["방문(가입)", s.users], ["대화방 생성", s.startedConversation], ["첫 메시지", s.sent1],
+          ["메시지 5+", s.sent5], ["메시지 20+", s.sent20], ["2일+ 재방문", s.returned], ["가상 연애 대화", s.dating], ["로그인", s.loggedIn]];
+        return (
+          <>
+            <h2 className="dot-title" style={{ marginBottom: 4 }}>퍼널 (최근 {funnel.days}일 가입 코호트)</h2>
+            <p className="meta" style={{ margin: "0 0 10px" }}>목표: 첫 메시지 35% · 재방문 20%</p>
+            <div style={{ background: "var(--paper)", border: "1px solid var(--line)", borderRadius: 16, padding: "6px 16px", marginBottom: 12 }}>
+              {rows.map(([label, v]) => (
+                <div key={label} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid var(--line)", fontSize: 14 }}>
+                  <span>{label}</span><span><b>{n(v)}</b> <span className="meta">{pct(v)}</span></span>
+                </div>
+              ))}
+            </div>
+            <p className="meta" style={{ margin: "0 0 6px" }}>유입 경로 (visit 이벤트, 사용자 수)</p>
+            <div className="chip-wrap" style={{ marginBottom: 28 }}>
+              {funnel.sources.length === 0 && <span className="meta">아직 없음</span>}
+              {funnel.sources.map((x) => <span key={`${x.source}-${x.surface}`} className="chip" style={{ cursor: "default" }}>{x.source} · {x.surface} · {n(x.users)}</span>)}
+            </div>
+          </>
+        );
+      })()}
 
       <h2 className="dot-title" style={{ marginBottom: 12 }}>AI 답변 신고</h2>
       <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 28 }}>

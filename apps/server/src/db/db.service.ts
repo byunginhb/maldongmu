@@ -60,6 +60,15 @@ export class DbService implements OnModuleDestroy {
         content TEXT NOT NULL,
         created_at TEXT NOT NULL DEFAULT (datetime('now'))
       );
+      -- 제품 이벤트 (유입 경로·퍼널). 외부 분석 도구 대신 자체 수집 — 키 불필요, 데이터 내부 보관.
+      CREATE TABLE IF NOT EXISTS events (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id TEXT,
+        name TEXT NOT NULL,
+        props TEXT,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+      CREATE INDEX IF NOT EXISTS idx_events_name ON events(name, created_at);
       -- AI 답변 신고 (Play "AI 생성 콘텐츠" 정책: 앱 안에서 불쾌한 AI 콘텐츠를 신고할 수 있어야 함). content는 신고 시점 원문 스냅샷.
       CREATE TABLE IF NOT EXISTS reports (
         id TEXT PRIMARY KEY,

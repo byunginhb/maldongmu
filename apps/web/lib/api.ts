@@ -226,6 +226,12 @@ export function getOccupations(): Promise<{ items: OccupationEntry[] }> {
   return apiGet("/personas/occupations");
 }
 
+/* ---------- 제품 이벤트 ---------- */
+/** 이벤트 수집 — 실패해도 조용히 무시 (UX에 영향 없음) */
+export function track(name: string, props?: Record<string, unknown>): void {
+  apiPost("/events", { name, props }).catch(() => {});
+}
+
 /* ---------- AI 답변 신고 ---------- */
 /** 불쾌한 AI 답변을 앱 안에서 바로 신고 (Play AI 생성 콘텐츠 정책) */
 export function reportMessage(conversationId: string, messageId: string, reason: string, detail?: string): Promise<{ ok: boolean }> {

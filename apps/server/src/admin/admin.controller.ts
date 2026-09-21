@@ -40,6 +40,39 @@ export class AdminController {
     return { daily, totals };
   }
 
+  /** 퍼널: 기간 내 가입(게스트 포함) 코호트가 어디까지 갔는지 + 유입 경로 (visit 이벤트) */
+  @Get("funnel")
+  funnel(@Query("days") days = "14") {
+    const since = `-${Math.min(Number(days) || 14, 90)} days`;
+    const one = (sql: string) => (this.db.prepare(sql).get(since) as any).n as number;
+    const cohort = `SELECT id FROM users WHERE created_at >= datetime('now', ?)`;
+    const sent = `SELECT c.user_id AS uid, COUNT(*) AS n, COUNT(DISTINCT date(m.created_at)) AS days
+                  FROM messages m JOIN conversations c ON c.id = m.conversation_id
+                  WHERE m.role = 'user' AND c.user_id IN (${cohort}) GROUP BY c.user_id`;
+    const steps = {
+      users: one(`SELECT COUNT(*) AS n FROM (${cohort})`),
+      startedConversation: one(`SELECT COUNT(DISTINCT user_id) AS n FROM conversations WHERE user_id IN (${cohort})`),
+      sent1: one(`SELECT COUNT(*) AS n FROM (${sent})`),
+      sent5: one(`SELECT COUNT(*) AS n FROM (${sent}) WHERE n >= 5`),
+      sent20: one(`SELECT COUNT(*) AS n FROM (${sent}) WHERE n >= 20`),
+      returned: one(`SELECT COUNT(*) AS n FROM (${sent}) WHERE days >= 2`),
+      loggedIn: one(`SELECT COUNT(*) AS n FROM users WHERE created_at >= datetime('now', ?) AND type != 'guest'`),
+      dating: one(`SELECT COUNT(DISTINCT c.user_id) AS n FROM conversations c WHERE c.mode = 'dating' AND c.user_id IN (${cohort})
+                   AND EXISTS (SELECT 1 FROM messages m WHERE m.conversation_id = c.id AND m.role = 'user')`),
+    };
+    // 유입 경로: visit 이벤트의 source(utm_source > referrer host > direct) × app 여부
+    const sources = this.db
+      .prepare(
+        `SELECT COALESCE(NULLIF(json_extract(props, '$.utm_source'), ''), NULLIF(json_extract(props, '$.referrer'), ''), 'direct') AS source,
+                CASE WHEN json_extract(props, '$.app') THEN 'app' ELSE 'web' END AS surface,
+                COUNT(DISTINCT user_id) AS users
+         FROM events WHERE name = 'visit' AND created_at >= datetime('now', ?)
+         GROUP BY source, surface ORDER BY users DESC LIMIT 20`,
+      )
+      .all(since);
+    return { days: Number(days) || 14, steps, sources };
+  }
+
   @Get("personas/ranking")
   ranking(@Query("days") days = "7") {
     return this.personas.popular(Math.min(Number(days) || 7, 90), 30);

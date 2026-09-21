@@ -21,6 +21,12 @@ export class ChatService {
     return this.dbs.db;
   }
 
+  /** 제품 이벤트 저장 (visit·share 등). props는 JSON 문자열 1KB까지 */
+  saveEvent(userId: string, name: string, props: string | null) {
+    this.db.prepare(`INSERT INTO events (user_id, name, props) VALUES (?, ?, ?)`).run(userId, name, props);
+    return { ok: true };
+  }
+
   createConversation(userId: string, personaUuid: string, secondPersonaUuid?: string, mode?: "dating") {
     if (typeof personaUuid !== "string" || !personaUuid) throw new BadRequestException("친구를 골라주세요");
     if (secondPersonaUuid === personaUuid) throw new BadRequestException("서로 다른 친구를 골라주세요");
