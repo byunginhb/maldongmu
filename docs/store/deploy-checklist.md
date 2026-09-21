@@ -50,6 +50,15 @@ cp app/build/outputs/bundle/release/app-release.aab ~/android-tools/maldongmu-rn
 - v1.1.0: 2026-09-14 제출됨 (versionCode 2, 제목·설명·피처·스크린샷 6장 교체). 아래 U-2~U-5는 수동 절차 참고용.
 - v1.1.1: 2026-09-14 제출됨 (versionCode 3, 탭바 밑 여백 수정. AAB/테스트 APK: `~/android-tools/maldongmu-rn-v1.1.1*`)
 
+### 🧹 "DEX 코드 최적화 기준 미만(난독화 1%)" 대응 — v1.1.2 (2026-09-20)
+
+콘솔 출시 대시보드 "확인 필요": R8 코드 축소·난독화가 꺼져 있어 난독화 비율 1%. 해결 기한 2027-02.
+- 대응: `mobile/withReleaseSigning.js`가 prebuild 때 `android.enableMinifyInReleaseBuilds=true`,
+  `android.enableShrinkResourcesInReleaseBuilds=true`를 gradle.properties에 넣는다 → 릴리스 빌드에 R8 적용 (`app/build/outputs/mapping/release/mapping.txt` 생성 확인).
+- 앱 코드 변경 없음. WebView 앱이라 R8 리스크 낮음(RN·Expo 기본 proguard 규칙 포함). 문제 생기면 두 프로퍼티만 false로.
+- "권장 조치 3개"(대형 화면 API·PIP·방향 제한)는 필수 아님. 방향 제한(portrait)은 Android 16+ 대형 화면에서 자동 무시됨 — 그대로 둠.
+- 한국어 제목 변경(콘솔에서 손본 en/ko 등록정보를 `listings/`로 먼저 동기화한 뒤): `말동무 - 가상 연애, AI 채팅`.
+
 ### 🛡 Google Play "AI 생성 콘텐츠" 정책 대응 (2026-09-17)
 
 콘솔 메일: "사용자가 앱을 종료하지 않고도 불쾌감을 주는 AI 생성 콘텐츠를 신고할 수 있는 인앱 신고 기능을 포함하도록 업데이트하세요."

@@ -1,63 +1,27 @@
-Virtual dating, a dating simulator, and sharp-tongued Korean grandmas — all in one AI chat app.
-Maldongmu ("chat companion" in Korean) lets you sit down with one of 1,000,000 AI personas
-built from real Korean demographic data. Not a chatbot that answers questions —
-a neighbor you just met who somehow feels like an old friend.
+Meet your next AI conversation companion in Maldongmu. Chat with Korean AI characters, try a virtual dating simulation, or explore different perspectives through AI interviews. Each persona has a background, personality and way of speaking inspired by Korean life.
 
-Write in English, Japanese, Chinese or Korean — every character replies in your language.
-(App menus are currently in Korean; an English interface is on the way.)
+AI CHARACTER CHAT
+Choose a virtual neighbor by region, age or gender and start a conversation. Explore characters with different jobs and life stories, from firefighters and judges to haenyeo sea divers. Enjoy everyday conversation, share what's on your mind, or discover a different point of view.
 
-━━━━━━━━━━━━━━━
+VIRTUAL DATING SIMULATION
+Choose your preferred gender and age range for a café-style blind date with an AI character. Practice a first greeting and keep the conversation going. An affection meter responds to your messages as the simulated relationship develops.
 
-💗 Virtual dating with an affection meter
+KOREAN NEIGHBORHOOD CHARACTERS
+Talk with outspoken grandmother characters inspired by different Korean regions. Discover regional expressions, distinctive personalities and warm neighborhood-style conversation.
 
-Pick a gender and an age range, and you're seated at a quiet café for a blind date.
-From an awkward hello to getting to know each other, to a spark —
-the relationship deepens one step at a time, never rushed.
+SIMULATED AI INTERVIEWS
+Explore a topic with multiple AI personas, compare their answers and review an insight report. Use different perspectives to develop questions and ideas. These are AI-generated simulations, not responses from real research participants or verified market research.
 
-- An affection meter that moves with every message: warmth and sincerity open
-  their heart; rudeness or low effort makes them pull back
-- Not a doll that likes you no matter what — a person with their own standards
-- Today's date is one of 1M people with their own age, job and regional accent
-- Great for practicing dating conversation in Korean or your own language
+MORE WAYS TO TALK
+- Discover new virtual neighbors through daily introductions and random encounters.
+- Try a three-way conversation with two AI characters.
+- Find a companion around a topic on your mind.
+- Revisit characters you've met in your neighbor notebook.
 
-━━━━━━━━━━━━━━━
+LANGUAGE SUPPORT
+Write in Korean, English, Japanese or Chinese and the characters can reply in that language. App menus are currently in Korean. You can use conversations for casual Korean practice and exploring everyday expressions.
 
-🔥 Sharp-tongued grandmas from every region of Korea
+ABOUT THE CHARACTERS
+All conversation partners are fictional AI personas generated using Korean population statistics as a reference. Maldongmu does not connect you with real people for dating or interviews. AI responses may be inaccurate and do not replace professional advice.
 
-Seoul, Busan, Jeolla, Chungcheong, Jeju — each region's "cursing grandma."
-She scolds you in thick dialect, then makes sure you've eaten.
-A very Korean kind of affection, and a fun way to hear real regional speech.
-
-━━━━━━━━━━━━━━━
-
-💬 AI conversations that feel like real people
-
-- 1,000,000 AI characters, each with a different age, hometown, job and personality
-- Natural dialogue with regional dialects and generational speech intact
-- Meet people you rarely get to: judges, firefighters, haenyeo sea divers, pilots
-- From a twenty-year-old's worries to a seventy-year-old's wisdom
-- A gentle way to practice Korean: switch to Korean any time and they'll follow
-
-━━━━━━━━━━━━━━━
-
-🏡 How to enjoy it
-
-- Virtual dating: pick gender and age range, start a blind date
-- Meet today's match: a random neighbor, no spoilers
-- Three-way chat: invite two friends and talk together
-- Today's neighbors: new people introduced every day
-- Got something on your mind? Pick a worry and we'll find the right companion
-- Find neighbors: search by region, age and gender
-- Neighbor notebook: your collection of everyone you've met
-
-━━━━━━━━━━━━━━━
-
-🌙 Made for
-
-- Lonely nights when you just want someone to talk to
-- Practicing dating conversation before the real thing
-- Casual AI companion chat when you're bored
-- Anyone curious about everyday Korean life, dialects and K-culture
-
-Every persona in Maldongmu is generated from real Korean population statistics.
-So — who will you talk to today?
+Who will you talk to today?

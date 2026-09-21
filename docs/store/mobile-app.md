@@ -55,6 +55,7 @@ cd android && echo "sdk.dir=$ANDROID_HOME" > local.properties
 | 1.0.0 | 1 | 첫 출시 (욕쟁이 할매 훅) |
 | 1.1.0 | 2 | 스토어 등록정보를 가상 연애 중심으로 갱신, 사진 아바타 스크린샷 (앱 코드 변경 없음) |
 | 1.1.1 | 3 | 하단 시스템 바 영역을 탭바와 같은 흰색으로 — 탭바 밑 cream 띠(여백) 제거 |
+| 1.1.2 | 4 | R8 코드 축소·난독화 + 리소스 축소 켬 (Play "DEX 코드 최적화 기준 미만" 대응). 앱 기능 변경 없음 |
 
 - 이 맥(2026-09)의 툴체인: JDK `/opt/homebrew/opt/openjdk@17`, SDK `~/Library/Android/sdk` (build-tools 34~36). `~/android-tools/`(키스토어·구 툴체인)는 맥미니 쪽.
 - 스토어 스크린샷 재생성: 라이브 사이트를 Playwright로 캡처해 `docs/store/images/raw/`에 두고 `python3 scripts/store/compose.py`.

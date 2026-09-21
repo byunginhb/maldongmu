@@ -49,6 +49,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--aab")
     ap.add_argument("--release-name")
+    ap.add_argument("--mapping", help="R8 mapping.txt — 난독화된 크래시 로그 해독용, AAB와 같은 versionCode에 연결")
     ap.add_argument("--notes", help="출시 노트 텍스트 파일")
     ap.add_argument("--track", default="production")
     ap.add_argument("--title")
@@ -81,6 +82,10 @@ def main():
                     print(f"  AAB 업로드 {int(status.progress() * 100)}%")
             vc = resp["versionCode"]
             print(f"AAB 업로드 완료: versionCode {vc}")
+            if a.mapping:
+                edits.deobfuscationfiles().upload(packageName=PACKAGE, editId=edit_id, apkVersionCode=vc, deobfuscationFileType="proguard",
+                                                   media_body=MediaFileUpload(a.mapping, mimetype="application/octet-stream", resumable=True)).execute()
+                print("  mapping.txt 업로드 (deobfuscation)")
             release = {"name": a.release_name or str(vc), "versionCodes": [str(vc)], "status": "completed"}
             notes = listing_notes(a.listings_dir) if a.listings_dir else []
             if a.notes and not any(n["language"] == LANG for n in notes):

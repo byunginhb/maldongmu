@@ -1,4 +1,4 @@
-const { withAppBuildGradle } = require("@expo/config-plugins");
+const { withAppBuildGradle, withGradleProperties } = require("@expo/config-plugins");
 
 // 릴리스 AAB를 업로드 키스토어로 서명하도록 android/app/build.gradle을 패치.
 // 시크릿은 gradle 프로퍼티(-P 또는 ~/.gradle/gradle.properties)로 주입 → 저장소엔 안 들어간다.
@@ -13,7 +13,19 @@ const RELEASE_SIGNING = `        release {
         }
 `;
 
+// Play 콘솔 "DEX 코드 최적화 기준 미만(난독화 1%)" 대응: 릴리스 빌드에 R8 코드 축소·난독화 + 리소스 축소를 켠다.
+// build.gradle이 이 두 프로퍼티를 읽어 minifyEnabled/shrinkResources에 반영한다. RN·Expo 기본 proguard 규칙이 포함돼 있음.
+const RELEASE_PROPERTIES = { "android.enableMinifyInReleaseBuilds": "true", "android.enableShrinkResourcesInReleaseBuilds": "true" };
+
 module.exports = function withReleaseSigning(config) {
+  config = withGradleProperties(config, (cfg) => {
+    for (const [key, value] of Object.entries(RELEASE_PROPERTIES)) {
+      const item = cfg.modResults.find((p) => p.type === "property" && p.key === key);
+      if (item) item.value = value;
+      else cfg.modResults.push({ type: "property", key, value });
+    }
+    return cfg;
+  });
   return withAppBuildGradle(config, (cfg) => {
     let c = cfg.modResults.contents;
     if (!c.includes("MALDONGMU_STORE_FILE")) {
