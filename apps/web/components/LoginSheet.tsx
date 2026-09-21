@@ -11,8 +11,8 @@ export default function LoginSheet({ onClose }: { onClose: () => void }) {
           가입하고 계속 이야기 나눠요
         </h2>
         <p className="meta" style={{ margin: "0 0 18px" }}>
-          가입하면 지금까지 나눈 대화가 그대로 저장돼요. 아직은 모두 무료니까,
-          가입하고 이웃들과 마음껏 이야기를 이어가세요.
+          가입하면 지금까지 나눈 대화와 가상 연애의 호감도가 그대로 저장되고,
+          이웃 수첩에서 언제든 이어서 만날 수 있어요. 아직은 모두 무료예요.
         </p>
         <button className="btn-social btn-kakao" onClick={() => (window.location.href = socialLoginUrl("kakao"))}>
           카카오로 계속하기

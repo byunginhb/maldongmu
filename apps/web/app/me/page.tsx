@@ -6,6 +6,7 @@ import { apiGet, clearToken, socialLoginUrl } from "../../lib/api";
 import Avatar from "../../components/Avatar";
 import DotDivider from "../../components/DotDivider";
 import { Skeleton } from "../../components/ui";
+import { RARE } from "../../lib/rare";
 
 interface ConvItem {
   id: string;
@@ -36,11 +37,6 @@ interface Me {
   messagesUsed: number;
 }
 
-// 희소 직업 = "귀한 이웃" (서버 OCCUPATION_GROUPS와 동일 목록)
-const RARE = new Set([
-  "판사", "소방관", "해녀", "비행기 조종사", "항해사",
-  "국악인", "국악 연주가", "승려", "천문 및 우주 과학 연구원", "배우", "문학작가",
-]);
 
 const todayUTC = () => new Date().toISOString().slice(0, 10);
 

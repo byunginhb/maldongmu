@@ -525,6 +525,12 @@ h2.dot-title { font-size: 18px; margin: 0; }
 .notebook-add { width: 64px; height: 64px; border-radius: 14px; border: 2px dashed var(--line); display: grid; place-items: center; font-size: 26px; color: var(--brown-soft); }
 .notebook-cell:active .notebook-add { border-color: var(--coral); color: var(--coral); }
 
+/* 안드로이드 웹 → 앱 유도 슬림 배너 (앱 안에서는 숨김) */
+.app-banner { display: flex; align-items: center; gap: 10px; padding: 8px 14px; background: var(--brown); color: var(--cream); font-size: 13px; }
+.app-banner span { flex: 1; }
+.app-banner a { color: var(--cream); font-weight: 700; text-decoration: underline; text-underline-offset: 2px; }
+.app-banner button { background: none; border: none; color: var(--cream); font-size: 18px; line-height: 1; padding: 0 2px; }
+
 /* 가상 연애 — 홈 최상단 히어로 (성별·나이대 칩 + coral CTA) */
 .dating-hero { background: var(--paper); border: 1px solid var(--line); border-radius: 16px; padding: 16px; margin: 0 0 18px; }
 .dating-hero .chip { height: 36px; font-size: 14px; }

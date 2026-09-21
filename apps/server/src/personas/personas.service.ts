@@ -305,6 +305,15 @@ ${list}
     return { items };
   }
 
+  /** 직업 큐레이션 페이지(SEO)용: 그룹 메타 + 인물 목록. 검색 색인이 안정되도록 rowid 순으로 고정 (매일 바뀌는 대표는 occupations()) */
+  occupationGroup(key: string, limit = 24) {
+    this.occupations(); // 캐시 보장
+    const g = OCCUPATION_GROUPS.find((x) => x.key === key);
+    if (!g) throw new NotFoundException("occupation group not found");
+    const members = this.occupationsCache!.groups[g.key];
+    return { key: g.key, label: g.label, blurb: g.blurb, count: members.length, items: members.slice(0, Math.min(Math.max(1, limit), 50)) };
+  }
+
   /** 만나기 어려운 직업 대표 페르소나: 날짜 시드로 매일 교체, 하루 단위 캐시 */
   occupations() {
     const day = new Date().toISOString().slice(0, 10);

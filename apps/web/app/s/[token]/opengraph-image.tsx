@@ -6,7 +6,7 @@ export const runtime = "nodejs";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-const SITE = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+const SITE = process.env.NEXT_PUBLIC_SITE_URL || "https://www.maldongmu.app";
 const font = (w: string) => fetch(`https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/public/static/Pretendard-${w}.otf`).then((r) => r.arrayBuffer());
 
 /** 카톡·트위터 미리보기용 호감도 카드 (1200×630). 사진 아바타(WebP)는 satori가 못 읽어 이름 이니셜 원으로 대체 */

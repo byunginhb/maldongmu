@@ -15,6 +15,7 @@ export async function generateMetadata({ params }: { params: Promise<{ token: st
   const title = `${card.persona.name}님의 호감도 ${card.score} · ${stageOf(card.score)}`;
   return {
     title,
+    robots: { index: false }, // 사용자 생성 카드 — 색인 대신 소셜 미리보기만
     description: card.line ? `"${card.line}" — 말동무 가상 연애` : "말동무 가상 연애 결과",
     openGraph: { title, description: card.line || "말동무 가상 연애", type: "website" },
     twitter: { card: "summary_large_image", title, description: card.line || "말동무 가상 연애" },

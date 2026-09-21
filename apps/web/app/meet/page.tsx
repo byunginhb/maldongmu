@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { getOccupations, type OccupationEntry } from "../../lib/api";
 import Avatar from "../../components/Avatar";
 
 export default function MeetPage() {
+  const router = useRouter();
   const [items, setItems] = useState<OccupationEntry[] | null>(null);
 
   useEffect(() => {
@@ -35,6 +37,9 @@ export default function MeetPage() {
                     <p className="card-oneliner">{o.persona.oneLiner}</p>
                   </div>
                 </div>
+                <span className="meta" style={{ display: "block", marginTop: 10, fontWeight: 600 }} onClick={(e) => { e.preventDefault(); e.stopPropagation(); router.push(`/meet/${o.key}`); }}>
+                  다른 {o.label} {o.count}명 더 보기 →
+                </span>
               </Link>
             ))}
       </div>

@@ -16,6 +16,12 @@ export class PersonasController {
     return this.personas.occupations();
   }
 
+  /** 직업 큐레이션 페이지 (공개, SEO). :uuid보다 먼저 */
+  @Get("occupations/:key")
+  occupationGroup(@Param("key") key: string, @Query("limit") limit?: string) {
+    return this.personas.occupationGroup(key, limit ? Number(limit) : 24);
+  }
+
   @Get("grannies")
   grannies() {
     return this.personas.grannies();

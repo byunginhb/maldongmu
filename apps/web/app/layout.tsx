@@ -4,8 +4,9 @@ import TabBar from "../components/TabBar";
 import Footer from "../components/Footer";
 import RegisterSW from "../components/RegisterSW";
 import Analytics from "../components/Analytics";
+import AppBanner from "../components/AppBanner";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.maldongmu.app";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -53,6 +54,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body>
+        <AppBanner />
         {children}
         <Footer />
         <TabBar />
