@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import Avatar from "../../../components/Avatar";
-import { stageOf } from "../../../components/AffectionMeter";
+import { stageOf } from "../../../lib/affection";
 import { getShareCard } from "../../../lib/share";
 
 export const dynamic = "force-dynamic";

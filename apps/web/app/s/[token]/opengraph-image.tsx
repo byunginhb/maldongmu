@@ -1,5 +1,5 @@
 import { ImageResponse } from "next/og";
-import { stageOf } from "../../../components/AffectionMeter";
+import { stageOf } from "../../../lib/affection";
 import { getShareCard } from "../../../lib/share";
 
 export const runtime = "nodejs";

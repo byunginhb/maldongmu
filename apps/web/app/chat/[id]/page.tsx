@@ -9,7 +9,8 @@ import Avatar from "../../../components/Avatar";
 import LoginSheet from "../../../components/LoginSheet";
 import QuotaSheet from "../../../components/QuotaSheet";
 import FriendPicker from "../../../components/FriendPicker";
-import AffectionMeter, { stageOf } from "../../../components/AffectionMeter";
+import AffectionMeter from "../../../components/AffectionMeter";
+import { stageOf } from "../../../lib/affection";
 import ReviewSheet from "../../../components/ReviewSheet";
 import ReportSheet from "../../../components/ReportSheet";
 
