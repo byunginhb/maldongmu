@@ -10,7 +10,7 @@ export const stageOf = (score: number) => STAGES.find(([min]) => score >= min)![
  * 가상 연애 호감도 게이지. 점수가 바뀌면 막대가 부드럽게 채워지고 숫자가 세어 올라가며 변화량이 떠오른다.
  * ponytail: 이번 턴 변화 하나만 보여준다. 턴별 추이 그래프는 필요해지면 messages.affection으로 그리면 됨.
  */
-export default function AffectionMeter({ score, change, note }: { score: number; change: number; note: string }) {
+export default function AffectionMeter({ score, change, note, onShare }: { score: number; change: number; note: string; onShare?: () => void }) {
   const [shown, setShown] = useState(score);
   const from = useRef(score);
   const [pulse, setPulse] = useState(0);
@@ -35,7 +35,7 @@ export default function AffectionMeter({ score, change, note }: { score: number;
   return (
     <div className="affection" role="status" aria-label={`호감도 ${score}점, ${stageOf(score)}`}>
       <div className="affection-head">
-        <span className="meta">호감도 · {stageOf(score)}</span>
+        <span className="meta">호감도 · {stageOf(score)}{onShare && <button className="affection-share" onClick={onShare}>공유</button>}</span>
         <span className="affection-score">
           <b key={pulse} className={pulse ? "affection-bump" : ""}>{shown}</b>
           {pulse > 0 && change !== 0 && (

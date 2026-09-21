@@ -6,10 +6,11 @@ import { PersonasModule } from "../personas/personas.module";
 import { AuthModule } from "../auth/auth.module";
 import { GroupChatService } from "./group-chat.service";
 import { AffectionService } from "./affection.service";
+import { ShareController } from "./share.controller";
 
 @Module({
   imports: [LlmModule, PersonasModule, AuthModule],
-  controllers: [ChatController],
+  controllers: [ChatController, ShareController],
   providers: [ChatService, GroupChatService, AffectionService],
 })
 export class ChatModule {}

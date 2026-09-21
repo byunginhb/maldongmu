@@ -1,4 +1,5 @@
-import { Injectable } from "@nestjs/common";
+import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
+import { nanoid } from "nanoid";
 import type { PersonaCard } from "@maldongmu/shared";
 import { DbService } from "../db/db.service";
 import { LlmService } from "../llm/llm.service";
@@ -63,6 +64,33 @@ JSON만 출력: {"score": 정수, "note": "상대의 속마음 한 줄(20자 이
       console.error("affection judge error:", error?.message);
       return undefined;
     }
+  }
+
+  /** 호감도 결과 카드 공유 링크 생성 (가상 연애 방만, 본인만). 대화당 토큰 1개, 재공유 시 스냅샷 갱신 */
+  createShare(userId: string, conversationId: string) {
+    const conv = this.dbs.db.prepare(`SELECT id, persona_uuid, mode FROM conversations WHERE id = ? AND user_id = ?`).get(conversationId, userId) as any;
+    if (!conv) throw new NotFoundException("conversation not found");
+    if (conv.mode !== "dating") throw new BadRequestException("가상 연애 대화만 공유할 수 있어요");
+    const last = this.dbs.db.prepare(`SELECT content, affection_note FROM messages WHERE conversation_id = ? AND role = 'assistant'
+      ORDER BY created_at DESC, rowid DESC LIMIT 1`).get(conversationId) as any;
+    // 대표 대사: 괄호 속 행동 묘사는 빼고 첫 문장 80자
+    const line = String(last?.content || "").replace(/[（(][^)）]*[)）]/g, "").trim().split(/(?<=[.!?。！？])\s/)[0].slice(0, 80);
+    const existing = this.dbs.db.prepare(`SELECT token FROM shares WHERE conversation_id = ?`).get(conversationId) as any;
+    const token = existing?.token ?? nanoid(10);
+    this.dbs.db.prepare(`INSERT INTO shares (token, conversation_id, user_id, persona_uuid, score, note, line) VALUES (?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(conversation_id) DO UPDATE SET score = excluded.score, note = excluded.note, line = excluded.line, updated_at = datetime('now')`)
+      .run(token, conversationId, userId, conv.persona_uuid, this.current(conversationId), last?.affection_note ?? null, line);
+    return { token };
+  }
+
+  /** 공개 카드 데이터 (토큰만 알면 누구나) — 대화 내용은 대표 대사 한 줄만 */
+  getShare(token: string) {
+    const row = this.dbs.db.prepare(`SELECT s.score, s.note, s.line, s.created_at as createdAt,
+        p.uuid, p.name, p.age, p.sex, p.occupation, p.province
+      FROM shares s JOIN personas p ON p.uuid = s.persona_uuid WHERE s.token = ?`).get(token) as any;
+    if (!row) throw new NotFoundException("share not found");
+    const { uuid, name, age, sex, occupation, province, ...rest } = row;
+    return { ...rest, persona: { uuid, name, age, sex, occupation, province } };
   }
 
   /** 답변 메시지에 호감도를 기록 — 새로고침 시 그래프 복원·다음 턴의 기준값 */

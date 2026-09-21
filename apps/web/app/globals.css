@@ -568,6 +568,8 @@ h2.dot-title { font-size: 18px; margin: 0; }
 .affection-delta.down { color: var(--red); }
 .affection-track { height: 6px; margin-top: 6px; background: var(--sand); border-radius: 99px; overflow: hidden; }
 .affection-fill { height: 100%; background: var(--coral); border-radius: 99px; transition: width 0.9s cubic-bezier(0.22, 1, 0.36, 1); }
+.affection-share { background: none; border: 1px solid var(--line); border-radius: 99px; margin-left: 8px; padding: 1px 9px; font-size: 11px; color: var(--brown-soft); }
+.chat-toast { position: fixed; left: 50%; bottom: 120px; transform: translateX(-50%); background: var(--brown); color: var(--cream); font-size: 13px; padding: 8px 14px; border-radius: 99px; z-index: 60; animation: finding-fade 0.3s ease; }
 .affection-note { margin: 6px 0 0; font-size: 12px; color: var(--brown-soft); animation: finding-fade 0.4s ease; }
 @keyframes affection-bump { 0% { transform: scale(1); } 35% { transform: scale(1.25); } 100% { transform: scale(1); } }
 @keyframes affection-float { 0% { opacity: 0; transform: translateY(6px); } 20% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-12px); } }

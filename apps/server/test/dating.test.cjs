@@ -122,6 +122,25 @@ test("guest message budget is shared across rooms, then login is required", (t) 
   f.chat.assertMessageQuota("owner", f.chat.createConversation("owner", "a").id);
 });
 
+test("affection share card: owner-only, dating-only, public read returns a snapshot with one line", async (t) => {
+  const f = fixture(); t.after(f.close);
+  const c = f.chat.createConversation("owner", "a", undefined, "dating");
+  f.setJudge(() => '{"score": 40, "note": "질문해 줘서 기뻤어요"}');
+  await f.controller.send({ userId: "owner" }, c.id, { message: "취미가 뭐예요?" }, new ResponseStub());
+  f.db.prepare("UPDATE messages SET content = ? WHERE role = 'assistant' AND conversation_id = ?")
+    .run("(살짝 웃으며) 주말엔 도서관에서 책을 읽어요. 당신은요?", c.id);
+  const { token } = f.affection.createShare("owner", c.id);
+  assert.equal(f.affection.createShare("owner", c.id).token, token, "one token per conversation");
+  const card = f.affection.getShare(token);
+  assert.equal(card.score, 37);
+  assert.equal(card.line, "주말엔 도서관에서 책을 읽어요.");
+  assert.equal(card.persona.name, "김하늘");
+  assert.equal(card.note, "질문해 줘서 기뻤어요");
+  assert.throws(() => f.affection.createShare("other", c.id), (e) => e.getStatus() === 404);
+  assert.throws(() => f.affection.createShare("owner", f.chat.createConversation("owner", "b").id), (e) => e.getStatus() === 400);
+  assert.throws(() => f.affection.getShare("nope"), (e) => e.getStatus() === 404);
+});
+
 test("dating candidates match sex/age, skip spouses/custom personas/duplicate photos, and validate input", (t) => {
   const f = fixture(); t.after(f.close);
   f.db.exec(`CREATE TABLE persona_details (uuid TEXT PRIMARY KEY, marital_status TEXT);`);

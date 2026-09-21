@@ -81,7 +81,8 @@ export default function Home() {
   }, []);
 
   const quickDate = async () => {
-    if (!sex || !age || dateBusy) return;
+    if (dateBusy) return;
+    if (!sex || !age) { setDateError("먼저 성별과 나이대를 골라주세요"); return; }
     setDateBusy(true);
     setDateError("");
     track("dating_quick_start", { sex, age: age.label });
@@ -162,7 +163,7 @@ export default function Home() {
             <button key={a.label} className={`chip${age?.label === a.label ? " on" : ""}`} onClick={() => setAge(a)} aria-pressed={age?.label === a.label}>{a.label}</button>
           ))}
         </div>
-        <button className="btn-cta" onClick={quickDate} disabled={!sex || !age || dateBusy}>
+        <button className="btn-cta" onClick={quickDate} disabled={dateBusy}>
           {dateBusy ? "소개할 분을 찾는 중..." : "바로 소개받기"}
         </button>
         {dateError && <p className="chat-error" style={{ padding: "8px 0 0" }} role="alert">{dateError}</p>}

@@ -37,6 +37,12 @@ export class ChatController {
     return this.group.today(req.userId);
   }
 
+  /** 호감도 결과 카드 공유 링크 (가상 연애) */
+  @Post("conversations/:id/share")
+  share(@Req() req: any, @Param("id") id: string) {
+    return this.affection.createShare(req.userId, id);
+  }
+
   @Post("conversations/:id/friend")
   invite(@Req() req: any, @Param("id") id: string, @Body() body: { personaUuid: string }) {
     return this.group.invite(req.userId, id, body?.personaUuid);

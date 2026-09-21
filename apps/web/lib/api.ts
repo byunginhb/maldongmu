@@ -226,6 +226,12 @@ export function getOccupations(): Promise<{ items: OccupationEntry[] }> {
   return apiGet("/personas/occupations");
 }
 
+/* ---------- 호감도 카드 공유 ---------- */
+/** 가상 연애 대화의 공유 토큰 (대화당 1개, 재호출 시 점수 갱신) */
+export function createShare(conversationId: string): Promise<{ token: string }> {
+  return apiPost(`/conversations/${conversationId}/share`);
+}
+
 /* ---------- 제품 이벤트 ---------- */
 /** 이벤트 수집 — 실패해도 조용히 무시 (UX에 영향 없음) */
 export function track(name: string, props?: Record<string, unknown>): void {

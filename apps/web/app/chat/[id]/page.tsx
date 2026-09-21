@@ -3,13 +3,14 @@
 import { use, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { PersonaCard as Card, ChatStreamEvent } from "@maldongmu/shared";
-import { apiGet, apiPost, chatFeatures, streamChat, fetchGreeting, LoginRequiredError, QuotaExceededError,
+import { apiGet, apiPost, chatFeatures, streamChat, fetchGreeting, createShare, track, LoginRequiredError, QuotaExceededError,
   type ConversationSnapshot, type ConversationMessage } from "../../../lib/api";
 import Avatar from "../../../components/Avatar";
 import LoginSheet from "../../../components/LoginSheet";
 import QuotaSheet from "../../../components/QuotaSheet";
 import FriendPicker from "../../../components/FriendPicker";
-import AffectionMeter from "../../../components/AffectionMeter";
+import AffectionMeter, { stageOf } from "../../../components/AffectionMeter";
+import ReviewSheet from "../../../components/ReviewSheet";
 import ReportSheet from "../../../components/ReportSheet";
 
 interface Msg extends ConversationMessage { streaming?: boolean }
@@ -38,6 +39,33 @@ function ChatRoom({ id }: { id: string }) {
   const [showLogin, setShowLogin] = useState(false);
   const [showQuota, setShowQuota] = useState(false);
   const [reportTarget, setReportTarget] = useState<Msg | null>(null);
+  const [showReview, setShowReview] = useState(false);
+  const [toast, setToast] = useState("");
+
+  // 스토어 평점 유도: 긍정 순간에 기기당 한 번만
+  const maybeReview = (reason: string) => {
+    try {
+      if (localStorage.getItem("mdm_review_done")) return;
+      localStorage.setItem("mdm_review_done", "1");
+    } catch { return; }
+    track("review_prompt", { reason });
+    setShowReview(true);
+  };
+
+  const share = async () => {
+    if (!persona) return;
+    track("share_create", { score: affection.score });
+    try {
+      const { token } = await createShare(id);
+      const url = `${location.origin}/s/${token}?ref=share`;
+      const text = `${persona.name}님의 호감도 ${affection.score} · ${stageOf(affection.score)} — 말동무 가상 연애`;
+      if (navigator.share) await navigator.share({ title: text, text, url });
+      else { await navigator.clipboard.writeText(url); setToast("링크를 복사했어요"); setTimeout(() => setToast(""), 2000); }
+    } catch (e) {
+      if (e instanceof Error && e.name === "AbortError") return; // 공유 시트 닫음
+      setToast("공유 링크를 만들지 못했어요"); setTimeout(() => setToast(""), 2000);
+    }
+  };
   const [error, setError] = useState("");
   const [turn, setTurn] = useState(0);
   const bodyRef = useRef<HTMLDivElement>(null);
@@ -133,6 +161,11 @@ function ChatRoom({ id }: { id: string }) {
     setError("");
     setBusy(true);
     setTurn(0);
+    try {
+      const n = Number(localStorage.getItem("mdm_sent") || 0) + 1;
+      localStorage.setItem("mdm_sent", String(n));
+      if (n === 10) maybeReview("messages_10");
+    } catch { /* 저장소 차단 */ }
     nearBottom.current = true;
     const controller = new AbortController();
     setMsgs((m) => [...m, { role: "user", content: text }, ...(!isGroup ? [{ role: "assistant" as const, content: "", streaming: true }] : [])]);
@@ -145,6 +178,7 @@ function ChatRoom({ id }: { id: string }) {
         setMsgs((m) => m.map((message) => ({ ...message, streaming: false })));
       } else if (event.type === "affection") {
         setAffection({ score: event.score, change: event.change, note: event.note });
+        if (event.score >= 60 && event.change > 0) maybeReview("affection_60");
       } else if (event.type === "saved") {
         // 방금 스트리밍된 1:1 답변에 저장 id를 붙여 바로 신고할 수 있게
         setMsgs((m) => m.map((message, i) => i === m.length - 1 && message.role === "assistant" ? { ...message, id: event.messageId } : message));
@@ -222,7 +256,7 @@ function ChatRoom({ id }: { id: string }) {
         <span className="meta" role="status">{stopping ? "친구들이 말을 멈추고 있어요…" : busy ? `친구들이 이야기 중이에요${turn ? ` · ${turn}/4` : ""}` : "이제 당신 이야기를 들려주세요"}</span>
         {busy && <button className="btn-ghost" onClick={stop} disabled={stopping}>나도 한마디</button>}
       </div>}
-      {isDating && !loading && <AffectionMeter score={affection.score} change={affection.change} note={affection.note} />}
+      {isDating && !loading && <AffectionMeter score={affection.score} change={affection.change} note={affection.note} onShare={share} />}
       <form className="chat-input-row" onSubmit={(e) => { e.preventDefault(); send(); }}>
         <input ref={inputRef} value={input} onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter" && e.nativeEvent.isComposing) e.preventDefault(); }}
@@ -234,6 +268,8 @@ function ChatRoom({ id }: { id: string }) {
         onClose={() => setShowPicker(false)} onAdded={(c) => { applySnapshot(c); setShowPicker(false); nearBottom.current = true; }} />}
       {showLogin && <LoginSheet onClose={() => setShowLogin(false)} />}
       {showQuota && <QuotaSheet onClose={() => setShowQuota(false)} />}
+      {toast && <div className="chat-toast" role="status">{toast}</div>}
+      {showReview && <ReviewSheet onClose={() => setShowReview(false)} />}
       {reportTarget?.id && <ReportSheet conversationId={id} messageId={reportTarget.id} excerpt={reportTarget.content} onClose={() => setReportTarget(null)} />}
     </div>
   );

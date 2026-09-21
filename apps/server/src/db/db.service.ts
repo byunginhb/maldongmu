@@ -60,6 +60,18 @@ export class DbService implements OnModuleDestroy {
         content TEXT NOT NULL,
         created_at TEXT NOT NULL DEFAULT (datetime('now'))
       );
+      -- 호감도 결과 카드 공유 (공개 링크). 대화 1개당 토큰 1개, 공유할 때마다 점수·대사 스냅샷 갱신.
+      CREATE TABLE IF NOT EXISTS shares (
+        token TEXT PRIMARY KEY,
+        conversation_id TEXT NOT NULL UNIQUE,
+        user_id TEXT NOT NULL,
+        persona_uuid TEXT NOT NULL,
+        score INTEGER NOT NULL,
+        note TEXT,
+        line TEXT,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
       -- 제품 이벤트 (유입 경로·퍼널). 외부 분석 도구 대신 자체 수집 — 키 불필요, 데이터 내부 보관.
       CREATE TABLE IF NOT EXISTS events (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
