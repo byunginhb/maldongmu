@@ -49,6 +49,8 @@ cp app/build/outputs/bundle/release/app-release.aab ~/android-tools/maldongmu-rn
 - API로 안 되는 것: 콘텐츠 등급·데이터 안전·타겟층 재설문, 스토어 태그 → 콘솔에서 직접.
 - v1.1.0: 2026-09-14 제출됨 (versionCode 2, 제목·설명·피처·스크린샷 6장 교체). 아래 U-2~U-5는 수동 절차 참고용.
 - v1.1.1: 2026-09-14 제출됨 (versionCode 3, 탭바 밑 여백 수정. AAB/테스트 APK: `~/android-tools/maldongmu-rn-v1.1.1*`)
+- v1.1.2: 2026-09-20 제출됨 (versionCode 4, R8 켬)
+- v1.2.0: 2026-09-22 제출됨 (versionCode 5, 인앱 리뷰 창. 산출물 `~/android-tools/maldongmu-rn-v1.2.0*`)
 
 ### 🧹 "DEX 코드 최적화 기준 미만(난독화 1%)" 대응 — v1.1.2 (2026-09-20)
 
