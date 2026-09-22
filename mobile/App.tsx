@@ -14,8 +14,11 @@ import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from "react-native-
 import { StatusBar } from "expo-status-bar";
 import * as WebBrowser from "expo-web-browser";
 import * as SplashScreen from "expo-splash-screen";
+import * as StoreReview from "expo-store-review";
 
 const SITE = "https://www.maldongmu.app";
+// 웹이 앱 기능 유무를 알 수 있게 주입. 구버전 앱(플래그 없음)에서는 웹이 스토어 링크로 폴백한다.
+const APP_FLAGS = `window.__mdmApp = { review: true, version: "1.2.0" }; true;`;
 const CREAM = "#f2e9d9";
 const PAPER = "#ffffff";
 const CORAL = "#e8613c";
@@ -97,6 +100,16 @@ function Shell() {
     [handleOAuth],
   );
 
+  // 웹 → 앱 메시지. review: 긍정 순간에 구글 인앱 리뷰 창(앱을 떠나지 않음). 미지원 기기면 조용히 무시
+  const onMessage = useCallback(async (e: { nativeEvent: { data: string } }) => {
+    try {
+      const msg = JSON.parse(e.nativeEvent.data);
+      if (msg?.type === "review" && (await StoreReview.isAvailableAsync())) await StoreReview.requestReview();
+    } catch {
+      /* 잘못된 메시지·리뷰 창 실패 — 앱 동작엔 영향 없음 */
+    }
+  }, []);
+
   const onNav = useCallback((s: WebViewNavigation) => {
     canGoBack.current = s.canGoBack;
   }, []);
@@ -131,6 +144,8 @@ function Shell() {
             applicationNameForUserAgent="maldongmuApp"
             onShouldStartLoadWithRequest={onShouldStart}
             onNavigationStateChange={onNav}
+            onMessage={onMessage}
+            injectedJavaScriptBeforeContentLoaded={APP_FLAGS}
             onLoadEnd={finishLoad}
             onError={() => {
               setErrored(true);

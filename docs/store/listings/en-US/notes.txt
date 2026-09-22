@@ -1,2 +1,2 @@
-- Smaller app size and optimized performance
-- Virtual dating, affection meter, grandmas and three-way chat — all as before
+- Rate the app without leaving it
+- Start a blind date right from the home screen, share your affection card

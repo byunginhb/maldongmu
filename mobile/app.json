@@ -3,14 +3,14 @@
     "name": "말동무",
     "slug": "maldongmu",
     "scheme": "maldongmu",
-    "version": "1.1.2",
+    "version": "1.2.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "backgroundColor": "#f2e9d9",
     "android": {
       "package": "app.maldongmu.twa",
-      "versionCode": 4,
+      "versionCode": 5,
       "adaptiveIcon": {
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundColor": "#e8613c"

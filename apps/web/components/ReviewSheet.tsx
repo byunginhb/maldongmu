@@ -12,8 +12,12 @@ export function storeUrl(): string {
 
 export default function ReviewSheet({ onClose }: { onClose: () => void }) {
   const go = () => {
-    track("review_click");
-    window.location.href = storeUrl();
+    // 1.2.0+ 앱: 구글 인앱 리뷰 창(앱을 떠나지 않음). 그 외: 스토어 링크
+    const w = window as unknown as { __mdmApp?: { review?: boolean }; ReactNativeWebView?: { postMessage: (s: string) => void } };
+    const native = !!(w.__mdmApp?.review && w.ReactNativeWebView);
+    track("review_click", { native });
+    if (native) w.ReactNativeWebView!.postMessage(JSON.stringify({ type: "review" }));
+    else window.location.href = storeUrl();
     onClose();
   };
   return (
