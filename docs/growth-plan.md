@@ -62,6 +62,7 @@
 | # | 작업 | 효과 | 노력 | 담당 |
 |---|---|---|---|---|
 | 5-1 | ✅ (9/21) 페르소나 페이지 서버 렌더 + 제목/설명/canonical/JSON-LD (희소 직업만 index, 나머지 noindex) · 직업 큐레이션 `/meet/<key>` 10개(CollectionPage+ItemList) · /dating·/grannies·/meet·/search 메타데이터 · 사이트맵. 지역×직업 확장은 색인 반응 보고 | 높음(장기) | 중간 | Claude |
+| 5-1b | ✅ (9/21) Google Search Console 도메인 속성(`maldongmu.app`) 인증 + `sitemap.xml` 제출. DNS는 Cloudflare(네임서버) — Vercel DNS 화면의 레코드는 무효 | — | — | Ben |
 | 5-2 | ✅ (9/21) 안드로이드 모바일 웹 상단 "Play에서 받기" 배너 (앱 안·닫은 뒤 7일 숨김, app_banner_click 이벤트) | 중간 | 낮음 | Claude |
 | 5-3 | 숏폼 콘텐츠: 가상 연애 호감도가 오르내리는 반응 화면(주력)·할매 타박(밈) 15~30초 → 릴스/쇼츠/틱톡 주 3회. 대사가 곧 콘텐츠라 제작비 0 | 매우 높음 | 중간(꾸준함) | Ben (Claude: 캡처 스크립트·자막 템플릿) |
 | 5-4 | 커뮤니티 시딩: 에펨코리아·디시(연애/AI갤)·네이트판·블라인드에 "AI 할매한테 혼났다" 류 체험담 + 스크린샷. 광고 티 나지 않게, 주 1~2회 | 높음 | 낮음 | Ben |
