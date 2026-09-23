@@ -119,6 +119,13 @@ export default function AdminPage() {
     setConvDetail(null);
     setUserDetail(await adminGet<UserDetail>(`/users/${encodeURIComponent(id)}`));
   };
+  useEffect(() => {
+    if (!convDetail) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setConvDetail(null); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [convDetail]);
+
   const openConv = async (id: string) => {
     setConvDetail(await adminGet<ConvDetail>(`/conversations/${id}`));
   };
@@ -234,10 +241,10 @@ export default function AdminPage() {
         ))}
       </div>
 
-      <h2 className="dot-title" style={{ marginBottom: 12 }}>인기 페르소나 (7일)</h2>
+      <h2 className="dot-title" style={{ marginBottom: 12 }}>인기 페르소나 TOP 5 (7일)</h2>
       <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 28 }}>
         {ranking.length === 0 && <p className="empty" style={{ padding: "8px 0" }}>아직 대화 기록이 없어요.</p>}
-        {ranking.map((p, i) => (
+        {ranking.slice(0, 5).map((p, i) => (
           <div key={p.uuid} className="card" style={{ padding: "10px 14px", alignItems: "center" }}>
             <b style={{ width: 24, color: i < 3 ? "var(--coral)" : "var(--brown-soft)" }}>{i + 1}</b>
             <Avatar uuid={p.uuid} sex={p.sex} age={p.age} size={36} radius={10} />
@@ -438,26 +445,16 @@ export default function AdminPage() {
       )}
 
       {convDetail && (
-        <section style={{ marginTop: 28 }}>
-          <h2 className="dot-title" style={{ marginBottom: 4 }}>
-            {convDetail.personaName}님과의 대화 내용
-          </h2>
-          <p className="meta" style={{ margin: "0 0 12px" }}>
-            대화 ID {convDetail.id} · 메시지 {convDetail.messages.length}개
-          </p>
-          <div
-            style={{
-              background: "var(--paper)",
-              border: "1px solid var(--line)",
-              borderRadius: 16,
-              padding: 16,
-              display: "flex",
-              flexDirection: "column",
-              gap: 8,
-              maxHeight: 480,
-              overflowY: "auto",
-            }}
-          >
+        <div className="sheet-back" style={{ alignItems: "center" }} onClick={() => setConvDetail(null)}>
+          <div className="admin-modal" role="dialog" aria-label="대화 내용" onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <h2 className="dot-title" style={{ margin: 0 }}>{convDetail.personaName}님과의 대화 내용</h2>
+                <p className="meta" style={{ margin: "4px 0 0" }}>대화 ID {convDetail.id} · 메시지 {convDetail.messages.length}개</p>
+              </div>
+              <button className="chat-back" style={{ fontSize: 22 }} onClick={() => setConvDetail(null)} aria-label="닫기">×</button>
+            </div>
+            <div className="admin-modal-body">
             {convDetail.messages.map((m) => (
               <div
                 key={m.id}
@@ -471,8 +468,9 @@ export default function AdminPage() {
                 </div>
               </div>
             ))}
+            </div>
           </div>
-        </section>
+        </div>
       )}
     </main>
   );
