@@ -19,7 +19,7 @@ export class AdminController {
     const d = Math.min(Number(days) || 14, 90);
     const daily = this.db
       .prepare(
-        `SELECT date(created_at) as date,
+        `SELECT date(created_at, '+9 hours') as date,
                 COUNT(DISTINCT user_id) as activeUsers,
                 SUM(CASE WHEN event = 'chat_start' THEN 1 ELSE 0 END) as conversations,
                 SUM(CASE WHEN event = 'message' THEN 1 ELSE 0 END) as messages,
@@ -104,10 +104,11 @@ export class AdminController {
                 (SELECT COUNT(*) FROM messages m JOIN conversations c ON c.id = m.conversation_id
                  WHERE c.user_id = u.id AND m.role = 'user') as messages,
                 (SELECT COUNT(*) FROM interview_sessions s WHERE s.user_id = u.id AND s.status != 'aborted') as interviewUsed,
-                (SELECT COALESCE(SUM(e.tokens), 0) FROM usage_events e WHERE e.user_id = u.id) as tokens
+                (SELECT COALESCE(SUM(e.tokens), 0) FROM usage_events e WHERE e.user_id = u.id) as tokens,
+                (SELECT MAX(c.last_message_at) FROM conversations c WHERE c.user_id = u.id) as lastActiveAt
          FROM users u
          ${where}
-         ORDER BY u.created_at DESC LIMIT ? OFFSET ?`,
+         ORDER BY COALESCE(lastActiveAt, u.created_at) DESC LIMIT ? OFFSET ?`,
       )
       .all(...params, limit, offset);
     return { rows, total, page: Number(page), limit };

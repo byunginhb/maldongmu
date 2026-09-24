@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { Fragment, useCallback, useEffect, useState } from "react";
 import type { PersonaCard as Card } from "@maldongmu/shared";
 import { adminGet, adminPost, getAdminKey, setAdminKey } from "../../lib/api";
 import Avatar from "../../components/Avatar";
@@ -9,12 +9,21 @@ interface Stats {
   totals: { users: number; conversations: number; messages: number; tokens: number };
   daily: { date: string; activeUsers: number; conversations: number; messages: number; tokens: number }[];
 }
+// 서버 시각은 UTC 'YYYY-MM-DD HH:MM:SS' → 한국 시간 'MM-DD HH:mm'
+const kst = (s?: string | null) => {
+  if (!s) return "";
+  const d = new Date(s.replace(" ", "T") + "Z");
+  if (Number.isNaN(d.getTime())) return s.slice(0, 16);
+  return d.toLocaleString("sv-SE", { timeZone: "Asia/Seoul" }).slice(5, 16);
+};
+
 interface UserRow {
   id: string;
   type: string;
   nickname: string | null;
   email: string | null;
   createdAt: string;
+  lastActiveAt: string | null;
   conversations: number;
   messages: number;
   tokens: number;
@@ -207,7 +216,7 @@ export default function AdminPage() {
   return (
     <main className="page" style={{ maxWidth: 800 }}>
       <h1 className="dot-title">말동무 관리자</h1>
-      <p className="meta" style={{ margin: "0 0 20px" }}>최근 14일 기준</p>
+      <p className="meta" style={{ margin: "0 0 20px" }}>최근 14일 기준 · 한국 시간</p>
 
       {stats && (
         <div className="stat-grid" style={{ marginBottom: 28 }}>
@@ -288,7 +297,7 @@ export default function AdminPage() {
         {reports.map((r) => (
           <div key={r.id} style={{ background: "var(--paper)", border: "1px solid var(--line)", borderRadius: 16, padding: "14px 16px" }}>
             <p className="meta" style={{ margin: "0 0 6px" }}>
-              <b style={{ color: "var(--red)" }}>{r.reason}</b> · {r.personaName || "?"} · {r.nickname || r.email || r.userId} · {r.createdAt?.slice(0, 16)}
+              <b style={{ color: "var(--red)" }}>{r.reason}</b> · {r.personaName || "?"} · {r.nickname || r.email || r.userId} · {kst(r.createdAt)}
             </p>
             <p style={{ margin: "0 0 6px", fontSize: 14, whiteSpace: "pre-wrap" }}>{r.content}</p>
             {r.detail && <p className="meta" style={{ margin: 0 }}>메모: {r.detail}</p>}
@@ -303,7 +312,7 @@ export default function AdminPage() {
         {feedback.map((f) => (
           <div key={f.id} style={{ background: "var(--paper)", border: "1px solid var(--line)", borderRadius: 16, padding: "14px 16px" }}>
             <p className="meta" style={{ margin: "0 0 6px" }}>
-              {f.nickname || f.email || f.userId} · {f.type} · 사용 {n(f.messagesUsed)}/{n(f.messageLimit ?? 100)} · {f.createdAt?.slice(0, 16)}
+              {f.nickname || f.email || f.userId} · {f.type} · 사용 {n(f.messagesUsed)}/{n(f.messageLimit ?? 100)} · {kst(f.createdAt)}
             </p>
             <p style={{ margin: "0 0 10px", fontSize: 14, whiteSpace: "pre-wrap" }}>{f.content}</p>
             <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
@@ -341,25 +350,65 @@ export default function AdminPage() {
       <div style={{ overflowX: "auto" }}>
         <table className="admin-table">
           <thead>
-            <tr><th>ID</th><th>유형</th><th>닉네임</th><th>대화방</th><th>메시지</th><th>인터뷰</th><th>토큰</th><th>가입일</th></tr>
+            <tr><th>ID</th><th>유형</th><th>닉네임</th><th>대화방</th><th>메시지</th><th>인터뷰</th><th>토큰</th><th>최근 활동</th><th>가입일</th></tr>
           </thead>
           <tbody>
-            {users.map((u) => (
+            {users.map((u) => {
+              const open = userDetail?.user?.id === u.id;
+              return (
+              <Fragment key={u.id}>
               <tr
-                key={u.id}
-                onClick={() => openUser(u.id)}
-                style={{ cursor: "pointer", background: userDetail?.user?.id === u.id ? "var(--sand)" : undefined }}
+                onClick={() => (open ? setUserDetail(null) : openUser(u.id))}
+                style={{ cursor: "pointer", background: open ? "var(--sand)" : undefined }}
+                aria-expanded={open}
               >
-                <td style={{ maxWidth: 160, overflow: "hidden", textOverflow: "ellipsis" }}>{u.id}</td>
+                <td style={{ maxWidth: 160, overflow: "hidden", textOverflow: "ellipsis" }}>{open ? "▾ " : "▸ "}{u.id}</td>
                 <td>{u.type}</td>
                 <td>{u.nickname || u.email || "-"}</td>
                 <td>{n(u.conversations)}</td>
                 <td>{n(u.messages)}</td>
                 <td>{n(u.interviewUsed)}/{u.interviewLimit ?? 2}</td>
                 <td>{n(u.tokens)}</td>
-                <td>{u.createdAt?.slice(0, 16)}</td>
+                <td>{kst(u.lastActiveAt) || "-"}</td>
+                <td>{kst(u.createdAt)}</td>
               </tr>
-            ))}
+              {open && userDetail && (
+                <tr className="admin-expanded"><td colSpan={9}>
+                  <div className="card" style={{ padding: "10px 14px", marginBottom: 10, alignItems: "center", gap: 10 }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ margin: 0, fontWeight: 600 }}>이웃 인터뷰 크레딧 <span className="meta">사용 {n(userDetail.user?.interviewUsed)} / 한도 {userDetail.user?.interviewLimit ?? 2}</span></p>
+                    </div>
+                    <input
+                      type="number"
+                      value={ivInputs[userDetail.user.id] ?? ""}
+                      onChange={(e) => setIvInputs((s) => ({ ...s, [userDetail.user.id]: e.target.value }))}
+                      onClick={(e) => e.stopPropagation()}
+                      placeholder="새 한도"
+                      style={{ width: 80, height: 36, border: "1px solid var(--line)", borderRadius: 10, padding: "0 10px", background: "var(--cream)", color: "var(--brown)", outline: "none" }}
+                    />
+                    <button className="btn-ghost" style={{ height: 36, padding: "0 14px", flexShrink: 0 }} onClick={(e) => { e.stopPropagation(); bumpInterview(userDetail.user.id); }}>
+                      부여
+                    </button>
+                  </div>
+                  {userDetail.conversations.length === 0 && <p className="empty" style={{ padding: "8px 0" }}>아직 대화가 없어요.</p>}
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                    {userDetail.conversations.map((c) => (
+                      <button key={c.id} onClick={() => openConv(c.id)} className="card"
+                        style={{ padding: "8px 12px", alignItems: "center", width: "100%", textAlign: "left", cursor: "pointer" }}>
+                        <Avatar uuid={c.personaUuid} sex={c.personaSex} age={c.personaAge} size={32} radius={9} />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <p className="card-name">{c.personaName ?? "(삭제된 페르소나)"} <span className="meta">{c.title}</span></p>
+                          <p className="card-meta">{c.personaOccupation} · 시작 {kst(c.createdAt)} · 마지막 {kst(c.lastMessageAt)}</p>
+                        </div>
+                        <span className="meta" style={{ flexShrink: 0 }}>메시지 {n(c.messageCount)} · 토큰 {n(c.tokens)} · 보기 →</span>
+                      </button>
+                    ))}
+                  </div>
+                </td></tr>
+              )}
+              </Fragment>
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -386,64 +435,6 @@ export default function AdminPage() {
         </div>
       )}
 
-      {userDetail && (
-        <section style={{ marginTop: 28 }}>
-          <h2 className="dot-title" style={{ marginBottom: 4 }}>
-            {userDetail.user?.nickname || userDetail.user?.id} 님의 대화방
-          </h2>
-          <p className="meta" style={{ margin: "0 0 12px" }}>
-            {userDetail.user?.type} · 가입 {userDetail.user?.createdAt?.slice(0, 10)} · 대화방 {userDetail.conversations.length}개
-          </p>
-          <div className="card" style={{ padding: "12px 14px", marginBottom: 16, alignItems: "center", gap: 10 }}>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <p style={{ margin: 0, fontWeight: 600 }}>이웃 인터뷰 크레딧</p>
-              <p className="meta" style={{ margin: "2px 0 0" }}>
-                사용 {n(userDetail.user?.interviewUsed)} / 한도 {userDetail.user?.interviewLimit ?? 2}
-              </p>
-            </div>
-            <input
-              type="number"
-              value={ivInputs[userDetail.user.id] ?? ""}
-              onChange={(e) => setIvInputs((s) => ({ ...s, [userDetail.user.id]: e.target.value }))}
-              placeholder="새 한도"
-              style={{ width: 80, height: 36, border: "1px solid var(--line)", borderRadius: 10, padding: "0 10px", background: "var(--cream)", color: "var(--brown)", outline: "none" }}
-            />
-            <button className="btn-ghost" style={{ height: 36, padding: "0 14px", flexShrink: 0 }} onClick={() => bumpInterview(userDetail.user.id)}>
-              부여
-            </button>
-          </div>
-          {userDetail.conversations.length === 0 && (
-            <p className="empty" style={{ padding: "12px 0" }}>아직 대화가 없어요.</p>
-          )}
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {userDetail.conversations.map((c) => (
-              <button
-                key={c.id}
-                onClick={() => openConv(c.id)}
-                className="card"
-                style={{
-                  padding: "10px 14px",
-                  alignItems: "center",
-                  width: "100%",
-                  textAlign: "left",
-                  cursor: "pointer",
-                  borderColor: convDetail?.id === c.id ? "var(--coral)" : undefined,
-                }}
-              >
-                <Avatar uuid={c.personaUuid} sex={c.personaSex} age={c.personaAge} size={36} radius={10} />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <p className="card-name">{c.personaName ?? "(삭제된 페르소나)"}</p>
-                  <p className="card-meta">{c.personaOccupation} · 시작 {c.createdAt?.slice(0, 16)}</p>
-                </div>
-                <span className="meta" style={{ flexShrink: 0 }}>
-                  메시지 {n(c.messageCount)} · 토큰 {n(c.tokens)}
-                </span>
-              </button>
-            ))}
-          </div>
-        </section>
-      )}
-
       {convDetail && (
         <div className="sheet-back" style={{ alignItems: "center" }} onClick={() => setConvDetail(null)}>
           <div className="admin-modal" role="dialog" aria-label="대화 내용" onClick={(e) => e.stopPropagation()}>
@@ -463,7 +454,7 @@ export default function AdminPage() {
               >
                 {m.content}
                 <div style={{ fontSize: 11, opacity: 0.7, marginTop: 4 }}>
-                  {m.createdAt?.slice(5, 16)}
+                  {kst(m.createdAt)}
                   {m.role === "assistant" && (m.tokensIn || m.tokensOut) ? ` · ${n(m.tokensIn + m.tokensOut)} tok` : ""}
                 </div>
               </div>

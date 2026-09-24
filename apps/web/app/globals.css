@@ -525,6 +525,7 @@ h2.dot-title { font-size: 18px; margin: 0; }
 .notebook-add { width: 64px; height: 64px; border-radius: 14px; border: 2px dashed var(--line); display: grid; place-items: center; font-size: 26px; color: var(--brown-soft); }
 .notebook-cell:active .notebook-add { border-color: var(--coral); color: var(--coral); }
 
+.admin-expanded > td { background: var(--cream); padding: 12px 14px 14px; }
 /* 어드민 — 대화 내용 팝업 (화면 중앙, 내부 스크롤) */
 .admin-modal { width: min(760px, calc(100vw - 24px)); max-height: 88dvh; display: flex; flex-direction: column; gap: 12px; background: var(--paper); border: 1px solid var(--line); border-radius: 20px; padding: 20px; }
 .admin-modal-body { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding: 4px 2px; }
