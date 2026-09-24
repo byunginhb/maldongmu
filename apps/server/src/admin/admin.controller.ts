@@ -171,10 +171,12 @@ export class AdminController {
       .get(id);
     const conversations = this.db
       .prepare(
-        `SELECT c.id, c.persona_uuid as personaUuid, c.title,
+        `SELECT c.id, c.persona_uuid as personaUuid, c.title, c.mode,
                 c.created_at as createdAt, c.last_message_at as lastMessageAt,
                 p.name as personaName, p.age as personaAge, p.sex as personaSex,
                 p.occupation as personaOccupation,
+                (SELECT m.affection FROM messages m WHERE m.conversation_id = c.id AND m.affection IS NOT NULL
+                 ORDER BY m.created_at DESC, m.rowid DESC LIMIT 1) as affection,
                 (SELECT COUNT(*) FROM messages m WHERE m.conversation_id = c.id) as messageCount,
                 (SELECT COALESCE(SUM(m.tokens_in + m.tokens_out), 0) FROM messages m
                  WHERE m.conversation_id = c.id) as tokens
@@ -190,7 +192,7 @@ export class AdminController {
   conversationDetail(@Param("id") id: string) {
     const conv = this.db
       .prepare(
-        `SELECT c.id, c.user_id as userId, c.persona_uuid as personaUuid, c.title,
+        `SELECT c.id, c.user_id as userId, c.persona_uuid as personaUuid, c.title, c.mode,
                 c.created_at as createdAt, p.name as personaName, p.age as personaAge,
                 p.sex as personaSex, p.occupation as personaOccupation
          FROM conversations c LEFT JOIN personas p ON p.uuid = c.persona_uuid
@@ -200,7 +202,7 @@ export class AdminController {
     const messages = this.db
       .prepare(
         `SELECT id, role, content, tokens_in as tokensIn, tokens_out as tokensOut,
-                created_at as createdAt
+                affection, affection_note as affectionNote, created_at as createdAt
          FROM messages WHERE conversation_id = ? ORDER BY created_at, rowid`,
       )
       .all(id);

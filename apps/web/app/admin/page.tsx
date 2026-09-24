@@ -4,6 +4,7 @@ import { Fragment, useCallback, useEffect, useState } from "react";
 import type { PersonaCard as Card } from "@maldongmu/shared";
 import { adminGet, adminPost, getAdminKey, setAdminKey } from "../../lib/api";
 import Avatar from "../../components/Avatar";
+import { stageOf } from "../../lib/affection";
 
 interface Stats {
   totals: { users: number; conversations: number; messages: number; tokens: number };
@@ -34,6 +35,8 @@ interface UserConv {
   id: string;
   personaUuid: string;
   title: string;
+  mode?: "dating" | null;
+  affection?: number | null;
   createdAt: string;
   lastMessageAt: string;
   personaName: string;
@@ -86,7 +89,8 @@ interface ConvDetail {
   personaName: string;
   personaAge: number;
   personaSex: string;
-  messages: { id: string; role: string; content: string; tokensIn: number; tokensOut: number; createdAt: string }[];
+  mode?: "dating" | null;
+  messages: { id: string; role: string; content: string; tokensIn: number; tokensOut: number; createdAt: string; affection?: number | null; affectionNote?: string | null }[];
 }
 
 const n = (v: number | null | undefined) => (v ?? 0).toLocaleString("ko-KR");
@@ -397,7 +401,11 @@ export default function AdminPage() {
                         style={{ padding: "8px 12px", alignItems: "center", width: "100%", textAlign: "left", cursor: "pointer" }}>
                         <Avatar uuid={c.personaUuid} sex={c.personaSex} age={c.personaAge} size={32} radius={9} />
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <p className="card-name">{c.personaName ?? "(삭제된 페르소나)"} <span className="meta">{c.title}</span></p>
+                          <p className="card-name">
+                            {c.personaName ?? "(삭제된 페르소나)"}
+                            {c.mode === "dating" && <span className="admin-badge">💗 가상 연애{typeof c.affection === "number" ? ` · 호감도 ${c.affection}` : ""}</span>}
+                            <span className="meta"> {c.title}</span>
+                          </p>
                           <p className="card-meta">{c.personaOccupation} · 시작 {kst(c.createdAt)} · 마지막 {kst(c.lastMessageAt)}</p>
                         </div>
                         <span className="meta" style={{ flexShrink: 0 }}>메시지 {n(c.messageCount)} · 토큰 {n(c.tokens)} · 보기 →</span>
@@ -441,12 +449,21 @@ export default function AdminPage() {
             <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <h2 className="dot-title" style={{ margin: 0 }}>{convDetail.personaName}님과의 대화 내용</h2>
-                <p className="meta" style={{ margin: "4px 0 0" }}>대화 ID {convDetail.id} · 메시지 {convDetail.messages.length}개</p>
+                <p className="meta" style={{ margin: "4px 0 0" }}>
+                  대화 ID {convDetail.id} · 메시지 {convDetail.messages.length}개
+                  {convDetail.mode === "dating" && (() => {
+                    const last = [...convDetail.messages].reverse().find((m) => typeof m.affection === "number");
+                    return <> · 💗 가상 연애{last ? ` · 현재 호감도 ${last.affection} (${stageOf(last.affection!)})` : " · 호감도 측정 전"}</>;
+                  })()}
+                </p>
               </div>
               <button className="chat-back" style={{ fontSize: 22 }} onClick={() => setConvDetail(null)} aria-label="닫기">×</button>
             </div>
             <div className="admin-modal-body">
-            {convDetail.messages.map((m) => (
+            {convDetail.messages.map((m, i) => {
+              const prev = convDetail.messages.slice(0, i).reverse().find((x) => typeof x.affection === "number")?.affection ?? 25;
+              const change = typeof m.affection === "number" ? m.affection - prev : null;
+              return (
               <div
                 key={m.id}
                 className={`bubble ${m.role === "user" ? "user" : "persona"}`}
@@ -457,8 +474,14 @@ export default function AdminPage() {
                   {kst(m.createdAt)}
                   {m.role === "assistant" && (m.tokensIn || m.tokensOut) ? ` · ${n(m.tokensIn + m.tokensOut)} tok` : ""}
                 </div>
+                {typeof m.affection === "number" && (
+                  <div className="admin-affection">
+                    💗 호감도 {m.affection}{change ? ` (${change > 0 ? "+" : ""}${change})` : ""} · {stageOf(m.affection)}{m.affectionNote ? ` · "${m.affectionNote}"` : ""}
+                  </div>
+                )}
               </div>
-            ))}
+              );
+            })}
             </div>
           </div>
         </div>
