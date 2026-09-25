@@ -118,8 +118,22 @@ export class AdminController {
   @Post("users/:id/limit")
   setLimit(@Param("id") id: string, @Body() body: { limit: number }) {
     const limit = Math.max(0, Math.min(Number(body.limit) || 0, 1000000));
-    this.db.prepare(`UPDATE users SET message_limit = ? WHERE id = ?`).run(limit, id);
-    return { ok: true, limit };
+    const before = (this.db.prepare(`SELECT message_limit FROM users WHERE id = ?`).get(id) as any)?.message_limit ?? 100;
+    // 변경 시각을 남겨 사용자가 다음에 열 때 "한도가 늘었어요" 안내를 띄운다
+    this.db.prepare(`UPDATE users SET message_limit = ?, limit_changed_at = datetime('now') WHERE id = ?`).run(limit, id);
+    // 같은 사용자의 미처리 피드백(한도 요청)은 한 번의 증액으로 모두 처리된 것
+    const handled = this.db
+      .prepare(`UPDATE feedback SET handled_at = datetime('now'), handled_note = ? WHERE user_id = ? AND handled_at IS NULL`)
+      .run(`한도 ${before} → ${limit}`, id).changes;
+    return { ok: true, limit, handled };
+  }
+
+  /** 한도 변경 없이 피드백만 처리 완료로 표시 */
+  @Post("feedback/:id/handle")
+  handleFeedback(@Param("id") id: string, @Body() body: { note?: string }) {
+    this.db.prepare(`UPDATE feedback SET handled_at = datetime('now'), handled_note = ? WHERE id = ?`)
+      .run(String(body?.note || "확인함").slice(0, 100), Number(id));
+    return { ok: true };
   }
 
   /** 이웃 인터뷰 크레딧 부여 (기본 2, 어드민 증설). 양수·상한 클램프 */
@@ -150,11 +164,13 @@ export class AdminController {
     return this.db
       .prepare(
         `SELECT f.id, f.user_id as userId, f.content, f.created_at as createdAt,
+                f.handled_at as handledAt, f.handled_note as handledNote,
                 u.type, u.nickname, u.email, u.message_limit as messageLimit,
                 (SELECT COUNT(*) FROM messages m JOIN conversations c ON c.id = m.conversation_id
-                 WHERE c.user_id = f.user_id AND m.role = 'user') as messagesUsed
+                 WHERE c.user_id = f.user_id AND m.role = 'user') as messagesUsed,
+                (SELECT COUNT(*) FROM feedback f2 WHERE f2.user_id = f.user_id AND f2.handled_at IS NULL) as pendingSameUser
          FROM feedback f LEFT JOIN users u ON u.id = f.user_id
-         ORDER BY f.created_at DESC LIMIT 100`,
+         ORDER BY (f.handled_at IS NULL) DESC, f.created_at DESC LIMIT 100`,
       )
       .all();
   }

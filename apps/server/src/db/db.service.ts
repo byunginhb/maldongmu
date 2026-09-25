@@ -141,7 +141,9 @@ export class DbService implements OnModuleDestroy {
     // Additive migration: old 1:1 conversations/messages remain valid.
     // mode: null(일반) | 'dating'(가상 연애). affection/affection_note: 가상 연애 답변에 기록되는 호감도(0~100)와 속마음 한 줄.
     for (const [table, column, type = "TEXT"] of [["conversations", "second_persona_uuid"], ["messages", "speaker_uuid"],
-      ["conversations", "mode"], ["messages", "affection", "INTEGER"], ["messages", "affection_note"]]) {
+      ["conversations", "mode"], ["messages", "affection", "INTEGER"], ["messages", "affection_note"],
+      // 피드백 처리 상태(어드민) · 한도 변경 시각(사용자에게 다음 방문 때 안내)
+      ["feedback", "handled_at"], ["feedback", "handled_note"], ["users", "limit_changed_at"]]) {
       const columns = this.db.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[];
       if (!columns.some((c) => c.name === column)) {
         this.db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${type}`);

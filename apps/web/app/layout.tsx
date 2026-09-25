@@ -5,6 +5,7 @@ import Footer from "../components/Footer";
 import RegisterSW from "../components/RegisterSW";
 import Analytics from "../components/Analytics";
 import AppBanner from "../components/AppBanner";
+import LimitNotice from "../components/LimitNotice";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.maldongmu.app";
 
@@ -60,6 +61,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <TabBar />
         <RegisterSW />
         <Analytics />
+        <LimitNotice />
       </body>
     </html>
   );

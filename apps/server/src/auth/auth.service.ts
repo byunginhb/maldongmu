@@ -20,7 +20,7 @@ export class AuthService {
   me(userId: string) {
     const user = this.dbs.db
       .prepare(
-        `SELECT id, type, nickname, created_at as createdAt, message_limit as messageLimit FROM users WHERE id = ?`,
+        `SELECT id, type, nickname, created_at as createdAt, message_limit as messageLimit, limit_changed_at as limitChangedAt FROM users WHERE id = ?`,
       )
       .get(userId) as any;
     if (!user) return null;

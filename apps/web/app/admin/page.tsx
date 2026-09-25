@@ -81,6 +81,9 @@ interface FeedbackRow {
   email: string | null;
   messageLimit: number | null;
   messagesUsed: number;
+  handledAt: string | null;
+  handledNote: string | null;
+  pendingSameUser: number;
 }
 interface ConvDetail {
   id: string;
@@ -113,11 +116,24 @@ export default function AdminPage() {
   const [userType, setUserType] = useState("");
   const [ivInputs, setIvInputs] = useState<Record<string, string>>({});
 
+  const [adminToast, setAdminToast] = useState("");
+  const [showHandled, setShowHandled] = useState(false);
+  const toast = (msg: string) => { setAdminToast(msg); setTimeout(() => setAdminToast(""), 3500); };
+
   const bumpLimit = async (userId: string) => {
     const v = Number(limitInputs[userId]);
     if (!v) return;
-    await adminPost(`/users/${encodeURIComponent(userId)}/limit`, { limit: v });
+    const res = await adminPost<{ ok: boolean; limit: number; handled: number }>(`/users/${encodeURIComponent(userId)}/limit`, { limit: v });
+    setLimitInputs((s) => ({ ...s, [userId]: "" }));
     setFeedback(await adminGet<FeedbackRow[]>("/feedback"));
+    loadUsers(userPage, userType);
+    toast(`한도 ${res.limit.toLocaleString()}개로 변경 · 피드백 ${res.handled}건 처리됨 · 사용자가 다음에 열면 안내돼요`);
+  };
+
+  const handleFeedback = async (id: number) => {
+    await adminPost(`/feedback/${id}/handle`, { note: "확인함" });
+    setFeedback(await adminGet<FeedbackRow[]>("/feedback"));
+    toast("처리 완료로 표시했어요");
   };
 
   const bumpInterview = async (userId: string) => {
@@ -310,16 +326,24 @@ export default function AdminPage() {
         ))}
       </div>
 
-      <h2 className="dot-title" style={{ marginBottom: 12 }}>피드백 · 한도 요청</h2>
+      <h2 className="dot-title" style={{ marginBottom: 4 }}>피드백 · 한도 요청</h2>
+      <div style={{ display: "flex", gap: 8, alignItems: "center", margin: "0 0 12px" }}>
+        <span className="meta">미처리 {feedback.filter((f) => !f.handledAt).length}건</span>
+        <button className={`chip${!showHandled ? " on" : ""}`} onClick={() => setShowHandled(false)}>미처리</button>
+        <button className={`chip${showHandled ? " on" : ""}`} onClick={() => setShowHandled(true)}>전체</button>
+      </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 28 }}>
-        {feedback.length === 0 && <p className="empty" style={{ padding: "8px 0" }}>아직 피드백이 없어요.</p>}
-        {feedback.map((f) => (
-          <div key={f.id} style={{ background: "var(--paper)", border: "1px solid var(--line)", borderRadius: 16, padding: "14px 16px" }}>
+        {feedback.filter((f) => showHandled || !f.handledAt).length === 0 && <p className="empty" style={{ padding: "8px 0" }}>{showHandled ? "아직 피드백이 없어요." : "미처리 피드백이 없어요."}</p>}
+        {feedback.filter((f) => showHandled || !f.handledAt).map((f) => (
+          <div key={f.id} style={{ background: "var(--paper)", border: `1px solid ${f.handledAt ? "var(--line)" : "var(--coral)"}`, borderRadius: 16, padding: "14px 16px", opacity: f.handledAt ? 0.6 : 1 }}>
             <p className="meta" style={{ margin: "0 0 6px" }}>
-              {f.nickname || f.email || f.userId} · {f.type} · 사용 {n(f.messagesUsed)}/{n(f.messageLimit ?? 100)} · {kst(f.createdAt)}
+              {f.handledAt
+                ? <span className="admin-badge" style={{ marginLeft: 0, color: "var(--green)" }}>✅ 처리됨 · {kst(f.handledAt)} · {f.handledNote}</span>
+                : <span className="admin-badge" style={{ marginLeft: 0 }}>미처리{f.pendingSameUser > 1 ? ` · 같은 사용자 ${f.pendingSameUser}건` : ""}</span>}
+              {" "}{f.nickname || f.email || f.userId} · {f.type} · 사용 {n(f.messagesUsed)}/{n(f.messageLimit ?? 100)} · {kst(f.createdAt)}
             </p>
             <p style={{ margin: "0 0 10px", fontSize: 14, whiteSpace: "pre-wrap" }}>{f.content}</p>
-            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            {!f.handledAt && <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
               <input
                 type="number"
                 placeholder={`새 한도 (현재 ${f.messageLimit ?? 100})`}
@@ -330,10 +354,14 @@ export default function AdminPage() {
               <button className="btn-ghost" style={{ height: 36, padding: "0 14px" }} onClick={() => bumpLimit(f.userId)}>
                 한도 변경
               </button>
-            </div>
+              <button className="btn-ghost" style={{ height: 36, padding: "0 14px", border: "none" }} onClick={() => handleFeedback(f.id)}>
+                한도 변경 없이 처리 완료
+              </button>
+            </div>}
           </div>
         ))}
       </div>
+      {adminToast && <div className="chat-toast" role="status">{adminToast}</div>}
 
       <h2 className="dot-title" style={{ marginBottom: 12 }}>사용자</h2>
       <div className="chip-row" style={{ marginBottom: 8 }}>
