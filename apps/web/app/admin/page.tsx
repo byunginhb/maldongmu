@@ -69,6 +69,8 @@ interface ReportRow {
   nickname: string | null;
   email: string | null;
   personaName: string | null;
+  handledAt: string | null;
+  handledNote: string | null;
 }
 
 interface FeedbackRow {
@@ -128,6 +130,14 @@ export default function AdminPage() {
     setFeedback(await adminGet<FeedbackRow[]>("/feedback"));
     loadUsers(userPage, userType);
     toast(`한도 ${res.limit.toLocaleString()}개로 변경 · 피드백 ${res.handled}건 처리됨 · 사용자가 다음에 열면 안내돼요`);
+  };
+
+  const [showHandledReports, setShowHandledReports] = useState(false);
+  const [reportNotes, setReportNotes] = useState<Record<string, string>>({});
+  const handleReport = async (id: string) => {
+    await adminPost(`/reports/${encodeURIComponent(id)}/handle`, { note: reportNotes[id]?.trim() || "확인함" });
+    setReports(await adminGet<ReportRow[]>("/reports"));
+    toast("신고를 처리 완료로 표시했어요");
   };
 
   const handleFeedback = async (id: number) => {
@@ -311,17 +321,36 @@ export default function AdminPage() {
         );
       })()}
 
-      <h2 className="dot-title" style={{ marginBottom: 12 }}>AI 답변 신고</h2>
+      <h2 className="dot-title" style={{ marginBottom: 4 }}>AI 답변 신고</h2>
+      <div style={{ display: "flex", gap: 8, alignItems: "center", margin: "0 0 12px" }}>
+        <span className="meta">미처리 {reports.filter((r) => !r.handledAt).length}건</span>
+        <button className={`chip${!showHandledReports ? " on" : ""}`} onClick={() => setShowHandledReports(false)}>미처리</button>
+        <button className={`chip${showHandledReports ? " on" : ""}`} onClick={() => setShowHandledReports(true)}>전체</button>
+      </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 28 }}>
-        {reports.length === 0 && <p className="empty" style={{ padding: "8px 0" }}>접수된 신고가 없어요.</p>}
-        {reports.map((r) => (
-          <div key={r.id} style={{ background: "var(--paper)", border: "1px solid var(--line)", borderRadius: 16, padding: "14px 16px" }}>
+        {reports.filter((r) => showHandledReports || !r.handledAt).length === 0 && <p className="empty" style={{ padding: "8px 0" }}>{showHandledReports ? "접수된 신고가 없어요." : "미처리 신고가 없어요."}</p>}
+        {reports.filter((r) => showHandledReports || !r.handledAt).map((r) => (
+          <div key={r.id} style={{ background: "var(--paper)", border: `1px solid ${r.handledAt ? "var(--line)" : "var(--red)"}`, borderRadius: 16, padding: "14px 16px", opacity: r.handledAt ? 0.6 : 1 }}>
             <p className="meta" style={{ margin: "0 0 6px" }}>
-              <b style={{ color: "var(--red)" }}>{r.reason}</b> · {r.personaName || "?"} · {r.nickname || r.email || r.userId} · {kst(r.createdAt)}
+              {r.handledAt
+                ? <span className="admin-badge" style={{ marginLeft: 0, color: "var(--green)" }}>✅ 처리됨 · {kst(r.handledAt)} · {r.handledNote}</span>
+                : <span className="admin-badge" style={{ marginLeft: 0, color: "var(--red)" }}>미처리 · {r.reason}</span>}
+              {" "}{r.personaName || "?"} · {r.nickname || r.email || r.userId} · {kst(r.createdAt)}
             </p>
             <p style={{ margin: "0 0 6px", fontSize: 14, whiteSpace: "pre-wrap" }}>{r.content}</p>
-            {r.detail && <p className="meta" style={{ margin: 0 }}>메모: {r.detail}</p>}
-            <button className="btn-ghost" style={{ height: 32, padding: "0 12px", marginTop: 8, fontSize: 12 }} onClick={() => openConv(r.conversationId)}>대화 전체 보기</button>
+            {r.detail && <p className="meta" style={{ margin: 0 }}>신고자 메모: {r.detail}</p>}
+            <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 8, flexWrap: "wrap" }}>
+              <button className="btn-ghost" style={{ height: 32, padding: "0 12px", fontSize: 12 }} onClick={() => openConv(r.conversationId)}>대화 전체 보기</button>
+              {!r.handledAt && <>
+                <input
+                  value={reportNotes[r.id] ?? ""}
+                  onChange={(e) => setReportNotes((s) => ({ ...s, [r.id]: e.target.value }))}
+                  placeholder="조치 메모 (예: 프롬프트 보강)"
+                  style={{ flex: 1, minWidth: 180, height: 32, border: "1px solid var(--line)", borderRadius: 10, padding: "0 10px", fontSize: 12, background: "var(--cream)", color: "var(--brown)", outline: "none" }}
+                />
+                <button className="btn-ghost" style={{ height: 32, padding: "0 12px", fontSize: 12 }} onClick={() => handleReport(r.id)}>처리 완료</button>
+              </>}
+            </div>
           </div>
         ))}
       </div>

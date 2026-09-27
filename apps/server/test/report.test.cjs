@@ -1,6 +1,7 @@
 const { test } = require("node:test");
 const assert = require("node:assert/strict");
 const { fixture, ResponseStub } = require("./chat-fixture.cjs");
+const { AdminController } = require("../dist/admin/admin.controller");
 
 test("a streamed reply announces its saved id and can be reported in-app; foreign/user messages cannot", async (t) => {
   const f = fixture(); t.after(f.close);
@@ -23,4 +24,12 @@ test("a streamed reply announces its saved id and can be reported in-app; foreig
   assert.throws(() => f.chat.saveReport("owner", c.id, stored.at(-2).id, "기타"), (e) => e.getStatus() === 404, "user messages are not reportable");
   assert.throws(() => f.chat.saveReport("owner", c.id, saved.messageId, "  "), (e) => e.getStatus() === 400);
   assert.equal(f.db.prepare("SELECT COUNT(*) AS n FROM reports").get().n, 1);
+
+  const admin = new AdminController({ db: f.db }, f.personas);
+  const [pending] = admin.reports();
+  assert.equal(pending.handledAt, null);
+  admin.handleReport(pending.id, { note: "프롬프트 보강함" });
+  const [after] = admin.reports();
+  assert.ok(after.handledAt);
+  assert.equal(after.handledNote, "프롬프트 보강함");
 });

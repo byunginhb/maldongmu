@@ -128,6 +128,14 @@ export class AdminController {
     return { ok: true, limit, handled };
   }
 
+  /** AI 답변 신고 처리 완료 (정책 증적: 언제 무엇을 조치했는지 메모) */
+  @Post("reports/:id/handle")
+  handleReport(@Param("id") id: string, @Body() body: { note?: string }) {
+    this.db.prepare(`UPDATE reports SET handled_at = datetime('now'), handled_note = ? WHERE id = ?`)
+      .run(String(body?.note || "확인함").slice(0, 200), String(id));
+    return { ok: true };
+  }
+
   /** 한도 변경 없이 피드백만 처리 완료로 표시 */
   @Post("feedback/:id/handle")
   handleFeedback(@Param("id") id: string, @Body() body: { note?: string }) {
@@ -151,9 +159,10 @@ export class AdminController {
       .prepare(
         `SELECT r.id, r.user_id as userId, r.conversation_id as conversationId, r.message_id as messageId,
                 r.reason, r.detail, r.content, r.created_at as createdAt,
+                r.handled_at as handledAt, r.handled_note as handledNote,
                 u.type, u.nickname, u.email, p.name as personaName
          FROM reports r LEFT JOIN users u ON u.id = r.user_id LEFT JOIN personas p ON p.uuid = r.persona_uuid
-         ORDER BY r.created_at DESC LIMIT 100`,
+         ORDER BY (r.handled_at IS NULL) DESC, r.created_at DESC LIMIT 100`,
       )
       .all();
   }

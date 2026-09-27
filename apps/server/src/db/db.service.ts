@@ -143,7 +143,8 @@ export class DbService implements OnModuleDestroy {
     for (const [table, column, type = "TEXT"] of [["conversations", "second_persona_uuid"], ["messages", "speaker_uuid"],
       ["conversations", "mode"], ["messages", "affection", "INTEGER"], ["messages", "affection_note"],
       // 피드백 처리 상태(어드민) · 한도 변경 시각(사용자에게 다음 방문 때 안내)
-      ["feedback", "handled_at"], ["feedback", "handled_note"], ["users", "limit_changed_at"]]) {
+      ["feedback", "handled_at"], ["feedback", "handled_note"], ["users", "limit_changed_at"],
+      ["reports", "handled_at"], ["reports", "handled_note"]]) {
       const columns = this.db.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[];
       if (!columns.some((c) => c.name === column)) {
         this.db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${type}`);
