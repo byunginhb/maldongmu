@@ -45,7 +45,11 @@ export class AdminController {
   funnel(@Query("days") days = "14") {
     const since = `-${Math.min(Number(days) || 14, 90)} days`;
     const one = (sql: string) => (this.db.prepare(sql).get(since) as any).n as number;
-    const cohort = `SELECT id FROM users WHERE created_at >= datetime('now', ?)`;
+    // 코호트 = 기간 내 가입자 중 실제 제품 페이지를 본 사람 (스토어 링크로 /privacy·/account/delete만 찍고 간 심사·크롤러 제외)
+    const cohort = `SELECT id FROM users u WHERE created_at >= datetime('now', ?)
+      AND (EXISTS (SELECT 1 FROM conversations c WHERE c.user_id = u.id)
+           OR EXISTS (SELECT 1 FROM events e WHERE e.user_id = u.id AND e.name = 'visit'
+                      AND COALESCE(json_extract(e.props, '$.path'), '/') NOT IN ('/privacy', '/terms', '/account/delete', '/admin')))`;
     const sent = `SELECT c.user_id AS uid, COUNT(*) AS n, COUNT(DISTINCT date(m.created_at)) AS days
                   FROM messages m JOIN conversations c ON c.id = m.conversation_id
                   WHERE m.role = 'user' AND c.user_id IN (${cohort}) GROUP BY c.user_id`;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { track } from "../lib/api";
+import { getToken, track } from "../lib/api";
 
 /** 세션당 1회 visit 이벤트: 어디서 왔는지(referrer/UTM)·앱인지·언어. 퍼널은 서버 DB에서 계산한다. */
 export default function Analytics() {
@@ -10,6 +10,7 @@ export default function Analytics() {
       if (sessionStorage.getItem("mdm_visit")) return;
       sessionStorage.setItem("mdm_visit", "1");
     } catch { /* 저장소 차단 환경 — 매번 기록되어도 무방 */ }
+    if (/^\/(privacy|terms|account|admin|s\/)/.test(location.pathname) && !getToken()) return; // 스토어 링크로 들어온 심사·크롤러 트래픽
     const q = new URLSearchParams(location.search);
     let referrer = "";
     try { referrer = document.referrer ? new URL(document.referrer).hostname.replace(/^www\./, "") : ""; } catch { /* 무시 */ }

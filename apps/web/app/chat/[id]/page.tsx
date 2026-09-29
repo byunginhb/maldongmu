@@ -41,6 +41,7 @@ function ChatRoom({ id }: { id: string }) {
   const [showQuota, setShowQuota] = useState(false);
   const [reportTarget, setReportTarget] = useState<Msg | null>(null);
   const [showReview, setShowReview] = useState(false);
+  const [milestone, setMilestone] = useState<number | null>(null); // 호감도 60/80 첫 도달 → 공유 유도
   const [toast, setToast] = useState("");
 
   // 스토어 평점 유도: 긍정 순간에 기기당 한 번만
@@ -179,7 +180,14 @@ function ChatRoom({ id }: { id: string }) {
         setMsgs((m) => m.map((message) => ({ ...message, streaming: false })));
       } else if (event.type === "affection") {
         setAffection({ score: event.score, change: event.change, note: event.note });
-        if (event.score >= 60 && event.change > 0) maybeReview("affection_60");
+        // 60·80 첫 돌파 순간에 공유 유도 (방마다 한 번씩)
+        for (const m of [80, 60]) {
+          if (event.score >= m && event.score - event.change < m) {
+            try { const k = `mdm_ms_${id}_${m}`; if (!localStorage.getItem(k)) { localStorage.setItem(k, "1"); setMilestone(m); track("share_prompt", { milestone: m }); } } catch { /* 저장소 차단 */ }
+            break;
+          }
+        }
+        if (event.score >= 60 && event.change > 0 && !milestone) maybeReview("affection_60");
       } else if (event.type === "saved") {
         // 방금 스트리밍된 1:1 답변에 저장 id를 붙여 바로 신고할 수 있게
         setMsgs((m) => m.map((message, i) => i === m.length - 1 && message.role === "assistant" ? { ...message, id: event.messageId } : message));
@@ -269,6 +277,18 @@ function ChatRoom({ id }: { id: string }) {
         onClose={() => setShowPicker(false)} onAdded={(c) => { applySnapshot(c); setShowPicker(false); nearBottom.current = true; }} />}
       {showLogin && <LoginSheet onClose={() => setShowLogin(false)} />}
       {showQuota && <QuotaSheet onClose={() => setShowQuota(false)} />}
+      {milestone && persona && (
+        <div className="sheet-back" onClick={() => setMilestone(null)}>
+          <div className="sheet" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="호감도 달성">
+            <h2 className="dot-title" style={{ marginBottom: 6 }}>호감도 {milestone} 달성!</h2>
+            <p style={{ fontSize: 14, margin: "0 0 18px", lineHeight: 1.7 }}>
+              {persona.name}님의 마음이 {stageOf(affection.score)}. 이 순간을 카드로 남겨 친구에게 자랑해볼까요?
+            </p>
+            <button className="btn-cta" onClick={() => { setMilestone(null); share(); }}>결과 카드 공유하기</button>
+            <button className="btn-ghost" style={{ width: "100%", marginTop: 10, border: "none" }} onClick={() => { setMilestone(null); if (milestone >= 60) maybeReview("affection_60"); }}>계속 이야기하기</button>
+          </div>
+        </div>
+      )}
       {toast && <div className="chat-toast" role="status">{toast}</div>}
       {showReview && <ReviewSheet onClose={() => setShowReview(false)} />}
       {reportTarget?.id && <ReportSheet conversationId={id} messageId={reportTarget.id} excerpt={reportTarget.content} onClose={() => setReportTarget(null)} />}

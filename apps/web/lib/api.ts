@@ -21,9 +21,16 @@ export function clearToken() {
   localStorage.removeItem("mdm_token");
 }
 
+/** 크롤러·심사 도구(헤드리스)는 게스트 계정을 만들지 않는다 — 퍼널 "방문(가입)"이 봇으로 부풀지 않게 */
+export function isBot(): boolean {
+  if (typeof navigator === "undefined") return false;
+  return navigator.webdriver === true || /bot|crawl|spider|slurp|headless|lighthouse|pagespeed|google-?read|preview|facebookexternalhit|embedly/i.test(navigator.userAgent);
+}
+
 export async function ensureGuest(): Promise<string> {
   const t = getToken();
   if (t) return t;
+  if (isBot()) throw new Error("bot");
   if (!guestRequest) {
     guestRequest = (async () => {
       const res = await fetch(`${API}/api/auth/guest`, { method: "POST" });
