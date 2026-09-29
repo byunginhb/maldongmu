@@ -70,6 +70,14 @@ cp app/build/outputs/bundle/release/app-release.aab ~/android-tools/maldongmu-rn
 - 콘솔에서 할 일: 정책 메일의 **"검토 요청"/이의 제기**에 "앱 내 각 AI 답변에 신고 버튼을 추가했고(웹 배포 반영), 신고는 관리자 대시보드에서 검토·조치함"이라고 회신.
   필요 시 스크린샷: 채팅 화면의 "신고" 버튼과 신고 시트.
 
+### 📈 스토어 전환율 실험 순서 (2026-09-29~)
+
+Play 실적: 28일 노출 1,350(+527%) → 설치 8 = **0.6%**. 노출은 늘었으니 병목은 "노출→설치". 실험은 등록정보당 1개씩만 돌아가므로 순서대로:
+1. 🔄 간단한 설명 (9/22 시작, ~10/6 결과)
+2. **아이콘** — 후보 `docs/store/images/icon-variants/icon-heart.png`(하트 말풍선, 코랄 바탕)·`icon-duo.png`(브라운 바탕, 두 말풍선+하트). 콘솔 → 스토어 등록정보 실험 → 만들기 → 실험 대상 **앱 아이콘**, 대안 2개, 각 파일 업로드. 2주
+3. **첫 스크린샷** — B안: `screenshot-02-affection.png`를 1번으로 (결과가 먼저 보이게)
+4. 승자는 `listings/`·`app-icon-512.png`에 반영해 두기 (Claude). 앱 런처 아이콘(`mobile/assets`)은 스토어 승자 확정 후 다음 앱 업데이트 때 교체
+
 ### 🌏 다국어 등록정보 + ASO (2026-09-15)
 
 - 언어: ko-KR · en-US(기본 언어) · ja-JP · zh-TW · zh-HK · zh-CN. 원본은 `docs/store/listings/<lang>/`, 이미지는 `docs/store/images/<lang>/` (ko는 루트).
