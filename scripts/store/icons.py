@@ -45,3 +45,20 @@ def icon_duo():
 if __name__ == "__main__":
     OUT.mkdir(parents=True, exist_ok=True)
     icon_heart(); icon_duo(); print("wrote", OUT)
+
+
+def app_assets(variant: str = "heart"):
+    """앱 런처 자산도 같은 모양으로: icon.png(1024, 불투명) + android-icon-foreground.png(1024, 투명, 안전 영역 중앙 66%)."""
+    assets = Path(__file__).resolve().parents[2] / "mobile/assets"
+    src = Image.open(OUT / f"icon-{variant}.png").convert("RGB")
+    src.resize((1024, 1024), Image.NEAREST).save(assets / "icon.png", optimize=True)
+    # 포그라운드: 말풍선+하트만 투명 배경에 (adaptiveIcon.backgroundColor가 코랄 바탕을 깔아줌)
+    fg = Image.new("RGBA", (16 * S, 16 * S), (0, 0, 0, 0)); d = ImageDraw.Draw(fg)
+    px(d, 5, 4, 7, 1, PAPER); px(d, 4, 5, 9, 5, PAPER); px(d, 5, 10, 7, 1, PAPER); px(d, 5, 11, 1, 1, PAPER)
+    heart(d, 6, 6, CORAL)
+    canvas = Image.new("RGBA", (1024, 1024), (0, 0, 0, 0))
+    inner = fg.crop((4 * S, 4 * S, 13 * S, 12 * S)).resize((9 * 56, 8 * 56), Image.NEAREST)  # 안전 영역(가운데 66%) 안에
+    canvas.paste(inner, ((1024 - inner.width) // 2, (1024 - inner.height) // 2), inner)
+    canvas.save(assets / "android-icon-foreground.png", optimize=True)
+    src.resize((48, 48), Image.LANCZOS).save(assets / "favicon.png", optimize=True)
+    print("wrote app assets (", variant, ")")

@@ -1,2 +1,2 @@
-- Rate the app without leaving it
-- Start a blind date right from the home screen, share your affection card
+- New icon: a heart in the speech bubble 💗
+- Share your card when affection hits 60 or 80
