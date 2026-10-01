@@ -51,6 +51,7 @@ cp app/build/outputs/bundle/release/app-release.aab ~/android-tools/maldongmu-rn
 - v1.1.1: 2026-09-14 제출됨 (versionCode 3, 탭바 밑 여백 수정. AAB/테스트 APK: `~/android-tools/maldongmu-rn-v1.1.1*`)
 - v1.1.2: 2026-09-20 제출됨 (versionCode 4, R8 켬)
 - v1.2.0: 2026-09-22 제출됨 (versionCode 5, 인앱 리뷰 창. 산출물 `~/android-tools/maldongmu-rn-v1.2.0*`)
+- v1.2.1: 2026-09-30 제출됨 (versionCode 6, 런처 아이콘 하트 말풍선. 스토어 아이콘도 같은 날 API로 교체)
 
 ### 🧹 "DEX 코드 최적화 기준 미만(난독화 1%)" 대응 — v1.1.2 (2026-09-20)
 
@@ -74,7 +75,7 @@ cp app/build/outputs/bundle/release/app-release.aab ~/android-tools/maldongmu-rn
 
 Play 실적: 28일 노출 1,350(+527%) → 설치 8 = **0.6%**. 노출은 늘었으니 병목은 "노출→설치". 실험은 등록정보당 1개씩만 돌아가므로 순서대로:
 1. 🔄 간단한 설명 (9/22 시작, ~10/6 결과)
-2. **아이콘** — 후보 `docs/store/images/icon-variants/icon-heart.png`(하트 말풍선, 코랄 바탕)·`icon-duo.png`(브라운 바탕, 두 말풍선+하트). 콘솔 → 스토어 등록정보 실험 → 만들기 → 실험 대상 **앱 아이콘**, 대안 2개, 각 파일 업로드. 2주
+2. ✅ **아이콘** — A/B 대신 바로 적용(9/30, 설치 규모가 작아 실험이 2주 안에 결론 안 남). 하트 말풍선(`icon-heart.png`). 후보 B `icon-duo.png`는 나중에 트래픽이 커지면 실험
 3. **첫 스크린샷** — B안: `screenshot-02-affection.png`를 1번으로 (결과가 먼저 보이게)
 4. 승자는 `listings/`·`app-icon-512.png`에 반영해 두기 (Claude). 앱 런처 아이콘(`mobile/assets`)은 스토어 승자 확정 후 다음 앱 업데이트 때 교체
 
