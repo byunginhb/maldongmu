@@ -10,7 +10,7 @@ export default function Analytics() {
       if (sessionStorage.getItem("mdm_visit")) return;
       sessionStorage.setItem("mdm_visit", "1");
     } catch { /* 저장소 차단 환경 — 매번 기록되어도 무방 */ }
-    if (/^\/(privacy|terms|account|admin|s\/)/.test(location.pathname) && !getToken()) return; // 스토어 링크로 들어온 심사·크롤러 트래픽
+    if (/^\/(privacy|terms|account|admin)/.test(location.pathname) && !getToken()) return; // 스토어 링크로 들어온 심사·크롤러 트래픽 (공유 카드 /s/는 사람 유입이라 기록)
     const q = new URLSearchParams(location.search);
     let referrer = "";
     try { referrer = document.referrer ? new URL(document.referrer).hostname.replace(/^www\./, "") : ""; } catch { /* 무시 */ }
