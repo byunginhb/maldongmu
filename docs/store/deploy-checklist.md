@@ -52,6 +52,7 @@ cp app/build/outputs/bundle/release/app-release.aab ~/android-tools/maldongmu-rn
 - v1.1.2: 2026-09-20 제출됨 (versionCode 4, R8 켬)
 - v1.2.0: 2026-09-22 제출됨 (versionCode 5, 인앱 리뷰 창. 산출물 `~/android-tools/maldongmu-rn-v1.2.0*`)
 - v1.2.1: 2026-09-30 제출됨 (versionCode 6, 런처 아이콘 하트 말풍선. 스토어 아이콘도 같은 날 API로 교체)
+- v1.2.2: 2026-10-07 제출됨 (versionCode 7, 화면 다국어 영어·일본어 — 웹 배포로 반영, 스토어 업데이트 신호용)
 
 ### 🧹 "DEX 코드 최적화 기준 미만(난독화 1%)" 대응 — v1.1.2 (2026-09-20)
 
