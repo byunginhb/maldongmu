@@ -1,6 +1,7 @@
 "use client";
 
 import { track } from "../lib/api";
+import { useT } from "./LangProvider";
 
 const PLAY_ID = "app.maldongmu.twa";
 
@@ -11,6 +12,7 @@ export function storeUrl(): string {
 }
 
 export default function ReviewSheet({ onClose }: { onClose: () => void }) {
+  const { t } = useT();
   const go = () => {
     // 1.2.0+ 앱: 구글 인앱 리뷰 창(앱을 떠나지 않음). 그 외: 스토어 링크
     const w = window as unknown as { __mdmApp?: { review?: boolean }; ReactNativeWebView?: { postMessage: (s: string) => void } };
@@ -23,13 +25,13 @@ export default function ReviewSheet({ onClose }: { onClose: () => void }) {
   return (
     <div className="sheet-back" onClick={() => { track("review_dismiss"); onClose(); }}>
       <div className="sheet" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="말동무 평가">
-        <h2 className="dot-title" style={{ marginBottom: 6 }}>말동무, 마음에 드셨나요?</h2>
+        <h2 className="dot-title" style={{ marginBottom: 6 }}>{t("말동무, 마음에 드셨나요?")}</h2>
         <p style={{ fontSize: 14, margin: "0 0 18px", lineHeight: 1.7 }}>
-          별점 하나가 더 많은 분께 말동무를 소개해줘요. 30초면 충분해요.
+          {t("별점 하나가 더 많은 분께 말동무를 소개해줘요. 30초면 충분해요.")}
         </p>
-        <button className="btn-cta" onClick={go}>별점 남기러 가기</button>
+        <button className="btn-cta" onClick={go}>{t("별점 남기러 가기")}</button>
         <button className="btn-ghost" style={{ width: "100%", marginTop: 10, border: "none" }} onClick={() => { track("review_dismiss"); onClose(); }}>
-          다음에 할게요
+          {t("다음에 할게요")}
         </button>
       </div>
     </div>

@@ -30,6 +30,7 @@
   호감도: `affection.service.ts`가 매 턴 심판 모델(`DATING_JUDGE_MODEL`)을 답변과 병렬 호출 → `messages.affection`에 기록,
   SSE `{type:"affection", score, change, note}` 이벤트로 done 직전에 전달(필드명 `delta`는 텍스트 청크 예약). 첫인상 25, 턴당 +12/−15 클램프.
   답변 종료 후 1.5초 안에 심판이 안 끝나면 done을 먼저 보내고 결과는 DB에만 기록. 심판 호출 토큰은 usage_events에 미집계.
+- 화면 다국어: `apps/web/lib/i18n.ts` 사전(키=한국어 원문, en·ja) + `useT()`. 언어는 `layout.tsx`가 Accept-Language로 정해 `LangProvider`로 전달(서버 컴포넌트는 `headers()`+`translate()`). 페르소나 데이터는 번역 안 함. 미번역 화면: recommend·interview·feedback·about·admin.
 - 언어: 1:1은 마지막 사용자 메시지 뒤에 `languageHint()`(ko 외 감지 시 "그 언어로만 답하라" 꼬리)를 붙여 한국어 회귀를 막는다. 저장은 원문.
 - AI 답변 신고(Play AI 생성 콘텐츠 정책): 말풍선마다 "신고" → `POST /reports`(원문 스냅샷 저장) → `/admin` "AI 답변 신고". 1:1 스트림은 `{type:"saved", messageId}`로 방금 답변 id를 알려줌.
 

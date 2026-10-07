@@ -2,11 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { track } from "../lib/api";
+import { useT } from "./LangProvider";
 
 const PLAY = "https://play.google.com/store/apps/details?id=app.maldongmu.twa";
 
 /** 안드로이드 모바일 웹에만 "앱으로 보기" 슬림 배너. 앱 안(UA maldongmuApp)이나 닫은 뒤 7일은 숨김 */
 export default function AppBanner() {
+  const { t } = useT();
   const [show, setShow] = useState(false);
   useEffect(() => {
     const ua = navigator.userAgent;
@@ -21,9 +23,9 @@ export default function AppBanner() {
   };
   return (
     <div className="app-banner" role="region" aria-label="앱 안내">
-      <span>말동무 앱으로 더 편하게</span>
-      <a href={PLAY} onClick={() => track("app_banner_click")} target="_blank" rel="noopener">Play에서 받기</a>
-      <button onClick={dismiss} aria-label="닫기">×</button>
+      <span>{t("말동무 앱으로 더 편하게")}</span>
+      <a href={PLAY} onClick={() => track("app_banner_click")} target="_blank" rel="noopener">{t("Play에서 받기")}</a>
+      <button onClick={dismiss} aria-label={t("닫기")}>×</button>
     </div>
   );
 }

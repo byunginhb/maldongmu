@@ -5,6 +5,8 @@ import Avatar from "../../../components/Avatar";
 import { serverGet, SITE_URL } from "../../../lib/server-api";
 import { RARE } from "../../../lib/rare";
 import { BackButton, StartChat } from "./PersonaActions";
+import { headers } from "next/headers";
+import { pickLang, translate } from "../../../lib/i18n";
 
 const SECTIONS: { key: keyof PersonaDetail; title: string }[] = [
   { key: "culturalBackground", title: "성격과 배경" },
@@ -42,6 +44,8 @@ export default async function PersonaPage({ params }: { params: Promise<{ uuid: 
   const { uuid } = await params;
   const p = await load(uuid);
   if (!p) notFound();
+  const lang = pickLang((await headers()).get("accept-language"));
+  const t = (k: string, v?: Record<string, string | number>) => translate(lang, k, v);
 
   const facts = [
     p.educationLevel && `학력 · ${p.educationLevel}`,
@@ -67,7 +71,7 @@ export default async function PersonaPage({ params }: { params: Promise<{ uuid: 
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center" }}>
         <Avatar uuid={p.uuid} sex={p.sex} age={p.age} size={96} radius={20} />
         <h1 className="dot-title" style={{ marginTop: 16 }}>{p.name}</h1>
-        <p className="meta" style={{ margin: 0 }}>{p.age}세 · {p.occupation}</p>
+        <p className="meta" style={{ margin: 0 }}>{t("{age}세", { age: p.age })} · {p.occupation}</p>
         <p className="meta" style={{ margin: "2px 0 0" }}>{p.province} {p.district?.replace(`${p.province}-`, "")}</p>
       </div>
 
@@ -86,7 +90,7 @@ export default async function PersonaPage({ params }: { params: Promise<{ uuid: 
         if (!text) return null;
         return (
           <section key={key} style={{ marginTop: 20 }}>
-            <h2 className="dot-title" style={{ marginBottom: 8 }}>{title}</h2>
+            <h2 className="dot-title" style={{ marginBottom: 8 }}>{t(title)}</h2>
             <div style={{ background: "var(--paper)", border: "1px solid var(--line)", borderRadius: 16, padding: "14px 18px" }}>
               <p style={{ margin: 0, fontSize: 14, lineHeight: 1.7 }}>{text}</p>
             </div>
@@ -95,7 +99,7 @@ export default async function PersonaPage({ params }: { params: Promise<{ uuid: 
       })}
 
       <p className="meta" style={{ margin: "24px 0 0", textAlign: "center" }}>
-        말동무의 모든 인물은 한국의 실제 인구 통계 데이터를 바탕으로 만들어진 AI 페르소나예요. 특정 실존 인물과는 무관해요.
+        {t("말동무의 모든 인물은 한국의 실제 인구 통계 데이터를 바탕으로 만들어진 AI 페르소나예요. 특정 실존 인물과는 무관해요.")}
       </p>
 
       <StartChat uuid={p.uuid} name={p.name} />

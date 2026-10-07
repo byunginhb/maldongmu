@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useT } from "./LangProvider";
 
 /* 픽셀 아이콘 3종 — 동일한 '채운 실루엣' 스타일로 통일 */
 const HomeIcon = ({ on }: { on: boolean }) => (
@@ -54,6 +55,7 @@ const TABS = [
 ];
 
 export default function TabBar() {
+  const { t } = useT();
   const pathname = usePathname();
   if (pathname.startsWith("/chat/") || pathname.startsWith("/admin")) return null;
   return (
@@ -63,7 +65,7 @@ export default function TabBar() {
         return (
           <Link key={href} href={href} className={on ? "on" : ""}>
             <Icon on={on} />
-            {label}
+            {t(label)}
           </Link>
         );
       })}

@@ -5,6 +5,7 @@ import type { PersonaCard as Card } from "@maldongmu/shared";
 import { apiGet } from "../../lib/api";
 import PersonaCard from "../../components/PersonaCard";
 import { SkeletonCard } from "../../components/ui";
+import { useT } from "../../components/LangProvider";
 
 // DB의 province 실제 값 기준
 const PROVINCES = [
@@ -21,6 +22,7 @@ const AGES: { label: string; min?: number; max?: number }[] = [
 ];
 
 export default function SearchPage() {
+  const { t } = useT();
   const [q, setQ] = useState("");
   const [province, setProvince] = useState("");
   const [sex, setSex] = useState("");
@@ -88,8 +90,8 @@ export default function SearchPage() {
 
   return (
     <main className="page">
-      <h1 className="dot-title">이웃 찾기</h1>
-      <p className="meta" style={{ margin: "0 0 16px" }}>어떤 이웃을 찾으세요?</p>
+      <h1 className="dot-title">{t("이웃 찾기")}</h1>
+      <p className="meta" style={{ margin: "0 0 16px" }}>{t("어떤 이웃을 찾으세요?")}</p>
 
       <div className="search-box" style={{ marginBottom: 12 }}>
         <svg width="16" height="16" viewBox="0 0 16 16" shapeRendering="crispEdges" aria-hidden>
@@ -101,13 +103,13 @@ export default function SearchPage() {
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="직업, 취미, 지역, 이름..."
-          aria-label="검색"
+          placeholder={t("직업, 취미, 지역, 이름...")}
+          aria-label={t("검색")}
         />
       </div>
 
       <div className="chip-row" style={{ marginBottom: 8 }}>
-        <button className={`chip ${province === "" ? "on" : ""}`} onClick={() => setProvince("")}>지역 전체</button>
+        <button className={`chip ${province === "" ? "on" : ""}`} onClick={() => setProvince("")}>{t("지역 전체")}</button>
         {PROVINCES.map((p) => (
           <button key={p} className={`chip ${province === p ? "on" : ""}`} onClick={() => setProvince(province === p ? "" : p)}>
             {p}
@@ -117,14 +119,14 @@ export default function SearchPage() {
       <div className="chip-row" style={{ marginBottom: 8 }}>
         {AGES.map((a, i) => (
           <button key={a.label} className={`chip ${ageIdx === i ? "on" : ""}`} onClick={() => setAgeIdx(i)}>
-            {a.label}
+            {t(a.label)}
           </button>
         ))}
       </div>
       <div className="chip-row" style={{ marginBottom: 20 }}>
         {["", "남자", "여자"].map((s) => (
           <button key={s || "all"} className={`chip ${sex === s ? "on" : ""}`} onClick={() => setSex(s)}>
-            {s === "" ? "성별 전체" : s}
+            {s === "" ? t("성별 전체") : t(s)}
           </button>
         ))}
       </div>
@@ -137,7 +139,7 @@ export default function SearchPage() {
       </div>
 
       {searched && !loading && items.length === 0 && (
-        <p className="empty">조건에 맞는 이웃을 찾지 못했어요. 검색어를 바꿔볼까요?</p>
+        <p className="empty">{t("조건에 맞는 이웃을 찾지 못했어요. 검색어를 바꿔볼까요?")}</p>
       )}
 
       <div ref={sentinel} style={{ height: 1 }} />

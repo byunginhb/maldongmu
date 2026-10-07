@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import type { PersonaCard } from "@maldongmu/shared";
 import { apiGet, apiPost, type ConversationSnapshot } from "../lib/api";
 import Avatar from "./Avatar";
+import { useT } from "./LangProvider";
 
 export default function FriendPicker({ conversationId, currentUuid, onAdded, onClose }: {
   conversationId: string;
@@ -21,6 +22,7 @@ export default function FriendPicker({ conversationId, currentUuid, onAdded, onC
   const addingRef = useRef(false);
   const [hasMore, setHasMore] = useState(false);
   const [error, setError] = useState("");
+  const { t } = useT();
 
   useEffect(() => { dialog.current?.showModal(); }, []);
 
@@ -37,7 +39,7 @@ export default function FriendPicker({ conversationId, currentUuid, onAdded, onC
         setItems(result.items.filter((p) => p.uuid !== currentUuid));
         setHasMore(!!query.trim() && result.items.length === 12);
       } catch {
-        if (alive) setError("친구 목록을 불러오지 못했어요. 검색어를 바꾸거나 다시 열어주세요.");
+        if (alive) setError(t("친구 목록을 불러오지 못했어요. 검색어를 바꾸거나 다시 열어주세요."));
       } finally {
         if (alive) setLoading(false);
       }
@@ -53,7 +55,7 @@ export default function FriendPicker({ conversationId, currentUuid, onAdded, onC
     try {
       onAdded(await apiPost<ConversationSnapshot>(`/conversations/${conversationId}/friend`, { personaUuid: selected.uuid }));
     } catch (e) {
-      setError(e instanceof Error ? e.message : "초대하지 못했어요. 다시 시도해주세요.");
+      setError(e instanceof Error ? e.message : t("초대하지 못했어요. 다시 시도해주세요."));
     } finally {
       addingRef.current = false;
       setAdding(false);
@@ -65,37 +67,37 @@ export default function FriendPicker({ conversationId, currentUuid, onAdded, onC
       onCancel={(e) => { e.preventDefault(); if (!adding) onClose(); }}>
       <div className="friend-picker-head">
         <div>
-          <h2 id="friend-picker-title" className="dot-title">같이 놀 친구 한 명</h2>
-          <p className="meta">나이 상관없이, 마음 가는 친구를 골라주세요.</p>
+          <h2 id="friend-picker-title" className="dot-title">{t("같이 놀 친구 한 명")}</h2>
+          <p className="meta">{t("나이 상관없이, 마음 가는 친구를 골라주세요.")}</p>
         </div>
-        <button className="btn-ghost" onClick={onClose} disabled={adding} aria-label="친구 선택 닫기">닫기</button>
+        <button className="btn-ghost" onClick={onClose} disabled={adding} aria-label={t("친구 선택 닫기")}>{t("닫기")}</button>
       </div>
       <label className="search-box">
-        <input autoFocus value={query} disabled={adding} maxLength={80} aria-label="함께할 친구 검색"
-          placeholder="이름, 직업, 취미로 찾아보기"
+        <input autoFocus value={query} disabled={adding} maxLength={80} aria-label={t("함께할 친구 검색")}
+          placeholder={t("이름, 직업, 취미로 찾아보기")}
           onChange={(e) => { setQuery(e.target.value); setPage(1); setSelected(null); }} />
       </label>
       <div className="friend-picker-list" aria-busy={loading}>
-        {loading ? <p className="empty">친구를 찾고 있어요…</p> : items.map((p) => (
+        {loading ? <p className="empty">{t("친구를 찾고 있어요…")}</p> : items.map((p) => (
           <button key={p.uuid} className={`friend-option ${selected?.uuid === p.uuid ? "selected" : ""}`}
             disabled={adding} aria-pressed={selected?.uuid === p.uuid} onClick={() => setSelected(p)}>
             <Avatar uuid={p.uuid} sex={p.sex} age={p.age} size={44} />
-            <span><b>{p.name} · {p.age}세</b><span className="meta">{p.occupation} · {p.province}</span>
+            <span><b>{p.name} · {t("{age}세", { age: p.age })}</b><span className="meta">{p.occupation} · {p.province}</span>
               <span className="friend-intro">{p.oneLiner}</span></span>
             <span aria-hidden>{selected?.uuid === p.uuid ? "✓" : "+"}</span>
           </button>
         ))}
-        {!loading && !items.length && !error && <p className="empty">검색어를 바꿔볼까요?</p>}
+        {!loading && !items.length && !error && <p className="empty">{t("검색어를 바꿔볼까요?")}</p>}
       </div>
       {(page > 1 || hasMore) && <div className="friend-pagination">
-        <button className="btn-ghost" disabled={page === 1 || loading || adding} onClick={() => { setPage(page - 1); setSelected(null); }}>이전</button>
-        <span className="meta">{page}쪽</span>
-        <button className="btn-ghost" disabled={!hasMore || loading || adding} onClick={() => { setPage(page + 1); setSelected(null); }}>다음</button>
+        <button className="btn-ghost" disabled={page === 1 || loading || adding} onClick={() => { setPage(page - 1); setSelected(null); }}>{t("이전")}</button>
+        <span className="meta">{t("{page}쪽", { page })}</span>
+        <button className="btn-ghost" disabled={!hasMore || loading || adding} onClick={() => { setPage(page + 1); setSelected(null); }}>{t("다음")}</button>
       </div>}
       {error && <p className="chat-error" role="alert">{error}</p>}
-      <p className="meta friend-invite-note">초대하면 지금까지 나눈 이야기를 함께 이어가요. 친구는 두 명까지 함께할 수 있어요.</p>
+      <p className="meta friend-invite-note">{t("초대하면 지금까지 나눈 이야기를 함께 이어가요. 친구는 두 명까지 함께할 수 있어요.")}</p>
       <button className="btn-cta" disabled={!selected || adding || loading} onClick={add}>
-        {adding ? "초대하는 중…" : selected ? `${selected.name}님 초대하기` : "친구 한 명을 골라주세요"}
+        {adding ? t("초대하는 중…") : selected ? t("{name}님 초대하기", { name: selected.name }) : t("친구 한 명을 골라주세요")}
       </button>
     </dialog>
   );

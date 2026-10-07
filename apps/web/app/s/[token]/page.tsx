@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import Avatar from "../../../components/Avatar";
 import { stageOf } from "../../../lib/affection";
 import { getShareCard } from "../../../lib/share";
+import { headers } from "next/headers";
+import { pickLang, translate } from "../../../lib/i18n";
 
 export const dynamic = "force-dynamic";
 
@@ -12,7 +14,8 @@ export async function generateMetadata({ params }: { params: Promise<{ token: st
   const { token } = await params;
   const card = await getShareCard(token);
   if (!card) return { title: "말동무" };
-  const title = `${card.persona.name}님의 호감도 ${card.score} · ${stageOf(card.score)}`;
+  const lang = pickLang((await headers()).get("accept-language"));
+  const title = `${translate(lang, "{name}님의 호감도 {score}", { name: card.persona.name, score: card.score })} · ${stageOf(card.score, lang)}`;
   return {
     title,
     robots: { index: false }, // 사용자 생성 카드 — 색인 대신 소셜 미리보기만
@@ -26,26 +29,28 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
   const { token } = await params;
   const card = await getShareCard(token);
   if (!card) notFound();
+  const lang = pickLang((await headers()).get("accept-language"));
+  const t = (k: string, v?: Record<string, string | number>) => translate(lang, k, v);
   const p = card.persona;
   return (
     <main className="page" style={{ textAlign: "center" }}>
-      <p className="meta" style={{ margin: "8px 0 18px" }}>말동무 가상 연애 결과</p>
+      <p className="meta" style={{ margin: "8px 0 18px" }}>{t("말동무 가상 연애 결과")}</p>
       <div style={{ background: "var(--paper)", border: "1px solid var(--line)", borderRadius: 20, padding: "24px 20px" }}>
         <div style={{ display: "flex", justifyContent: "center" }}>
           <Avatar uuid={p.uuid} sex={p.sex} age={p.age} size={96} radius={22} />
         </div>
-        <h1 className="dot-title" style={{ margin: "14px 0 2px" }}>{p.name}님의 호감도 {card.score}</h1>
-        <p className="meta" style={{ margin: 0 }}>{p.age}세 · {p.occupation} · {p.province}</p>
+        <h1 className="dot-title" style={{ margin: "14px 0 2px" }}>{t("{name}님의 호감도 {score}", { name: p.name, score: card.score })}</h1>
+        <p className="meta" style={{ margin: 0 }}>{t("{age}세", { age: p.age })} · {p.occupation} · {p.province}</p>
         <div className="affection-track" style={{ margin: "16px 0 6px" }} aria-hidden>
           <div className="affection-fill" style={{ width: `${card.score}%` }} />
         </div>
-        <p style={{ margin: "0 0 16px", fontSize: 15, fontWeight: 600 }}>{stageOf(card.score)}</p>
+        <p style={{ margin: "0 0 16px", fontSize: 15, fontWeight: 600 }}>{stageOf(card.score, lang)}</p>
         {card.line && <p style={{ margin: 0, fontSize: 15, lineHeight: 1.7 }}>“{card.line}”</p>}
-        {card.note && <p className="meta" style={{ margin: "8px 0 0" }}>속마음: {card.note}</p>}
+        {card.note && <p className="meta" style={{ margin: "8px 0 0" }}>{t("속마음: {note}", { note: card.note })}</p>}
       </div>
-      <p style={{ margin: "24px 0 12px", fontSize: 15 }}>성별과 나이대만 고르면 나도 소개팅 시작</p>
-      <Link href="/?ref=share" className="btn-cta">나도 소개받기</Link>
-      <p className="meta" style={{ marginTop: 14 }}>100만 한국인 AI 페르소나와 진짜 같은 대화 · 말동무</p>
+      <p style={{ margin: "24px 0 12px", fontSize: 15 }}>{t("성별과 나이대만 고르면 나도 소개팅 시작")}</p>
+      <Link href="/?ref=share" className="btn-cta">{t("나도 소개받기")}</Link>
+      <p className="meta" style={{ marginTop: 14 }}>{t("100만 한국인 AI 페르소나와 진짜 같은 대화 · 말동무")}</p>
     </main>
   );
 }

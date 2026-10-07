@@ -11,6 +11,7 @@ import Avatar from "../components/Avatar";
 import { SkeletonCard } from "../components/ui";
 import TodayFriends from "../components/TodayFriends";
 import LoginSheet from "../components/LoginSheet";
+import { useT } from "../components/LangProvider";
 
 // 홈 최상단 훅: 가상 연애 즉시 시작 (성별·나이대 → 상대 1명 자동 선택 → 소개팅 방)
 const SEXES = ["여자", "남자"];
@@ -31,9 +32,9 @@ const HERO_SEEDS = [
 ];
 
 // 컨셉 스트립 메시지 (방문할 때마다 번갈아 노출)
-const HERO_MESSAGES = [
-  <>제주의 해녀부터 여든의 시인까지 — <b>평소엔 만나기 어려운 100만 명의 이웃</b>이 기다리고 있어요</>,
-  <>스무 살의 고민부터 일흔의 지혜까지 — <b>다른 세대와의 대화</b>가 여기선 어렵지 않아요</>,
+const HERO_MESSAGES: [string, string][] = [
+  ["제주의 해녀부터 여든의 시인까지 — {b}이 기다리고 있어요", "평소엔 만나기 어려운 100만 명의 이웃"],
+  ["스무 살의 고민부터 일흔의 지혜까지 — {b}가 여기선 어렵지 않아요", "다른 세대와의 대화"],
 ];
 
 // 히어로 CTA 위 "누굴 만날지 모르는" 미스터리 얼굴 (고정 시드)
@@ -62,6 +63,7 @@ const GRANNY_FACES = [
 ];
 
 export default function Home() {
+  const { t } = useT();
   const router = useRouter();
   const [featured, setFeatured] = useState<Card[] | null>(null);
   const [popular, setPopular] = useState<(Card & { chats: number })[]>([]);
@@ -82,7 +84,7 @@ export default function Home() {
 
   const quickDate = async () => {
     if (dateBusy) return;
-    if (!sex || !age) { setDateError("먼저 성별과 나이대를 골라주세요"); return; }
+    if (!sex || !age) { setDateError(t("먼저 성별과 나이대를 골라주세요")); return; }
     setDateBusy(true);
     setDateError("");
     track("dating_quick_start", { sex, age: age.label });
@@ -91,7 +93,7 @@ export default function Home() {
       router.push(`/chat/${c.id}`);
     } catch (e) {
       if (e instanceof LoginRequiredError) setShowLogin(true);
-      else setDateError(e instanceof Error ? e.message : "소개할 분을 찾지 못했어요. 잠시 후 다시 시도해주세요.");
+      else setDateError(e instanceof Error ? e.message : t("소개할 분을 찾지 못했어요. 잠시 후 다시 시도해주세요."));
       setDateBusy(false);
     }
   };
@@ -129,14 +131,14 @@ export default function Home() {
           </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", margin: "6px 0 12px" }}>
-          <p style={{ margin: 0, fontSize: 16 }}>오늘은 누구랑 얘기할까요?</p>
+          <p style={{ margin: 0, fontSize: 16 }}>{t("오늘은 누구랑 얘기할까요?")}</p>
           <Link href="/about" className="meta" style={{ fontWeight: 600, flexShrink: 0 }}>
-            서비스 소개 →
+            {t("서비스 소개 →")}
           </Link>
         </div>
         <div className="hero-strip">
           <i aria-hidden />
-          <span>{HERO_MESSAGES[heroIdx]}</span>
+          <span>{t(HERO_MESSAGES[heroIdx][0], { b: "\u0000" }).split("\u0000").map((part, i) => i === 0 ? part : <b key={i}>{t(HERO_MESSAGES[heroIdx][1])}{part}</b>)}</span>
         </div>
       </header>
 
@@ -149,26 +151,26 @@ export default function Home() {
             ))}
           </span>
           <span className="granny-banner-text">
-            <b>설레는 첫 만남, 지금 바로</b>
-            <span className="meta">성별과 나이대만 고르면 소개팅 자리로 안내해드려요</span>
+            <b>{t("설레는 첫 만남, 지금 바로")}</b>
+            <span className="meta">{t("성별과 나이대만 고르면 소개팅 자리로 안내해드려요")}</span>
           </span>
         </div>
         <div className="chip-row" style={{ marginBottom: 8 }}>
           {SEXES.map((x) => (
-            <button key={x} className={`chip${sex === x ? " on" : ""}`} onClick={() => setSex(x)} aria-pressed={sex === x}>{x}</button>
+            <button key={x} className={`chip${sex === x ? " on" : ""}`} onClick={() => setSex(x)} aria-pressed={sex === x}>{t(x)}</button>
           ))}
         </div>
         <div className="chip-row" style={{ marginBottom: 14 }}>
           {AGES.map((a) => (
-            <button key={a.label} className={`chip${age?.label === a.label ? " on" : ""}`} onClick={() => setAge(a)} aria-pressed={age?.label === a.label}>{a.label}</button>
+            <button key={a.label} className={`chip${age?.label === a.label ? " on" : ""}`} onClick={() => setAge(a)} aria-pressed={age?.label === a.label}>{t(a.label)}</button>
           ))}
         </div>
         <button className="btn-cta" onClick={quickDate} disabled={dateBusy}>
-          {dateBusy ? "소개할 분을 찾는 중..." : "바로 소개받기"}
+          {dateBusy ? t("소개할 분을 찾는 중...") : t("바로 소개받기")}
         </button>
         {dateError && <p className="chat-error" style={{ padding: "8px 0 0" }} role="alert">{dateError}</p>}
         <Link href="/dating" className="meta" style={{ display: "block", textAlign: "center", marginTop: 10, fontWeight: 600 }}>
-          직접 골라서 만나기 →
+          {t("직접 골라서 만나기 →")}
         </Link>
       </section>
 
@@ -181,8 +183,8 @@ export default function Home() {
           ))}
         </span>
         <span className="granny-banner-text">
-          <b>욕쟁이 할매</b>
-          <span className="meta">지역별 할매한테 한바탕 타박 들으러 가기</span>
+          <b>{t("욕쟁이 할매")}</b>
+          <span className="meta">{t("지역별 할매한테 한바탕 타박 들으러 가기")}</span>
         </span>
         {/* 화면당 coral 강조 1개 원칙: 두 번째 배너 화살표는 톤 다운 */}
         <span className="granny-banner-go" style={{ color: "var(--brown-soft)" }} aria-hidden>→</span>
@@ -198,26 +200,26 @@ export default function Home() {
         </div>
         <button className="btn-ghost btn-hero" style={{ width: "100%" }} onClick={meetRandom} disabled={randomLoading}>
           {randomLoading ? (
-            "인연을 찾는 중..."
+            t("인연을 찾는 중...")
           ) : (
             <>
               <svg width="17" height="17" viewBox="0 0 16 16" shapeRendering="crispEdges" aria-hidden>
                 <path d="M7 2h2v5H7zM7 9h2v5H7zM2 7h5v2H2zM9 7h5v2H9z" fill="var(--coral)" />
               </svg>
-              오늘의 인연 만나기
+              {t("오늘의 인연 만나기")}
             </>
           )}
         </button>
         <p className="meta" style={{ textAlign: "center", margin: "10px 0 30px" }}>
-          어떤 이웃을 만날지는 눌러봐야 알아요
+          {t("어떤 이웃을 만날지는 눌러봐야 알아요")}
         </p>
       </div>
 
       <TodayFriends />
       {showLogin && <LoginSheet onClose={() => setShowLogin(false)} />}
 
-      <h2 className="dot-title">오늘의 이웃</h2>
-      <p className="meta" style={{ margin: "4px 0 14px" }}>매일 새로운 이웃을 소개해드려요</p>
+      <h2 className="dot-title">{t("오늘의 이웃")}</h2>
+      <p className="meta" style={{ margin: "4px 0 14px" }}>{t("매일 새로운 이웃을 소개해드려요")}</p>
       <div className="card-grid">
         {featured === null
           ? Array.from({ length: 5 }).map((_, i) => <SkeletonCard key={i} />)
@@ -226,20 +228,20 @@ export default function Home() {
 
       <DotDivider />
 
-      <h2 className="dot-title">요즘 이런 고민이 있다면</h2>
-      <p className="meta" style={{ margin: "4px 0 14px" }}>골라주시면 어울리는 말동무를 찾아드려요</p>
+      <h2 className="dot-title">{t("요즘 이런 고민이 있다면")}</h2>
+      <p className="meta" style={{ margin: "4px 0 14px" }}>{t("골라주시면 어울리는 말동무를 찾아드려요")}</p>
       <div className="chip-wrap" style={{ marginBottom: 32 }}>
         {CONCERNS.map((c) => (
           <button key={c} className="chip" onClick={() => router.push(`/recommend?concern=${encodeURIComponent(c)}`)}>
-            {c}
+            {t(c)}
           </button>
         ))}
       </div>
 
       {popular.length > 0 && (
         <>
-          <h2 className="dot-title">요즘 인기</h2>
-          <p className="meta" style={{ margin: "2px 0 12px" }}>이번 주에 대화가 많았던 이웃들이에요</p>
+          <h2 className="dot-title">{t("요즘 인기")}</h2>
+          <p className="meta" style={{ margin: "2px 0 12px" }}>{t("이번 주에 대화가 많았던 이웃들이에요")}</p>
           <div className="card-grid">
             {popular.slice(0, 3).map((p) => (
               <PersonaCard key={p.uuid} p={p} />

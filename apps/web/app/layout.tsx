@@ -6,6 +6,9 @@ import RegisterSW from "../components/RegisterSW";
 import Analytics from "../components/Analytics";
 import AppBanner from "../components/AppBanner";
 import LimitNotice from "../components/LimitNotice";
+import { LangProvider } from "../components/LangProvider";
+import { pickLang } from "../lib/i18n";
+import { headers } from "next/headers";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.maldongmu.app";
 
@@ -45,9 +48,11 @@ export const viewport: Viewport = {
   themeColor: "#FDF6EF",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // 기기 언어(Accept-Language)로 화면 문구 언어를 정한다. 서버·클라이언트가 같은 값을 쓰므로 깜빡임 없음
+  const lang = pickLang((await headers()).get("accept-language"));
   return (
-    <html lang="ko">
+    <html lang={lang}>
       <head>
         <link
           rel="stylesheet"
@@ -55,6 +60,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body>
+        <LangProvider lang={lang}>
         <AppBanner />
         {children}
         <Footer />
@@ -62,6 +68,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <RegisterSW />
         <Analytics />
         <LimitNotice />
+        </LangProvider>
       </body>
     </html>
   );

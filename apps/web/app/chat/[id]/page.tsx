@@ -13,11 +13,12 @@ import AffectionMeter from "../../../components/AffectionMeter";
 import { stageOf } from "../../../lib/affection";
 import ReviewSheet from "../../../components/ReviewSheet";
 import ReportSheet from "../../../components/ReportSheet";
+import { useT } from "../../../components/LangProvider";
 
 interface Msg extends ConversationMessage { streaming?: boolean }
 interface Affection { score: number; change: number; note: string }
 // 첫 만남의 첫인상 (서버 AFFECTION.start와 동일). 아직 심판 결과가 없을 때 표시
-const FIRST_IMPRESSION: Affection = { score: 25, change: 0, note: "첫 만남이에요. 편하게 말을 건네보세요." };
+const FIRST_IMPRESSION: Affection = { score: 25, change: 0, note: "첫 만남이에요. 편하게 말을 건네보세요." }; // note는 표시 시 t()
 const TOPICS = ["오늘 있었던 소소한 일", "평생 한 가지 음식만 먹는다면?", "요즘 나를 웃게 하는 것"];
 
 export default function ChatPage({ params }: { params: Promise<{ id: string }> }) {
@@ -26,6 +27,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
 }
 
 function ChatRoom({ id }: { id: string }) {
+  const { t, lang } = useT();
   const router = useRouter();
   const [participants, setParticipants] = useState<Card[]>([]);
   const [mode, setMode] = useState<ConversationSnapshot["mode"]>(null);
@@ -60,12 +62,12 @@ function ChatRoom({ id }: { id: string }) {
     try {
       const { token } = await createShare(id);
       const url = `${location.origin}/s/${token}?ref=share`;
-      const text = `${persona.name}님의 호감도 ${affection.score} · ${stageOf(affection.score)} — 말동무 가상 연애`;
+      const text = t("{name}님의 호감도 {score} · {stage} — 말동무 가상 연애", { name: persona.name, score: affection.score, stage: stageOf(affection.score, lang) });
       if (navigator.share) await navigator.share({ title: text, text, url });
-      else { await navigator.clipboard.writeText(url); setToast("링크를 복사했어요"); setTimeout(() => setToast(""), 2000); }
+      else { await navigator.clipboard.writeText(url); setToast(t("링크를 복사했어요")); setTimeout(() => setToast(""), 2000); }
     } catch (e) {
       if (e instanceof Error && e.name === "AbortError") return; // 공유 시트 닫음
-      setToast("공유 링크를 만들지 못했어요"); setTimeout(() => setToast(""), 2000);
+      setToast(t("공유 링크를 만들지 못했어요")); setTimeout(() => setToast(""), 2000);
     }
   };
   const [error, setError] = useState("");
@@ -107,7 +109,7 @@ function ChatRoom({ id }: { id: string }) {
         }
         if (alive) applySnapshot(c);
       } catch {
-        if (alive) setError("대화를 불러오지 못했어요. 새로고침해 다시 연결해주세요.");
+        if (alive) setError(t("대화를 불러오지 못했어요. 새로고침해 다시 연결해주세요."));
       } finally {
         if (alive) setLoading(false);
       }
@@ -135,7 +137,7 @@ function ChatRoom({ id }: { id: string }) {
     transition.current = true;
     setStopping(true);
     try { await interrupt(); }
-    catch { setError("대화가 멈췄는지 확인하지 못했어요. 잠시 후 다시 시도해주세요."); }
+    catch { setError(t("대화가 멈췄는지 확인하지 못했어요. 잠시 후 다시 시도해주세요.")); }
     finally {
       transition.current = false;
       setStopping(false);
@@ -151,7 +153,7 @@ function ChatRoom({ id }: { id: string }) {
       setStopping(true);
       try { await interrupt(); }
       catch {
-        setError("아직 대화가 멈추지 않았어요. 잠시 후 다시 보내주세요.");
+        setError(t("아직 대화가 멈추지 않았어요. 잠시 후 다시 보내주세요."));
         transition.current = false;
         setStopping(false);
         return;
@@ -204,7 +206,7 @@ function ChatRoom({ id }: { id: string }) {
         if (!controller.signal.aborted && mounted.current) {
           if (e instanceof LoginRequiredError) { setShowLogin(true); setInput(text); }
           else if (e instanceof QuotaExceededError) { setShowQuota(true); setInput(text); }
-          else setError(e instanceof Error ? e.message : "연결을 잠시 쉬고 있어요. 다시 이야기해주세요.");
+          else setError(e instanceof Error ? e.message : t("연결을 잠시 쉬고 있어요. 다시 이야기해주세요."));
           try {
             const c = await apiGet<ConversationSnapshot>(`/conversations/${id}`);
             if (mounted.current && !controller.signal.aborted) applySnapshot(c);
@@ -226,22 +228,22 @@ function ChatRoom({ id }: { id: string }) {
   return (
     <div className="chat-page">
       <header className="chat-head">
-        <button className="chat-back" onClick={() => router.push("/me")} aria-label="이웃 수첩으로">←</button>
+        <button className="chat-back" onClick={() => router.push("/me")} aria-label={t("이웃 수첩으로")}>←</button>
         <div className="chat-faces">
           {participants.map((p) => <Avatar key={p.uuid} uuid={p.uuid} sex={p.sex} age={p.age} size={isGroup ? 30 : 36} radius={10} />)}
         </div>
         <div className="chat-heading">
-          <p>{participants.map((p) => p.name).join(" · ") || "대화 불러오는 중"}</p>
-          <span className="meta">{isGroup ? "나까지 셋이서 수다" : persona ? `${isDating ? "가상 연애 · " : ""}${persona.age}세 · ${persona.occupation}` : "잠시만 기다려주세요"}</span>
+          <p>{participants.map((p) => p.name).join(" · ") || t("대화 불러오는 중")}</p>
+          <span className="meta">{isGroup ? t("나까지 셋이서 수다") : persona ? `${isDating ? t("가상 연애 · ") : ""}${t("{age}세", { age: persona.age })} · ${persona.occupation}` : t("잠시만 기다려주세요")}</span>
         </div>
-        {!isGroup && !isDating && persona && groupEnabled && <button className="btn-ghost invite-friend" disabled={busy || loading} onClick={() => setShowPicker(true)}>+ 친구 초대</button>}
+        {!isGroup && !isDating && persona && groupEnabled && <button className="btn-ghost invite-friend" disabled={busy || loading} onClick={() => setShowPicker(true)}>{t("+ 친구 초대")}</button>}
       </header>
-      {isGroup && <p className="group-chat-guide">친구들이 짧게 이야기한 뒤 기다려요. 언제든 끼어들어도 좋아요.</p>}
-      <div className="chat-body" ref={bodyRef} role="log" aria-label="대화 내용" aria-live="off"
+      {isGroup && <p className="group-chat-guide">{t("친구들이 짧게 이야기한 뒤 기다려요. 언제든 끼어들어도 좋아요.")}</p>}
+      <div className="chat-body" ref={bodyRef} role="log" aria-label={t("대화 내용")} aria-live="off"
         onScroll={(e) => { const el = e.currentTarget; nearBottom.current = el.scrollHeight - el.scrollTop - el.clientHeight < 100; }}>
-        {loading && <p className="empty">대화를 불러오고 있어요…</p>}
-        {msgs.length > 0 && msgs.length <= 2 && <p className="meta chat-disclosure">말동무의 친구들은 AI 페르소나예요</p>}
-        {!loading && !msgs.length && persona && <p className="empty">{persona.name}님이 기다리고 있어요.<br />먼저 인사를 건네볼까요?</p>}
+        {loading && <p className="empty">{t("대화를 불러오고 있어요…")}</p>}
+        {msgs.length > 0 && msgs.length <= 2 && <p className="meta chat-disclosure">{t("말동무의 친구들은 AI 페르소나예요")}</p>}
+        {!loading && !msgs.length && persona && <p className="empty">{t("{name}님이 기다리고 있어요.", { name: persona.name })}<br />{t("먼저 인사를 건네볼까요?")}</p>}
         {msgs.map((m, i) => {
           const speaker = participants.find((p) => p.uuid === m.speakerUuid) ?? persona;
           return m.role === "user"
@@ -251,27 +253,27 @@ function ChatRoom({ id }: { id: string }) {
                 <div className="speaker-message">
                   {isGroup && <span className="speaker-name">{speaker?.name}</span>}
                   <div className="bubble persona">{m.content || (m.streaming ? "…" : "")}{m.streaming && <span className="cursor-blink" aria-hidden>▮</span>}</div>
-                  {m.id && !m.streaming && m.content && <button className="bubble-report" onClick={() => setReportTarget(m)} aria-label="이 답변 신고하기">신고</button>}
+                  {m.id && !m.streaming && m.content && <button className="bubble-report" onClick={() => setReportTarget(m)} aria-label={t("이 답변 신고하기")}>{t("신고")}</button>}
                 </div>
               </div>;
         })}
         {isGroup && !loading && !msgs.some((m) => m.role === "user") && <div className="group-topic-list">
-          <p className="meta">이런 이야기로 시작해볼까요?</p>
-          {TOPICS.map((topic) => <button key={topic} className="chip" disabled={busy} onClick={() => send(topic)}>{topic}</button>)}
+          <p className="meta">{t("이런 이야기로 시작해볼까요?")}</p>
+          {TOPICS.map((topic) => <button key={topic} className="chip" disabled={busy} onClick={() => send(t(topic))}>{t(topic)}</button>)}
         </div>}
       </div>
       {error && <div className="chat-error" role="alert">{error}</div>}
       {isGroup && !loading && <div className="group-turn-status">
-        <span className="meta" role="status">{stopping ? "친구들이 말을 멈추고 있어요…" : busy ? `친구들이 이야기 중이에요${turn ? ` · ${turn}/4` : ""}` : "이제 당신 이야기를 들려주세요"}</span>
-        {busy && <button className="btn-ghost" onClick={stop} disabled={stopping}>나도 한마디</button>}
+        <span className="meta" role="status">{stopping ? t("친구들이 말을 멈추고 있어요…") : busy ? `${t("친구들이 이야기 중이에요")}${turn ? ` · ${turn}/4` : ""}` : t("이제 당신 이야기를 들려주세요")}</span>
+        {busy && <button className="btn-ghost" onClick={stop} disabled={stopping}>{t("나도 한마디")}</button>}
       </div>}
-      {isDating && !loading && <AffectionMeter score={affection.score} change={affection.change} note={affection.note} onShare={share} />}
+      {isDating && !loading && <AffectionMeter score={affection.score} change={affection.change} note={t(affection.note)} onShare={share} />}
       <form className="chat-input-row" onSubmit={(e) => { e.preventDefault(); send(); }}>
         <input ref={inputRef} value={input} onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter" && e.nativeEvent.isComposing) e.preventDefault(); }}
-          aria-label="메시지" placeholder={isGroup && busy ? "한마디 보내고 대화에 끼어들기" : "메시지를 입력해주세요"}
+          aria-label={t("메시지")} placeholder={isGroup && busy ? t("한마디 보내고 대화에 끼어들기") : t("메시지를 입력해주세요")}
           maxLength={2000} disabled={loading || !persona} />
-        <button type="submit" className="chat-send" disabled={loading || stopping || (!isGroup && busy) || !input.trim() || !persona} aria-label={busy && isGroup ? "끼어들어 보내기" : "보내기"}>↑</button>
+        <button type="submit" className="chat-send" disabled={loading || stopping || (!isGroup && busy) || !input.trim() || !persona} aria-label={busy && isGroup ? t("끼어들어 보내기") : t("보내기")}>↑</button>
       </form>
       {showPicker && persona && <FriendPicker conversationId={id} currentUuid={persona.uuid}
         onClose={() => setShowPicker(false)} onAdded={(c) => { applySnapshot(c); setShowPicker(false); nearBottom.current = true; }} />}
@@ -279,13 +281,13 @@ function ChatRoom({ id }: { id: string }) {
       {showQuota && <QuotaSheet onClose={() => setShowQuota(false)} />}
       {milestone && persona && (
         <div className="sheet-back" onClick={() => setMilestone(null)}>
-          <div className="sheet" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="호감도 달성">
-            <h2 className="dot-title" style={{ marginBottom: 6 }}>호감도 {milestone} 달성!</h2>
+          <div className="sheet" onClick={(e) => e.stopPropagation()} role="dialog" aria-label={t("호감도 달성")}>
+            <h2 className="dot-title" style={{ marginBottom: 6 }}>{t("호감도 {m} 달성!", { m: milestone })}</h2>
             <p style={{ fontSize: 14, margin: "0 0 18px", lineHeight: 1.7 }}>
-              {persona.name}님의 마음이 {stageOf(affection.score)}. 이 순간을 카드로 남겨 친구에게 자랑해볼까요?
+              {t("{name}님의 마음이 {stage}. 이 순간을 카드로 남겨 친구에게 자랑해볼까요?", { name: persona.name, stage: stageOf(affection.score, lang) })}
             </p>
-            <button className="btn-cta" onClick={() => { setMilestone(null); share(); }}>결과 카드 공유하기</button>
-            <button className="btn-ghost" style={{ width: "100%", marginTop: 10, border: "none" }} onClick={() => { setMilestone(null); if (milestone >= 60) maybeReview("affection_60"); }}>계속 이야기하기</button>
+            <button className="btn-cta" onClick={() => { setMilestone(null); share(); }}>{t("결과 카드 공유하기")}</button>
+            <button className="btn-ghost" style={{ width: "100%", marginTop: 10, border: "none" }} onClick={() => { setMilestone(null); if (milestone >= 60) maybeReview("affection_60"); }}>{t("계속 이야기하기")}</button>
           </div>
         </div>
       )}

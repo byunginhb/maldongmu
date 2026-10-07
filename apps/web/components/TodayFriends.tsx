@@ -5,8 +5,10 @@ import { useRouter } from "next/navigation";
 import { apiPost, chatFeatures, LoginRequiredError } from "../lib/api";
 import Avatar from "./Avatar";
 import LoginSheet from "./LoginSheet";
+import { useT } from "./LangProvider";
 
 export default function TodayFriends() {
+  const { t } = useT();
   const router = useRouter();
   const [available, setAvailable] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -30,7 +32,7 @@ export default function TodayFriends() {
       router.push(`/chat/${c.id}`);
     } catch (e) {
       if (e instanceof LoginRequiredError) setLogin(true);
-      else setError("친구들을 만나지 못했어요. 잠시 후 다시 시도해주세요.");
+      else setError(t("친구들을 만나지 못했어요. 잠시 후 다시 시도해주세요."));
       pending.current = false;
       setBusy(false);
     }
@@ -44,8 +46,8 @@ export default function TodayFriends() {
           <Avatar uuid="today-friend-older" sex="여자" age={68} size={38} />
         </span>
         <span className="today-friends-copy">
-          <b>{busy ? "친구들을 부르고 있어요…" : "오늘의 친구 2명과 같이 놀기"}</b>
-          <span className="meta">나이는 달라도, 수다는 함께. 나까지 셋이서!</span>
+          <b>{busy ? t("친구들을 부르고 있어요…") : t("오늘의 친구 2명과 같이 놀기")}</b>
+          <span className="meta">{t("나이는 달라도, 수다는 함께. 나까지 셋이서!")}</span>
         </span>
         <span aria-hidden>→</span>
       </button>

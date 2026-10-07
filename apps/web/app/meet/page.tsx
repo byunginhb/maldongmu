@@ -5,8 +5,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getOccupations, type OccupationEntry } from "../../lib/api";
 import Avatar from "../../components/Avatar";
+import { useT } from "../../components/LangProvider";
 
 export default function MeetPage() {
+  const { t } = useT();
   const router = useRouter();
   const [items, setItems] = useState<OccupationEntry[] | null>(null);
 
@@ -16,9 +18,9 @@ export default function MeetPage() {
 
   return (
     <main className="page">
-      <h1 className="dot-title">만나보고 싶던 사람들</h1>
+      <h1 className="dot-title">{t("만나보고 싶던 사람들")}</h1>
       <p className="meta" style={{ margin: "4px 0 20px" }}>
-        평소엔 만나기 어려운 이웃들이에요. 매일 새로운 분이 인사드려요.
+        {t("평소엔 만나기 어려운 이웃들이에요. 매일 새로운 분이 인사드려요.")}
       </p>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -32,20 +34,20 @@ export default function MeetPage() {
                   <Avatar uuid={o.persona.uuid} sex={o.persona.sex} age={o.persona.age} size={48} radius={12} />
                   <div style={{ minWidth: 0 }}>
                     <p className="card-name">
-                      {o.persona.name} <span style={{ fontWeight: 400 }}>· {o.persona.age}세</span>
+                      {o.persona.name} <span style={{ fontWeight: 400 }}>· {t("{age}세", { age: o.persona.age })}</span>
                     </p>
                     <p className="card-oneliner">{o.persona.oneLiner}</p>
                   </div>
                 </div>
                 <span className="meta" style={{ display: "block", marginTop: 10, fontWeight: 600 }} onClick={(e) => { e.preventDefault(); e.stopPropagation(); router.push(`/meet/${o.key}`); }}>
-                  다른 {o.label} {o.count}명 더 보기 →
+                  {t("다른 {label} {n}명 더 보기 →", { label: o.label, n: o.count })}
                 </span>
               </Link>
             ))}
       </div>
 
       {items !== null && items.length === 0 && (
-        <p className="empty">아직 소개할 이웃이 없어요. 곧 찾아뵐게요.</p>
+        <p className="empty">{t("아직 소개할 이웃이 없어요. 곧 찾아뵐게요.")}</p>
       )}
     </main>
   );

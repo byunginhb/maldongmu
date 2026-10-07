@@ -58,6 +58,7 @@ cd android && echo "sdk.dir=$ANDROID_HOME" > local.properties
 | 1.1.2 | 4 | R8 코드 축소·난독화 + 리소스 축소 켬 (Play "DEX 코드 최적화 기준 미만" 대응). 앱 기능 변경 없음 |
 | 1.2.0 | 5 | 인앱 리뷰(expo-store-review): 웹이 `{type:"review"}` postMessage → 구글 별점 창. `window.__mdmApp` 플래그 주입 |
 | 1.2.1 | 6 | 아이콘 교체: 말풍선 안 하트 (스토어 아이콘과 동일, `scripts/store/icons.py`) |
+| 1.2.2 | 7 | 화면 다국어(영어·일본어, 기기 언어 자동). 앱 코드 변경 없음 — 스토어 '최근 업데이트' 신호용 |
 
 - 이 맥(2026-09)의 툴체인: JDK `/opt/homebrew/opt/openjdk@17`, SDK `~/Library/Android/sdk` (build-tools 34~36). `~/android-tools/`(키스토어·구 툴체인)는 맥미니 쪽.
 - 스토어 스크린샷 재생성: 라이브 사이트를 Playwright로 캡처해 `docs/store/images/raw/`에 두고 `python3 scripts/store/compose.py`.

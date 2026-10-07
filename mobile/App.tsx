@@ -18,7 +18,7 @@ import * as StoreReview from "expo-store-review";
 
 const SITE = "https://www.maldongmu.app";
 // 웹이 앱 기능 유무를 알 수 있게 주입. 구버전 앱(플래그 없음)에서는 웹이 스토어 링크로 폴백한다.
-const APP_FLAGS = `window.__mdmApp = { review: true, version: "1.2.1" }; true;`;
+const APP_FLAGS = `window.__mdmApp = { review: true, version: "1.2.2" }; true;`;
 const CREAM = "#f2e9d9";
 const PAPER = "#ffffff";
 const CORAL = "#e8613c";

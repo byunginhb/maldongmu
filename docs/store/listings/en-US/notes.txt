@@ -1,2 +1,2 @@
-- New icon: a heart in the speech bubble 💗
-- Share your card when affection hits 60 or 80
+- The app now speaks English: menus, buttons and guides follow your device language
+- Personas already replied in your language — now the whole app does
