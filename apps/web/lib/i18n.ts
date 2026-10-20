@@ -6,11 +6,36 @@
 export type Lang = "ko" | "en" | "ja";
 
 export function pickLang(accept?: string | null): Lang {
-  const first = (accept || "").split(",")[0].trim().toLowerCase();
-  if (first.startsWith("ko")) return "ko";
-  if (first.startsWith("ja")) return "ja";
-  if (!first) return "ko";
-  return "en";
+  if (!accept?.trim()) return "ko";
+
+  let selected: Lang = "en";
+  let highestQ = 0;
+  for (const range of accept.split(",")) {
+    const [tag, ...params] = range.trim().toLowerCase().split(";");
+    const match = /^(ko|en|ja)(?:-[a-z0-9]{1,8})*$/.exec(tag.trim());
+    if (!match) continue;
+
+    let q = 1;
+    let hasQ = false;
+    let valid = true;
+    for (const param of params) {
+      const [name, ...values] = param.trim().split("=");
+      if (name.trim() !== "q") continue;
+      const value = values.join("=").trim();
+      if (hasQ || !/^(?:0(?:\.[0-9]{0,3})?|1(?:\.0{0,3})?)$/.test(value)) {
+        valid = false;
+        break;
+      }
+      hasQ = true;
+      q = Number(value);
+    }
+    // Strict comparison preserves the original order when preferences tie.
+    if (valid && q > highestQ) {
+      selected = match[1] as Lang;
+      highestQ = q;
+    }
+  }
+  return selected;
 }
 
 type Dict = Record<string, string>;
