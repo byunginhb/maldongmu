@@ -41,6 +41,13 @@ export function pickLang(accept?: string | null): Lang {
 type Dict = Record<string, string>;
 
 const en: Dict = {
+  "어떤 말부터 건네볼까요?": "What would you like to say first?",
+  "문장을 누르면 AI 이웃과 대화를 시작하고, 선택한 문장이 바로 전송돼요.": "Tap a sentence to start a conversation with an AI neighbor. Your chosen sentence is sent automatically.",
+  "오늘 하루는 어떠셨어요?": "How has your day been?",
+  "요즘 즐겨 하는 일이 있으세요?": "What have you been enjoying lately?",
+  "좋아하는 음식 이야기를 나눠볼까요?": "Shall we talk about our favorite foods?",
+  "이웃과 대화를 연결하고 있어요…": "Connecting you with a neighbor…",
+  "대화를 시작하지 못했어요. 잠시 후 다시 눌러주세요.": "We couldn't start your conversation. Please try again in a moment.",
   // 탭바
   "홈": "Home", "검색": "Search", "만남": "Meet", "인터뷰": "Interview", "이웃 수첩": "Notebook",
   // 홈
@@ -116,6 +123,13 @@ const en: Dict = {
 };
 
 const ja: Dict = {
+  "어떤 말부터 건네볼까요?": "どんな言葉から話しかけましょうか？",
+  "문장을 누르면 AI 이웃과 대화를 시작하고, 선택한 문장이 바로 전송돼요.": "文を押すとAIのご近所さんとの会話が始まり、選んだ文がそのまま送信されます。",
+  "오늘 하루는 어떠셨어요?": "今日はどんな一日でしたか？",
+  "요즘 즐겨 하는 일이 있으세요?": "最近、楽しんでいることはありますか？",
+  "좋아하는 음식 이야기를 나눠볼까요?": "好きな食べ物についてお話ししませんか？",
+  "이웃과 대화를 연결하고 있어요…": "ご近所さんとの会話につないでいます…",
+  "대화를 시작하지 못했어요. 잠시 후 다시 눌러주세요.": "会話を始められませんでした。少し待ってからもう一度押してください。",
   "홈": "ホーム", "검색": "検索", "만남": "出会い", "인터뷰": "インタビュー", "이웃 수첩": "ご近所ノート",
   "오늘은 누구랑 얘기할까요?": "今日は誰と話しますか？", "서비스 소개 →": "サービス紹介 →",
   "제주의 해녀부터 여든의 시인까지 — {b}이 기다리고 있어요": "済州の海女から八十歳の詩人まで — {b}が待っています", "평소엔 만나기 어려운 100만 명의 이웃": "普段は会えない100万人の隣人",

@@ -14,6 +14,7 @@ import { stageOf } from "../../../lib/affection";
 import ReviewSheet from "../../../components/ReviewSheet";
 import ReportSheet from "../../../components/ReportSheet";
 import { useT } from "../../../components/LangProvider";
+import { takeOnboardingDraft } from "../../../lib/onboarding-draft";
 
 interface Msg extends ConversationMessage { streaming?: boolean }
 interface Affection { score: number; change: number; note: string }
@@ -78,6 +79,7 @@ function ChatRoom({ id }: { id: string }) {
   const transition = useRef(false);
   const mounted = useRef(true);
   const nearBottom = useRef(true);
+  const onboardingHandled = useRef(false);
   const isGroup = participants.length === 2;
   const isDating = mode === "dating";
   const persona = participants[0];
@@ -225,6 +227,13 @@ function ChatRoom({ id }: { id: string }) {
     await finished;
   };
 
+  useEffect(() => {
+    if (loading || !persona || busy || transition.current || active.current || onboardingHandled.current) return;
+    onboardingHandled.current = true;
+    const text = takeOnboardingDraft(id);
+    if (text) void send(text);
+  });
+
   return (
     <div className="chat-page">
       <header className="chat-head">
@@ -269,7 +278,7 @@ function ChatRoom({ id }: { id: string }) {
       </div>}
       {isDating && !loading && <AffectionMeter score={affection.score} change={affection.change} note={t(affection.note)} onShare={share} />}
       <form className="chat-input-row" onSubmit={(e) => { e.preventDefault(); send(); }}>
-        <input ref={inputRef} value={input} onChange={(e) => setInput(e.target.value)}
+        <input data-testid="company-message-input" ref={inputRef} value={input} onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter" && e.nativeEvent.isComposing) e.preventDefault(); }}
           aria-label={t("메시지")} placeholder={isGroup && busy ? t("한마디 보내고 대화에 끼어들기") : t("메시지를 입력해주세요")}
           maxLength={2000} disabled={loading || !persona} />

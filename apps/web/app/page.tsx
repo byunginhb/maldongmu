@@ -12,6 +12,7 @@ import { SkeletonCard } from "../components/ui";
 import TodayFriends from "../components/TodayFriends";
 import LoginSheet from "../components/LoginSheet";
 import { useT } from "../components/LangProvider";
+import OnboardingPrompts from "../components/OnboardingPrompts";
 
 // 홈 최상단 훅: 가상 연애 즉시 시작 (성별·나이대 → 상대 1명 자동 선택 → 소개팅 방)
 const SEXES = ["여자", "남자"];
@@ -141,6 +142,8 @@ export default function Home() {
           <span>{t(HERO_MESSAGES[heroIdx][0], { b: "\u0000" }).split("\u0000").map((part, i) => i === 0 ? part : <b key={i}>{t(HERO_MESSAGES[heroIdx][1])}{part}</b>)}</span>
         </div>
       </header>
+
+      <OnboardingPrompts featured={featured} onLoginRequired={() => setShowLogin(true)} />
 
       {/* 최상단 훅: 가상 연애 즉시 시작 — 화면당 coral CTA는 이 버튼 하나 */}
       <section className="dating-hero" aria-label="가상 연애 바로 시작">

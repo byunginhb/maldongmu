@@ -89,6 +89,22 @@ h2.dot-title { font-size: 18px; margin: 0; }
 }
 .hero-strip b { font-weight: 700; }
 
+/* 첫 대화 예시 — 기존 홈 폭과 색 토큰 유지 */
+.onboarding-prompts { margin: 0 0 32px; text-align: left; min-width: 0; }
+.onboarding-description { margin: 8px 0 14px; overflow-wrap: anywhere; }
+.onboarding-list { display: flex; flex-direction: column; gap: 8px; }
+.onboarding-prompt {
+  width: 100%; min-width: 0; min-height: 44px; padding: 12px 16px;
+  border: 1px solid var(--line); border-radius: 16px;
+  background: var(--sand); color: var(--brown);
+  font-family: var(--font-body); font-size: 15px; font-weight: 600;
+  line-height: 1.65; text-align: left; white-space: normal; overflow-wrap: anywhere;
+}
+.onboarding-prompt:focus-visible { outline: 2px solid var(--brown); outline-offset: 3px; }
+.onboarding-prompt:disabled { opacity: 0.65; cursor: default; }
+.onboarding-status { margin: 8px 0 0; overflow-wrap: anywhere; }
+.onboarding-prompts .chat-error { padding: 8px 0 0; overflow-wrap: anywhere; }
+
 /* 도트 구분선 장식 */
 .dot-divider { display: flex; gap: 6px; margin: 28px 0; }
 .dot-divider i { width: 4px; height: 4px; display: block; }
