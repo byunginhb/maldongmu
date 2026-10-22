@@ -1,25 +1,4 @@
-const AGE_BUCKETS = [20, 30, 50, 70] as const;
-
-function avatarVariant(uuid: string): number {
-  const hexSuffix = uuid.slice(-8);
-  if (/^[0-9a-f]{8}$/i.test(hexSuffix)) {
-    return Number.parseInt(hexSuffix, 16) % 6;
-  }
-
-  let hash = 2166136261;
-  for (let i = 0; i < uuid.length; i++) {
-    hash ^= uuid.charCodeAt(i);
-    hash = Math.imul(hash, 16777619);
-  }
-  return (hash >>> 0) % 6;
-}
-
-function ageBucket(age: number): (typeof AGE_BUCKETS)[number] {
-  if (age < 30) return 20;
-  if (age < 45) return 30;
-  if (age < 65) return 50;
-  return 70;
-}
+import { avatarSource } from "../lib/avatar-catalog";
 
 export default function Avatar({
   uuid,
@@ -27,16 +6,16 @@ export default function Avatar({
   age,
   size = 52,
   radius = 12,
+  loading = "lazy",
 }: {
   uuid: string;
   sex?: string;
   age?: number;
   size?: number;
   radius?: number;
+  loading?: "lazy" | "eager";
 }) {
-  const gender = sex?.includes("여") ? "female" : "male";
-  const bucket = ageBucket(age ?? 30);
-  const src = `/avatars/v1/${gender}-${bucket}-v${avatarVariant(uuid)}.webp`;
+  const src = avatarSource(uuid, sex, age);
 
   return (
     <span
@@ -56,7 +35,7 @@ export default function Avatar({
         alt=""
         width={size}
         height={size}
-        loading="lazy"
+        loading={loading}
         decoding="async"
         style={{ display: "block", width: "100%", height: "100%", objectFit: "cover" }}
       />

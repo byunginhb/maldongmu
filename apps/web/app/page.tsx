@@ -110,9 +110,9 @@ export default function Home() {
   };
 
   return (
-    <main className="page">
-      <header style={{ marginBottom: 28 }}>
-        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>
+    <main className="page company-home">
+      <header className="company-home-reveal" data-testid="company-home-reveal" style={{ marginBottom: 28 }}>
+        <div className="company-home-heading">
           <h1 className="dot-title" style={{ color: "var(--coral)", margin: 0, display: "flex", alignItems: "center", gap: 9 }}>
             <svg width="26" height="26" viewBox="0 0 16 16" shapeRendering="crispEdges" aria-hidden style={{ flexShrink: 0 }}>
               <path
@@ -123,15 +123,15 @@ export default function Home() {
             </svg>
             말동무
           </h1>
-          <div className="hero-avatars" aria-hidden>
+          <div className="hero-avatars company-hero-avatars" data-testid="company-hero-avatars" aria-hidden>
             {HERO_SEEDS.map((s) => (
-              <span key={s.uuid}>
-                <Avatar uuid={s.uuid} sex={s.sex} age={s.age} size={26} radius={0} />
+              <span key={s.uuid} data-testid="company-hero-avatar">
+                <Avatar uuid={s.uuid} sex={s.sex} age={s.age} size={26} radius={0} loading="eager" />
               </span>
             ))}
           </div>
         </div>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", margin: "6px 0 12px" }}>
+        <div className="company-home-subheading">
           <p style={{ margin: 0, fontSize: 16 }}>{t("오늘은 누구랑 얘기할까요?")}</p>
           <Link href="/about" className="meta" style={{ fontWeight: 600, flexShrink: 0 }}>
             {t("서비스 소개 →")}
@@ -146,7 +146,7 @@ export default function Home() {
       <OnboardingPrompts featured={featured} onLoginRequired={() => setShowLogin(true)} />
 
       {/* 최상단 훅: 가상 연애 즉시 시작 — 화면당 coral CTA는 이 버튼 하나 */}
-      <section className="dating-hero" aria-label="가상 연애 바로 시작">
+      <section className="dating-hero company-home-reveal company-home-delay-2" data-testid="company-home-reveal" aria-label="가상 연애 바로 시작">
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
           <span className="granny-banner-faces" aria-hidden>
             {DATING_FACES.map((f) => (
@@ -160,15 +160,15 @@ export default function Home() {
         </div>
         <div className="chip-row" style={{ marginBottom: 8 }}>
           {SEXES.map((x) => (
-            <button key={x} className={`chip${sex === x ? " on" : ""}`} onClick={() => setSex(x)} aria-pressed={sex === x}>{t(x)}</button>
+            <button key={x} data-testid="company-dating-chip" className={`chip${sex === x ? " on" : ""}`} onClick={() => setSex(x)} aria-pressed={sex === x}>{t(x)}</button>
           ))}
         </div>
         <div className="chip-row" style={{ marginBottom: 14 }}>
           {AGES.map((a) => (
-            <button key={a.label} className={`chip${age?.label === a.label ? " on" : ""}`} onClick={() => setAge(a)} aria-pressed={age?.label === a.label}>{t(a.label)}</button>
+            <button key={a.label} data-testid="company-dating-chip" className={`chip${age?.label === a.label ? " on" : ""}`} onClick={() => setAge(a)} aria-pressed={age?.label === a.label}>{t(a.label)}</button>
           ))}
         </div>
-        <button className="btn-cta" onClick={quickDate} disabled={dateBusy}>
+        <button className="btn-cta" data-testid="company-dating-cta" onClick={quickDate} disabled={dateBusy}>
           {dateBusy ? t("소개할 분을 찾는 중...") : t("바로 소개받기")}
         </button>
         {dateError && <p className="chat-error" style={{ padding: "8px 0 0" }} role="alert">{dateError}</p>}

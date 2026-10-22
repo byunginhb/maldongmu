@@ -43,6 +43,7 @@ export default function OnboardingPrompts({ featured, onLoginRequired }: {
 
   return (
     <section className="onboarding-prompts" data-testid="company-onboarding" aria-labelledby="company-onboarding-title">
+      <div className="company-home-reveal company-home-delay-1" data-testid="company-home-reveal">
       <h2 id="company-onboarding-title" className="dot-title">{t("어떤 말부터 건네볼까요?")}</h2>
       <p className="meta onboarding-description">{t("문장을 누르면 AI 이웃과 대화를 시작하고, 선택한 문장이 바로 전송돼요.")}</p>
       <div className="onboarding-list">
@@ -55,6 +56,7 @@ export default function OnboardingPrompts({ featured, onLoginRequired }: {
       </div>
       <p className="meta onboarding-status" role="status">{busy ? t("이웃과 대화를 연결하고 있어요…") : ""}</p>
       {error && <p className="chat-error" role="alert">{error}</p>}
+      </div>
     </section>
   );
 }
