@@ -8,6 +8,7 @@ import DotDivider from "../../components/DotDivider";
 import { Skeleton } from "../../components/ui";
 import { RARE } from "../../lib/rare";
 import { useT } from "../../components/LangProvider";
+import { useReveal } from "../../lib/use-reveal";
 
 interface ConvItem {
   id: string;
@@ -42,6 +43,7 @@ interface Me {
 const todayUTC = () => new Date().toISOString().slice(0, 10);
 
 export default function MePage() {
+  const motionRoot = useReveal("me");
   const { t, lang } = useT();
   const [convs, setConvs] = useState<ConvItem[] | null>(null);
   const [error, setError] = useState(false);
@@ -80,7 +82,7 @@ export default function MePage() {
   const newToday = Object.values(firstMet).filter((d) => d?.slice(0, 10) === todayUTC()).length;
 
   return (
-    <main className="page">
+    <main ref={motionRoot} className="page company-notebook">
       <h1 className="dot-title">{t("이웃 수첩")}</h1>
       <p className="meta" style={{ margin: "6px 0 20px" }}>
         {me?.type === "guest"
@@ -145,7 +147,7 @@ export default function MePage() {
       {groups.length > 0 && <section className="notebook-groups">
         <h2 className="dot-title">{t("셋이서 수다")}</h2>
         <p className="meta">{t("함께 놀던 친구들이 기다리고 있어요.")}</p>
-        {groups.map((c) => <Link key={c.id} href={`/chat/${c.id}`} className="group-conversation-card">
+        {groups.map((c, index) => <Link key={c.id} href={`/chat/${c.id}`} className="group-conversation-card" data-testid="company-motion-item" data-motion-key={`group:${c.id}`} data-motion-index={index}>
           <span className="chat-faces">
             <Avatar uuid={c.personaUuid} sex={c.sex} age={c.age} size={40} />
             <Avatar uuid={c.secondPersonaUuid!} sex={c.secondSex} age={c.secondAge} size={40} />
@@ -158,7 +160,7 @@ export default function MePage() {
       {dates.length > 0 && <section className="notebook-groups">
         <h2 className="dot-title">{t("가상 연애")}</h2>
         <p className="meta">{t("설레는 이야기를 이어가볼까요?")}</p>
-        {dates.map((c) => <Link key={c.id} href={`/chat/${c.id}`} className="group-conversation-card">
+        {dates.map((c, index) => <Link key={c.id} href={`/chat/${c.id}`} className="group-conversation-card" data-testid="company-motion-item" data-motion-key={`dating:${c.personaUuid}`} data-motion-index={index}>
           <Avatar uuid={c.personaUuid} sex={c.sex} age={c.age} size={40} />
           <span><b>{c.name}</b><span className="meta">{t("{age}세 · {job} · 이어서 만나기", { age: c.age, job: c.occupation })}</span></span>
           <span aria-hidden>→</span>
@@ -168,15 +170,15 @@ export default function MePage() {
       {/* 만난 이웃 그리드 */}
       {neighbors.length > 0 && (
         <div className="notebook-grid">
-          {neighbors.map((c) => (
-            <Link key={c.personaUuid} href={`/chat/${c.id}`} className="notebook-cell" aria-label={t("{name}님과 이어서 이야기하기", { name: c.name })}>
+          {neighbors.map((c, index) => (
+            <Link key={c.personaUuid} href={`/chat/${c.id}`} className="notebook-cell" data-testid="company-motion-item" data-motion-key={`neighbor:${c.personaUuid}`} data-motion-index={index} aria-label={t("{name}님과 이어서 이야기하기", { name: c.name })}>
               <Avatar uuid={c.personaUuid} sex={c.sex} age={c.age} size={64} radius={14} />
               <p className="notebook-name">{c.name}</p>
               <p className="notebook-job">{c.occupation}</p>
               {RARE.has(c.occupation) && <span className="notebook-rare">{t("귀한 이웃")}</span>}
             </Link>
           ))}
-          <Link href="/" className="notebook-cell" aria-label={t("새 이웃 만나러 가기")}>
+          <Link href="/" className="notebook-cell" data-testid="company-motion-item" data-motion-key="new-neighbor" data-motion-index={neighbors.length} aria-label={t("새 이웃 만나러 가기")}>
             <span className="notebook-add">?</span>
             <p className="notebook-name" style={{ color: "var(--brown-soft)" }}>{t("새 이웃")}</p>
             <p className="notebook-job">{t("추가해볼까요?")}</p>

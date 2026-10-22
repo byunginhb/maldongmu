@@ -40,7 +40,7 @@ export default function TodayFriends() {
 
   return (
     <section className="today-friends">
-      <button className="today-friends-button" onClick={start} disabled={busy}>
+      <button className="today-friends-button" data-testid="company-motion-item" data-motion-key="today-friends" data-motion-index="0" onClick={start} disabled={busy}>
         <span className="chat-faces" aria-hidden>
           <Avatar uuid="today-friend-young" sex="남자" age={26} size={38} />
           <Avatar uuid="today-friend-older" sex="여자" age={68} size={38} />

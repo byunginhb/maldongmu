@@ -5,10 +5,10 @@ import type { PersonaCard as Card } from "@maldongmu/shared";
 import Avatar from "./Avatar";
 import { useT } from "./LangProvider";
 
-export default function PersonaCard({ p }: { p: Card }) {
+export default function PersonaCard({ p, motionKey, motionIndex }: { p: Card; motionKey?: string; motionIndex?: number }) {
   const { t } = useT();
   return (
-    <Link href={`/persona/${p.uuid}`} className="card">
+    <Link href={`/persona/${p.uuid}`} className="card" data-testid={motionKey ? "company-motion-item" : undefined} data-motion-key={motionKey} data-motion-index={motionIndex}>
       <Avatar uuid={p.uuid} sex={p.sex} age={p.age} />
       <div style={{ minWidth: 0 }}>
         <p className="card-name">

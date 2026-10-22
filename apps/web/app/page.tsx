@@ -13,6 +13,7 @@ import TodayFriends from "../components/TodayFriends";
 import LoginSheet from "../components/LoginSheet";
 import { useT } from "../components/LangProvider";
 import OnboardingPrompts from "../components/OnboardingPrompts";
+import { useReveal } from "../lib/use-reveal";
 
 // 홈 최상단 훅: 가상 연애 즉시 시작 (성별·나이대 → 상대 1명 자동 선택 → 소개팅 방)
 const SEXES = ["여자", "남자"];
@@ -64,6 +65,7 @@ const GRANNY_FACES = [
 ];
 
 export default function Home() {
+  const motionRoot = useReveal("home");
   const { t } = useT();
   const router = useRouter();
   const [featured, setFeatured] = useState<Card[] | null>(null);
@@ -110,7 +112,7 @@ export default function Home() {
   };
 
   return (
-    <main className="page company-home">
+    <main ref={motionRoot} className="page company-home">
       <header className="company-home-reveal" data-testid="company-home-reveal" style={{ marginBottom: 28 }}>
         <div className="company-home-heading">
           <h1 className="dot-title" style={{ color: "var(--coral)", margin: 0, display: "flex", alignItems: "center", gap: 9 }}>
@@ -226,7 +228,7 @@ export default function Home() {
       <div className="card-grid">
         {featured === null
           ? Array.from({ length: 5 }).map((_, i) => <SkeletonCard key={i} />)
-          : featured.slice(0, 5).map((p) => <PersonaCard key={p.uuid} p={p} />)}
+          : featured.slice(0, 5).map((p, index) => <PersonaCard key={p.uuid} p={p} motionKey={`featured:${p.uuid}`} motionIndex={index} />)}
       </div>
 
       <DotDivider />
@@ -246,8 +248,8 @@ export default function Home() {
           <h2 className="dot-title">{t("요즘 인기")}</h2>
           <p className="meta" style={{ margin: "2px 0 12px" }}>{t("이번 주에 대화가 많았던 이웃들이에요")}</p>
           <div className="card-grid">
-            {popular.slice(0, 3).map((p) => (
-              <PersonaCard key={p.uuid} p={p} />
+            {popular.slice(0, 3).map((p, index) => (
+              <PersonaCard key={p.uuid} p={p} motionKey={`popular:${p.uuid}`} motionIndex={index} />
             ))}
           </div>
         </>
