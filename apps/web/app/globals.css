@@ -147,7 +147,7 @@ h2.dot-title { font-size: 18px; margin: 0; }
 .hero-cta-faces > span { margin-left: -8px; width: 36px; height: 36px; border: 2px solid var(--cream); border-radius: 12px; overflow: hidden; display: inline-flex; align-items: center; justify-content: center; background: var(--sand); }
 .hero-cta-faces > span:first-child { margin-left: 0; }
 .hero-q { font-size: 18px; font-weight: 700; color: var(--brown-soft); }
-.btn-hero { height: 54px; font-size: 16px; gap: 8px; animation: hero-breathe 2.8s ease-in-out infinite; }
+.btn-hero { height: 54px; font-size: 16px; gap: 8px; }
 @keyframes hero-breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.018); } }
 @media (prefers-reduced-motion: reduce) { .btn-hero { animation: none; } }
 
@@ -557,6 +557,36 @@ h2.dot-title { font-size: 18px; margin: 0; }
 /* 가상 연애 — 홈 최상단 히어로 (성별·나이대 칩 + coral CTA) */
 .dating-hero { background: var(--paper); border: 1px solid var(--line); border-radius: 16px; padding: 16px; margin: 0 0 18px; }
 .dating-hero .chip { height: 36px; font-size: 14px; }
+
+/* 홈 전용: 다른 화면의 칩과 기존 로딩 표현에는 적용하지 않는다. */
+.company-home-heading { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 10px; }
+.company-home-subheading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; margin: 6px 0 12px; }
+.company-home .hero-strip > span,
+.company-home .granny-banner-text { min-width: 0; overflow-wrap: anywhere; }
+.company-home .dating-hero .chip-row { flex-wrap: wrap; overflow: visible; padding: 5px; }
+.company-home .dating-hero .chip {
+  min-width: 44px; min-height: 44px; height: auto; max-width: 100%;
+  padding: 10px 14px; font-size: 14px; white-space: normal; overflow-wrap: anywhere;
+}
+.company-home [data-testid="company-dating-cta"] { min-width: 44px; min-height: 48px; height: auto; padding: 10px 16px; white-space: normal; overflow-wrap: anywhere; }
+.company-home [data-testid="company-dating-chip"]:focus-visible,
+.company-home [data-testid="company-dating-cta"]:focus-visible { outline: 2px solid var(--brown); outline-offset: 3px; }
+.company-home-reveal { animation: company-home-enter 400ms ease-out both; }
+.company-home-delay-1 { animation-delay: 80ms; }
+.company-home-delay-2 { animation-delay: 160ms; }
+.company-hero-avatars { animation: company-home-float 7s ease-in-out infinite; }
+@keyframes company-home-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes company-home-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+/* 포커스·클릭을 막는 overlay, visibility, pointer-events를 추가하지 않는다. */
+@media (prefers-reduced-motion: reduce) {
+  .company-home-reveal, .company-hero-avatars { animation: none; opacity: 1; transform: none; }
+}
 
 /* 욕쟁이 할매 — 홈 상단 배너 (coral CTA 아님: 카드형 메뉴) */
 .granny-banner {
