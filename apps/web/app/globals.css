@@ -571,10 +571,35 @@ h2.dot-title { font-size: 18px; margin: 0; }
 .company-home [data-testid="company-dating-cta"] { min-width: 44px; min-height: 48px; height: auto; padding: 10px 16px; white-space: normal; overflow-wrap: anywhere; }
 .company-home [data-testid="company-dating-chip"]:focus-visible,
 .company-home [data-testid="company-dating-cta"]:focus-visible { outline: 2px solid var(--brown); outline-offset: 3px; }
-.company-home-reveal { animation: company-home-enter 400ms ease-out both; }
-.company-home-delay-1 { animation-delay: 80ms; }
-.company-home-delay-2 { animation-delay: 160ms; }
-.company-hero-avatars { animation: company-home-float 7s ease-in-out infinite; }
+/* 기본 표시를 유지하며 클라이언트 준비 뒤에만 등장 상태를 적용한다. */
+.company-motion-ready .company-motion-pending { opacity: 0; translate: 0 8px; }
+.company-motion-ready .company-motion-enter {
+  animation: company-item-enter 360ms ease-out both;
+  animation-delay: var(--company-motion-delay, 0ms);
+}
+.company-motion-ready .company-home-reveal.company-motion-enter { animation-name: company-home-enter; }
+.company-hero-avatars {
+  animation: company-home-float 7s ease-in-out infinite;
+  animation-play-state: paused;
+}
+/* 실제 카드의 :active transform과 독립적으로 합성한다. */
+@keyframes company-item-enter {
+  from { opacity: 0; translate: 0 8px; }
+  to { opacity: 1; translate: 0 0; }
+}
+[data-testid="company-motion-item"] { min-width: 44px; min-height: 44px; overflow-wrap: anywhere; }
+.company-home .card-grid { grid-template-columns: minmax(0, 1fr); }
+.company-notebook .notebook-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.company-notebook .notebook-cell { min-width: 44px; }
+.company-notebook .group-conversation-card { min-width: 0; }
+@media (min-width: 768px) {
+  .company-home .card-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .company-notebook .notebook-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+.company-motion-ready [data-testid="company-motion-item"]:focus-visible {
+  outline: 2px solid var(--brown); outline-offset: 3px;
+  opacity: 1; translate: none; animation: none;
+}
 @keyframes company-home-enter {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
@@ -586,6 +611,11 @@ h2.dot-title { font-size: 18px; margin: 0; }
 /* 포커스·클릭을 막는 overlay, visibility, pointer-events를 추가하지 않는다. */
 @media (prefers-reduced-motion: reduce) {
   .company-home-reveal, .company-hero-avatars { animation: none; opacity: 1; transform: none; }
+  .company-home-reveal, [data-testid="company-motion-item"], .company-hero-avatars,
+  .company-motion-ready .company-motion-pending, .company-motion-ready .company-motion-enter {
+    animation: none !important; transition: none !important;
+    opacity: 1 !important; translate: none !important; transform: none !important;
+  }
 }
 
 /* 욕쟁이 할매 — 홈 상단 배너 (coral CTA 아님: 카드형 메뉴) */
