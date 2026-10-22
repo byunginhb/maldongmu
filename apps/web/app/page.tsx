@@ -10,6 +10,7 @@ import DotDivider from "../components/DotDivider";
 import Avatar from "../components/Avatar";
 import { SkeletonCard } from "../components/ui";
 import TodayFriends from "../components/TodayFriends";
+import RevealList from "../components/RevealList";
 import LoginSheet from "../components/LoginSheet";
 import { useT } from "../components/LangProvider";
 import OnboardingPrompts from "../components/OnboardingPrompts";
@@ -223,11 +224,15 @@ export default function Home() {
 
       <h2 className="dot-title">{t("오늘의 이웃")}</h2>
       <p className="meta" style={{ margin: "4px 0 14px" }}>{t("매일 새로운 이웃을 소개해드려요")}</p>
-      <div className="card-grid">
-        {featured === null
-          ? Array.from({ length: 5 }).map((_, i) => <SkeletonCard key={i} />)
-          : featured.slice(0, 5).map((p) => <PersonaCard key={p.uuid} p={p} />)}
-      </div>
+      {featured === null ? (
+        <div className="card-grid">
+          {Array.from({ length: 5 }).map((_, i) => <SkeletonCard key={i} />)}
+        </div>
+      ) : (
+        <RevealList className="card-grid">
+          {featured.slice(0, 5).map((p) => <PersonaCard key={p.uuid} p={p} />)}
+        </RevealList>
+      )}
 
       <DotDivider />
 
@@ -245,11 +250,11 @@ export default function Home() {
         <>
           <h2 className="dot-title">{t("요즘 인기")}</h2>
           <p className="meta" style={{ margin: "2px 0 12px" }}>{t("이번 주에 대화가 많았던 이웃들이에요")}</p>
-          <div className="card-grid">
+          <RevealList className="card-grid">
             {popular.slice(0, 3).map((p) => (
               <PersonaCard key={p.uuid} p={p} />
             ))}
-          </div>
+          </RevealList>
         </>
       )}
     </main>

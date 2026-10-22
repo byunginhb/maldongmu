@@ -8,7 +8,7 @@ import { useT } from "./LangProvider";
 export default function PersonaCard({ p }: { p: Card }) {
   const { t } = useT();
   return (
-    <Link href={`/persona/${p.uuid}`} className="card">
+    <Link href={`/persona/${p.uuid}`} className="card" data-testid="company-motion-item">
       <Avatar uuid={p.uuid} sex={p.sex} age={p.age} />
       <div style={{ minWidth: 0 }}>
         <p className="card-name">

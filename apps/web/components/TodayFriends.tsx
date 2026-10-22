@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { apiPost, chatFeatures, LoginRequiredError } from "../lib/api";
 import Avatar from "./Avatar";
 import LoginSheet from "./LoginSheet";
+import RevealList from "./RevealList";
 import { useT } from "./LangProvider";
 
 export default function TodayFriends() {
@@ -40,7 +41,8 @@ export default function TodayFriends() {
 
   return (
     <section className="today-friends">
-      <button className="today-friends-button" onClick={start} disabled={busy}>
+      <RevealList>
+      <button className="today-friends-button" data-testid="company-motion-item" onClick={start} disabled={busy}>
         <span className="chat-faces" aria-hidden>
           <Avatar uuid="today-friend-young" sex="남자" age={26} size={38} />
           <Avatar uuid="today-friend-older" sex="여자" age={68} size={38} />
@@ -51,6 +53,7 @@ export default function TodayFriends() {
         </span>
         <span aria-hidden>→</span>
       </button>
+      </RevealList>
       {error && <p className="chat-error" role="alert">{error}</p>}
       {login && <LoginSheet onClose={() => setLogin(false)} />}
     </section>

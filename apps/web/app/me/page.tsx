@@ -5,6 +5,7 @@ import Link from "next/link";
 import { apiGet, clearToken, socialLoginUrl } from "../../lib/api";
 import Avatar from "../../components/Avatar";
 import DotDivider from "../../components/DotDivider";
+import RevealList from "../../components/RevealList";
 import { Skeleton } from "../../components/ui";
 import { RARE } from "../../lib/rare";
 import { useT } from "../../components/LangProvider";
@@ -167,21 +168,21 @@ export default function MePage() {
 
       {/* 만난 이웃 그리드 */}
       {neighbors.length > 0 && (
-        <div className="notebook-grid">
+        <RevealList className="notebook-grid">
           {neighbors.map((c) => (
-            <Link key={c.personaUuid} href={`/chat/${c.id}`} className="notebook-cell" aria-label={t("{name}님과 이어서 이야기하기", { name: c.name })}>
+            <Link key={c.personaUuid} href={`/chat/${c.id}`} className="notebook-cell" data-testid="company-motion-item" aria-label={t("{name}님과 이어서 이야기하기", { name: c.name })}>
               <Avatar uuid={c.personaUuid} sex={c.sex} age={c.age} size={64} radius={14} />
               <p className="notebook-name">{c.name}</p>
               <p className="notebook-job">{c.occupation}</p>
               {RARE.has(c.occupation) && <span className="notebook-rare">{t("귀한 이웃")}</span>}
             </Link>
           ))}
-          <Link href="/" className="notebook-cell" aria-label={t("새 이웃 만나러 가기")}>
+          <Link href="/" className="notebook-cell" data-testid="company-motion-item" aria-label={t("새 이웃 만나러 가기")}>
             <span className="notebook-add">?</span>
             <p className="notebook-name" style={{ color: "var(--brown-soft)" }}>{t("새 이웃")}</p>
             <p className="notebook-job">{t("추가해볼까요?")}</p>
           </Link>
-        </div>
+        </RevealList>
       )}
 
       {/* 빈 상태 (로딩·에러 아님) */}

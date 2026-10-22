@@ -588,6 +588,47 @@ h2.dot-title { font-size: 18px; margin: 0; }
   .company-home-reveal, .company-hero-avatars { animation: none; opacity: 1; transform: none; }
 }
 
+/* 목록 등장은 래퍼, 조작 반응은 실제 버튼·링크에 분리한다. */
+[data-testid="company-motion-list"] { min-width: 0; overflow: visible; }
+.company-reveal-slot { min-width: 0; overflow: visible; }
+[data-reveal-phase="pending"] > .company-reveal-slot { opacity: 0; }
+[data-reveal-phase="revealed"] > .company-reveal-slot {
+  animation: company-list-enter 300ms ease-out var(--company-reveal-delay, 0ms) backwards;
+}
+@keyframes company-list-enter {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+[data-testid="company-motion-item"] {
+  min-width: 44px; min-height: 44px;
+  transition: transform 120ms ease-out;
+}
+.card[data-testid="company-motion-item"]:active { background: var(--paper); }
+.notebook-cell[data-testid="company-motion-item"]:active .notebook-add { border-color: var(--line); color: var(--brown-soft); }
+@media (hover: hover) {
+  [data-testid="company-motion-item"]:not(:disabled):hover { transform: translateY(-2px); }
+}
+[data-testid="company-motion-item"]:not(:disabled):active { transform: scale(0.98); }
+[data-testid="company-motion-item"]:focus-visible {
+  outline: 2px solid var(--brown); outline-offset: 3px;
+  transform: none;
+}
+/* 등장 대기 중에도 키보드 포커스를 즉시 보이게 한다. */
+[data-testid="company-motion-list"] > .company-reveal-slot:focus-within {
+  animation: none; opacity: 1; transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-testid="company-motion-list"],
+  [data-testid="company-motion-list"] > .company-reveal-slot,
+  [data-testid="company-motion-item"],
+  [data-testid="company-motion-item"]:hover,
+  [data-testid="company-motion-item"]:active,
+  [data-testid="company-home-reveal"] {
+    animation: none !important; transition: none !important;
+    opacity: 1 !important; transform: none !important;
+  }
+}
+
 /* 욕쟁이 할매 — 홈 상단 배너 (coral CTA 아님: 카드형 메뉴) */
 .granny-banner {
   display: flex; align-items: center; gap: 12px;
