@@ -47,6 +47,7 @@ Module({
   http.get("/api/personas/featured", (_, res) => res.json(f.cards));
   http.get("/api/personas/popular", (_, res) => res.json([]));
   http.get("/api/personas/search", (req, res) => res.json({ items: f.cards.filter((p) => JSON.stringify(p).includes(req.query.q || "")) }));
+  http.get("/api/personas/dating", (req, res) => res.json(f.personas.dating(req.query.sex, Number(req.query.ageMin), Number(req.query.ageMax))));
   http.get("/api/personas/:uuid", (req, res) => res.json(f.personas.card(req.params.uuid)));
   http.get("/api/preview/stats", (_, res) => res.json({ calls: f.calls.length }));
   const solo = f.chat.createConversation("owner", "a");
