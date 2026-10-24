@@ -51,7 +51,10 @@ export default function OnboardingPrompts({ featured, onLoginRequired }: {
           const text = t(key);
           return <button key={key} type="button" className="onboarding-prompt"
             data-testid="company-example-prompt" data-prompt={text}
-            disabled={busy} aria-busy={busy} onClick={() => void start(text)}>{text}</button>;
+            disabled={busy} aria-busy={busy} onClick={() => void start(text)}>
+            <span className="onboarding-prompt-text">{text}</span>
+            <span className="onboarding-prompt-arrow" data-testid="company-example-arrow" aria-hidden="true">→</span>
+          </button>;
         })}
       </div>
       <p className="meta onboarding-status" role="status">{busy ? t("이웃과 대화를 연결하고 있어요…") : ""}</p>
