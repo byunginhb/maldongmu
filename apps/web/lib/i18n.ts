@@ -41,6 +41,8 @@ export function pickLang(accept?: string | null): Lang {
 type Dict = Record<string, string>;
 
 const en: Dict = {
+  "추천을 불러오지 못했어요.": "We couldn't load recommendations.",
+  "이 나이대는 아직 소개할 분이 없어요.": "No one to introduce in this age range yet.",
   "어떤 말부터 건네볼까요?": "What would you like to say first?",
   "문장을 누르면 AI 이웃과 대화를 시작하고, 선택한 문장이 바로 전송돼요.": "Tap a sentence to start a conversation with an AI neighbor. Your chosen sentence is sent automatically.",
   "오늘 하루는 어떠셨어요?": "How has your day been?",
@@ -123,6 +125,8 @@ const en: Dict = {
 };
 
 const ja: Dict = {
+  "추천을 불러오지 못했어요.": "おすすめを読み込めませんでした。",
+  "이 나이대는 아직 소개할 분이 없어요.": "この年代にはまだ紹介できる方がいません。",
   "어떤 말부터 건네볼까요?": "どんな言葉から話しかけましょうか？",
   "문장을 누르면 AI 이웃과 대화를 시작하고, 선택한 문장이 바로 전송돼요.": "文を押すとAIのご近所さんとの会話が始まり、選んだ文がそのまま送信されます。",
   "오늘 하루는 어떠셨어요?": "今日はどんな一日でしたか？",

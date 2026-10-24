@@ -567,6 +567,22 @@ h2.dot-title { font-size: 18px; margin: 0; }
 .dating-hero { background: var(--paper); border: 1px solid var(--line); border-radius: 16px; padding: 16px; margin: 0 0 18px; }
 .dating-hero .chip { height: 36px; font-size: 14px; }
 
+/* 홈 추천: 토큰과 본문 폰트 유지, 포커스 외곽선 공간 확보 */
+.home-dating-picks, .home-dating-slot { min-width: 0; overflow: visible; }
+.home-dating-tabs { display: flex; gap: 8px; padding: 5px; margin-bottom: 10px; }
+.home-dating-tab { min-width: 44px; min-height: 44px; padding: 10px 16px; border: none; border-radius: 16px; background: var(--sand); color: var(--brown); font-size: 14px; }
+.home-dating-tab.on { background: var(--brown); color: var(--cream); }
+.home-dating-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; padding: 5px; }
+.home-dating-slot h3 { margin: 0 0 6px; font-weight: 600; }
+.home-dating-pick { display: flex; align-items: flex-start; gap: 10px; width: 100%; min-width: 44px; min-height: 44px; padding: 12px; border: 1px solid var(--line); border-radius: 16px; background: var(--paper); color: var(--brown); text-align: left; font-size: 14px; line-height: 1.65; }
+.home-dating-pick > :first-child { flex-shrink: 0; }
+.home-dating-copy { display: flex; flex-direction: column; min-width: 0; overflow-wrap: anywhere; }
+.home-dating-copy b { font-weight: 600; }
+.home-dating-status { margin: 0; min-width: 0; overflow-wrap: anywhere; color: var(--brown-soft); font-size: 13px; }
+.home-dating-tab:focus-visible, .home-dating-pick:focus-visible { outline: 2px solid var(--brown); outline-offset: 3px; }
+.home-dating-pick:disabled { opacity: 0.65; cursor: default; }
+@media (min-width: 768px) { .home-dating-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
 /* 홈 전용: 다른 화면의 칩과 기존 로딩 표현에는 적용하지 않는다. */
 .company-home-heading { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 10px; }
 .company-home-subheading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; margin: 6px 0 12px; }
