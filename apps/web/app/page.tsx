@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { PersonaCard as Card } from "@maldongmu/shared";
-import { apiGet, apiPost, track, LoginRequiredError } from "../lib/api";
+import { apiGet } from "../lib/api";
+import HomeDatingPicks from "../components/HomeDatingPicks";
 import PersonaCard from "../components/PersonaCard";
 import DotDivider from "../components/DotDivider";
 import Avatar from "../components/Avatar";
@@ -14,15 +15,6 @@ import RevealList from "../components/RevealList";
 import LoginSheet from "../components/LoginSheet";
 import { useT } from "../components/LangProvider";
 import OnboardingPrompts from "../components/OnboardingPrompts";
-
-// 홈 최상단 훅: 가상 연애 즉시 시작 (성별·나이대 → 상대 1명 자동 선택 → 소개팅 방)
-const SEXES = ["여자", "남자"];
-const AGES = [
-  { label: "20대", min: 20, max: 29 },
-  { label: "30대", min: 30, max: 39 },
-  { label: "40대", min: 40, max: 49 },
-  { label: "50대 이상", min: 50, max: 99 },
-];
 
 // 헤더 장식용 아바타 시드 (고정 — 같은 인물은 항상 같은 사진)
 const HERO_SEEDS = [
@@ -71,10 +63,6 @@ export default function Home() {
   const [popular, setPopular] = useState<(Card & { chats: number })[]>([]);
   const [randomLoading, setRandomLoading] = useState(false);
   const [heroIdx, setHeroIdx] = useState(0);
-  const [sex, setSex] = useState("");
-  const [age, setAge] = useState<(typeof AGES)[number] | null>(null);
-  const [dateBusy, setDateBusy] = useState(false);
-  const [dateError, setDateError] = useState("");
   const [showLogin, setShowLogin] = useState(false);
 
   useEffect(() => {
@@ -83,22 +71,6 @@ export default function Home() {
     // 방문마다 다른 컨셉 문구 (hydration mismatch 방지를 위해 mount 후 선택)
     setHeroIdx(Math.floor(Math.random() * HERO_MESSAGES.length));
   }, []);
-
-  const quickDate = async () => {
-    if (dateBusy) return;
-    if (!sex || !age) { setDateError(t("먼저 성별과 나이대를 골라주세요")); return; }
-    setDateBusy(true);
-    setDateError("");
-    track("dating_quick_start", { sex, age: age.label });
-    try {
-      const c = await apiPost<{ id: string }>("/conversations/dating", { sex, ageMin: age.min, ageMax: age.max });
-      router.push(`/chat/${c.id}`);
-    } catch (e) {
-      if (e instanceof LoginRequiredError) setShowLogin(true);
-      else setDateError(e instanceof Error ? e.message : t("소개할 분을 찾지 못했어요. 잠시 후 다시 시도해주세요."));
-      setDateBusy(false);
-    }
-  };
 
   const meetRandom = async () => {
     setRandomLoading(true);
@@ -146,8 +118,8 @@ export default function Home() {
 
       <OnboardingPrompts featured={featured} onLoginRequired={() => setShowLogin(true)} />
 
-      {/* 최상단 훅: 가상 연애 즉시 시작 — 화면당 coral CTA는 이 버튼 하나 */}
-      <section className="dating-hero company-home-reveal company-home-delay-2" data-testid="company-home-reveal" aria-label="가상 연애 바로 시작">
+      {/* 가상 연애 추천: 기존 홈 등장 모션과 LoginSheet를 유지한다. */}
+      <section className="dating-hero company-home-reveal company-home-delay-2" data-testid="company-home-reveal" aria-label={t("가상 연애")}>
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
           <span className="granny-banner-faces" aria-hidden>
             {DATING_FACES.map((f) => (
@@ -156,26 +128,10 @@ export default function Home() {
           </span>
           <span className="granny-banner-text">
             <b>{t("설레는 첫 만남, 지금 바로")}</b>
-            <span className="meta">{t("성별과 나이대만 고르면 소개팅 자리로 안내해드려요")}</span>
+            <span className="meta">{t("마음이 가는 분을 고르면 바로 첫 만남이 시작돼요.")}</span>
           </span>
         </div>
-        <div className="chip-row" style={{ marginBottom: 8 }}>
-          {SEXES.map((x) => (
-            <button key={x} data-testid="company-dating-chip" className={`chip${sex === x ? " on" : ""}`} onClick={() => setSex(x)} aria-pressed={sex === x}>{t(x)}</button>
-          ))}
-        </div>
-        <div className="chip-row" style={{ marginBottom: 14 }}>
-          {AGES.map((a) => (
-            <button key={a.label} data-testid="company-dating-chip" className={`chip${age?.label === a.label ? " on" : ""}`} onClick={() => setAge(a)} aria-pressed={age?.label === a.label}>{t(a.label)}</button>
-          ))}
-        </div>
-        <button className="btn-cta" data-testid="company-dating-cta" onClick={quickDate} disabled={dateBusy}>
-          {dateBusy ? t("소개할 분을 찾는 중...") : t("바로 소개받기")}
-        </button>
-        {dateError && <p className="chat-error" style={{ padding: "8px 0 0" }} role="alert">{dateError}</p>}
-        <Link href="/dating" className="meta" style={{ display: "block", textAlign: "center", marginTop: 10, fontWeight: 600 }}>
-          {t("직접 골라서 만나기 →")}
-        </Link>
+        <HomeDatingPicks onLoginRequired={() => setShowLogin(true)} />
       </section>
 
 
