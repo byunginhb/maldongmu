@@ -14,7 +14,7 @@ import TodayFriends from "../components/TodayFriends";
 import RevealList from "../components/RevealList";
 import LoginSheet from "../components/LoginSheet";
 import { useT } from "../components/LangProvider";
-import OnboardingPrompts from "../components/OnboardingPrompts";
+import HomeBalanceGame from "../components/HomeBalanceGame";
 
 // 헤더 장식용 아바타 시드 (고정 — 같은 인물은 항상 같은 사진)
 const HERO_SEEDS = [
@@ -107,7 +107,7 @@ export default function Home() {
         </div>
       </header>
 
-      <OnboardingPrompts featured={featured} onLoginRequired={() => setShowLogin(true)} />
+      <HomeBalanceGame featured={featured} onLoginRequired={() => setShowLogin(true)} />
 
       {/* 가상 연애 추천: 기존 홈 등장 모션과 LoginSheet를 유지한다. */}
       <section className="dating-hero company-home-reveal company-home-delay-2" data-testid="company-home-reveal" aria-label={t("가상 연애")}>

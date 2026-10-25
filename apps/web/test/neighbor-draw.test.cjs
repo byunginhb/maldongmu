@@ -85,7 +85,7 @@ test('메뉴 이동과 뽑기 화면 정적 계약 및 기존 홈 연결을 보�
   for (const source of [home, nav]) {
     assert.doesNotMatch(source, /\/grannies|욕쟁이 할매|GRANNY_FACES/);
   }
-  assert.match(home, /<OnboardingPrompts featured=\{featured\}/);
+  assert.match(home, /<HomeBalanceGame featured=\{featured\}/);
   assert.match(home, /<HomeDatingPicks/);
   assert.equal((home.match(/loading="eager"/g) || []).length, 1);
   assert.match(nav, /href: "\/draw", label: "뽑기"/);
