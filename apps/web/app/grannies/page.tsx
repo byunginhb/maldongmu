@@ -32,8 +32,8 @@ export default function GranniesPage() {
 
   return (
     <main className="page">
-      <button className="btn-ghost" style={{ height: 36, padding: "0 14px", marginBottom: 18 }} onClick={() => router.push("/")}>
-        {t("← 홈")}
+      <button data-testid="company-grannies-back" className="btn-ghost company-grannies-back" style={{ minWidth: 44, minHeight: 44, height: "auto", padding: "10px 14px", marginBottom: 18 }} onClick={() => router.push("/meet")}>
+        {t("← 만나보고 싶던 사람들")}
       </button>
 
       <h1 className="dot-title" style={{ marginBottom: 6 }}>{t("욕쟁이 할매")}</h1>

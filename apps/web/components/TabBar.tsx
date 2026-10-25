@@ -46,10 +46,18 @@ const InterviewIcon = ({ on }: { on: boolean }) => (
   </svg>
 );
 
+const DrawIcon = ({ on }: { on: boolean }) => (
+  <svg width="20" height="20" viewBox="0 0 16 16" shapeRendering="crispEdges" aria-hidden>
+    <path d="M2 2h12v12H2z" fill={on ? "var(--coral)" : "var(--brown-soft)"} />
+    <path d="M4 4h2v2H4zM10 4h2v2h-2zM7 7h2v2H7zM4 10h2v2H4zM10 10h2v2h-2z" fill="var(--paper)" />
+  </svg>
+);
+
 const TABS = [
   { href: "/", label: "홈", Icon: HomeIcon },
   { href: "/search", label: "검색", Icon: SearchIcon },
   { href: "/meet", label: "만남", Icon: MeetIcon },
+  { href: "/draw", label: "뽑기", Icon: DrawIcon },
   { href: "/interview", label: "인터뷰", Icon: InterviewIcon },
   { href: "/me", label: "이웃 수첩", Icon: NotebookIcon },
 ];
@@ -61,11 +69,11 @@ export default function TabBar() {
   return (
     <nav className="tabbar">
       {TABS.map(({ href, label, Icon }) => {
-        const on = pathname === href || pathname.startsWith(href + "/");
+        const on = pathname === href || (href !== "/draw" && pathname.startsWith(href + "/"));
         return (
-          <Link key={href} href={href} className={on ? "on" : ""}>
+          <Link key={href} href={href} className={on ? "on" : ""} data-testid={href === "/draw" ? "company-nav-draw" : undefined} aria-current={on ? "page" : undefined}>
             <Icon on={on} />
-            {t(label)}
+            <span>{t(label)}</span>
           </Link>
         );
       })}

@@ -24,6 +24,10 @@ export default function MeetPage() {
       </p>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        <Link href="/grannies" className="occupation-card company-meet-granny" data-testid="company-meet-granny">
+          <p className="occupation-title">{t("욕쟁이 할매")}</p>
+          <p className="meta" style={{ margin: "4px 0 0" }}>{t("지역별 사투리 할매")}</p>
+        </Link>
         {items === null
           ? Array.from({ length: 5 }).map((_, i) => <div key={i} className="skeleton" style={{ height: 108 }} />)
           : items.map((o) => (

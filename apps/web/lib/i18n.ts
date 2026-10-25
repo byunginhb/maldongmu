@@ -41,6 +41,15 @@ export function pickLang(accept?: string | null): Lang {
 type Dict = Record<string, string>;
 
 const en: Dict = {
+  "뽑기": "Draw",
+  "100만 명 중 딱 한 명": "One out of a million",
+  "뽑은 이웃": "Your drawn neighbor",
+  "이 분과 대화하기": "Talk with this neighbor",
+  "다시 뽑기": "Draw again",
+  "이웃을 뽑고 있어요…": "Drawing a neighbor…",
+  "이웃을 뽑지 못했어요. 다시 눌러주세요.": "We couldn't draw a neighbor. Please try again.",
+  "지역별 사투리 할매": "Grandmas with regional dialects",
+  "← 만나보고 싶던 사람들": "← People you wanted to meet",
   "추천을 불러오지 못했어요.": "We couldn't load recommendations.",
   "이 나이대는 아직 소개할 분이 없어요.": "No one to introduce in this age range yet.",
   "어떤 말부터 건네볼까요?": "What would you like to say first?",
@@ -125,6 +134,15 @@ const en: Dict = {
 };
 
 const ja: Dict = {
+  "뽑기": "くじ引き",
+  "100만 명 중 딱 한 명": "100万人の中のたった一人",
+  "뽑은 이웃": "選ばれたご近所さん",
+  "이 분과 대화하기": "この方と話す",
+  "다시 뽑기": "もう一度引く",
+  "이웃을 뽑고 있어요…": "ご近所さんを選んでいます…",
+  "이웃을 뽑지 못했어요. 다시 눌러주세요.": "ご近所さんを選べませんでした。もう一度押してください。",
+  "지역별 사투리 할매": "各地の方言を話すおばあちゃん",
+  "← 만나보고 싶던 사람들": "← 会ってみたかった人たち",
   "추천을 불러오지 못했어요.": "おすすめを読み込めませんでした。",
   "이 나이대는 아직 소개할 분이 없어요.": "この年代にはまだ紹介できる方がいません。",
   "어떤 말부터 건네볼까요?": "どんな言葉から話しかけましょうか？",

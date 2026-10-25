@@ -47,15 +47,6 @@ const DATING_FACES = [
 // 고민 기반 추천 진입 칩
 const CONCERNS = ["일·직장", "연애·썸", "가족", "친구·관계", "돈·미래", "건강·체력", "공부·진로", "외로움·수다"];
 
-// 욕쟁이 할매 배너 장식 얼굴 (server granny uuid와 동일 시드 → 얼굴 일치)
-const GRANNY_FACES = [
-  { uuid: "c0de0003911a5100000000000000d003", age: 68 },
-  { uuid: "c0de0004911a5100000000000000d004", age: 71 },
-  { uuid: "c0de0005911a5100000000000000d005", age: 70 },
-  { uuid: "c0de0006911a5100000000000000d006", age: 69 },
-  { uuid: "c0de0007911a5100000000000000d007", age: 72 },
-];
-
 export default function Home() {
   const { t } = useT();
   const router = useRouter();
@@ -134,21 +125,6 @@ export default function Home() {
         <HomeDatingPicks onLoginRequired={() => setShowLogin(true)} />
       </section>
 
-
-      {/* 두 번째 훅: 욕쟁이 할매 (coral CTA 아님 — 화면당 coral 1개 원칙 유지) */}
-      <Link href="/grannies" className="granny-banner">
-        <span className="granny-banner-faces" aria-hidden>
-          {GRANNY_FACES.map((f) => (
-            <span key={f.uuid}><Avatar uuid={f.uuid} sex="여자" age={f.age} size={34} radius={10} /></span>
-          ))}
-        </span>
-        <span className="granny-banner-text">
-          <b>{t("욕쟁이 할매")}</b>
-          <span className="meta">{t("지역별 할매한테 한바탕 타박 들으러 가기")}</span>
-        </span>
-        {/* 화면당 coral 강조 1개 원칙: 두 번째 배너 화살표는 톤 다운 */}
-        <span className="granny-banner-go" style={{ color: "var(--brown-soft)" }} aria-hidden>→</span>
-      </Link>
 
       {/* 오늘의 인연: 보조 진입 (coral은 위 소개받기 버튼 하나) */}
       <div className="hero-cta">
